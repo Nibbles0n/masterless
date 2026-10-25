@@ -35,6 +35,15 @@ the 4-bit weights plus one momentum. That is less memory per GPU, and it is step
 | 4 | No float copy, rounding error fed back into Muon's momentum, ECO-style (C3b). Two arms: error added before or after the orthogonalisation step. ECO with Adam as the prior-art control | **The paper test:** the best arm is within 0.03 of milestone 2, 3 of 3 seeds | Kaggle T4 |
 | 5 | Milestones 2–4 at ternary, and a second model size | The order of the arms holds at both sizes | Kaggle T4 |
 
+**How the pass lines are read (added 2026-10-25 before the milestone 1 claim runs and before any milestone 2–4
+run; the lines themselves are unchanged).** Milestones 1–4 run first at the CPU preset on this machine.
+- Milestone 1: seed k of Muon is compared with seed k of milestone 0's AdamW; each of seeds 1, 2, 3 must be at least
+  0.02 lower. The Muon learning rate is picked from {0.01, 0.02, 0.04} on seed 1 (tuning, not evidence).
+- Milestone 2: gap = mean of milestone 2 minus mean of milestone 1 over seeds 1–3, at milestone 1's learning rate.
+- Milestone 4: the "best Muon arm" is the Muon arm (error before or after the orthogonalisation) with the lower mean
+  final CE. It passes if, for each of seeds 1, 2, 3, its CE is at most milestone 2's CE for the same seed + 0.03.
+  The "after" arm keeps the error in an extra bf16 buffer (2 bytes per weight); its memory is reported beside it.
+
 After milestone 4 passes: a real-text model (FineWeb-Edu, about 30M parameters) on a rented GPU, and the paper draft.
 If milestone 4 fails: find out *why* (measure how much of the fed-back error survives the orthogonalisation step),
 then decide.
@@ -43,3 +52,5 @@ then decide.
 
 - [x] Milestone 0, CPU preset (3 seeds): PASS, mean 1.915 ± 0.003 (`runs/m0/RESULT.md`)
 - [ ] Milestone 0, GPU preset on Kaggle (1 seed is enough to confirm the setup)
+- [x] Milestone 1, CPU preset (3 seeds): PASS, Muon 1.628 ± 0.003 vs AdamW 1.915, 0.28–0.30 lower in every seed
+  (`runs/m1/RESULT.md`)
