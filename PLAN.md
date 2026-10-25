@@ -54,3 +54,4 @@ then decide.
 - [ ] Milestone 0, GPU preset on Kaggle (1 seed is enough to confirm the setup)
 - [x] Milestone 1, CPU preset (3 seeds): PASS, Muon 1.628 ± 0.003 vs AdamW 1.915, 0.28–0.30 lower in every seed
   (`runs/m1/RESULT.md`)
+- [x] Milestone 2, CPU preset (3 seeds): usable, C1 1.646 ± 0.002, gap +0.019 to milestone 1 (`runs/m2/RESULT.md`)
