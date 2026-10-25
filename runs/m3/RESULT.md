@@ -15,9 +15,9 @@ still exactly on the grid. Script: `m3_nomaster_sr.py`.
 | **Mean ± SE over seeds** | 1.6463 ± 0.0019 | **1.7636 ± 0.0044** | **+0.117** | |
 
 Measure-only line (expected worse than milestone 2, as MuonQ found): **confirmed**, about 0.12 worse in every seed.
-That is more than twice the cost of the 4-bit format itself (+0.019, milestone 2).
+That is about six times the cost of the 4-bit format itself (+0.019, milestone 2).
 
-The gap grows during training (seed 1, m3 − m2): +0.04 at step 250, +0.06 at step 1000, +0.09 at step 1500, +0.12 at
+The gap grows during training (seed 1, m3 − m2): +0.04 at step 250, +0.06 at step 1000, +0.10 at step 1500, +0.12 at
 step 2000. As the learning rate decays, each step gets smaller next to the grid spacing. Random rounding then mostly
 adds noise instead of moving the weight. This is the effect ECO's theory predicts for dropping the float copy.
 
