@@ -1,0 +1,29 @@
+{"step": 0, "val_ce": 4.22419, "val_se": 0.00221, "wall_s": 0.3}
+{"step": 0, "survival": {"cos": 0.56298, "gain": 0.52256, "inject_over_m": 2.30782}}
+{"step": 100, "survival": {"cos": 0.71232, "gain": 2.04216, "inject_over_m": 0.15113}}
+{"step": 200, "survival": {"cos": 0.71656, "gain": 1.90969, "inject_over_m": 0.19109}}
+{"step": 250, "val_ce": 2.37594, "val_se": 0.0122, "wall_s": 33.7}
+{"step": 300, "survival": {"cos": 0.71466, "gain": 1.73813, "inject_over_m": 0.21335}}
+{"step": 400, "survival": {"cos": 0.7076, "gain": 1.63721, "inject_over_m": 0.22433}}
+{"step": 500, "val_ce": 2.12987, "val_se": 0.01292, "wall_s": 65.8}
+{"step": 500, "survival": {"cos": 0.70569, "gain": 1.57912, "inject_over_m": 0.24015}}
+{"step": 600, "survival": {"cos": 0.70195, "gain": 1.52718, "inject_over_m": 0.25284}}
+{"step": 700, "survival": {"cos": 0.69905, "gain": 1.45251, "inject_over_m": 0.2705}}
+{"step": 750, "val_ce": 2.01868, "val_se": 0.01408, "wall_s": 96.7}
+{"step": 800, "survival": {"cos": 0.69299, "gain": 1.40263, "inject_over_m": 0.28014}}
+{"step": 900, "survival": {"cos": 0.69772, "gain": 1.35297, "inject_over_m": 0.30356}}
+{"step": 1000, "val_ce": 1.95747, "val_se": 0.01491, "wall_s": 126.8}
+{"step": 1000, "survival": {"cos": 0.68981, "gain": 1.32524, "inject_over_m": 0.31863}}
+{"step": 1100, "survival": {"cos": 0.69469, "gain": 1.26985, "inject_over_m": 0.33474}}
+{"step": 1200, "survival": {"cos": 0.68976, "gain": 1.25503, "inject_over_m": 0.34854}}
+{"step": 1250, "val_ce": 1.88486, "val_se": 0.015, "wall_s": 159.8}
+{"step": 1300, "survival": {"cos": 0.69353, "gain": 1.22842, "inject_over_m": 0.37432}}
+{"step": 1400, "survival": {"cos": 0.69655, "gain": 1.21406, "inject_over_m": 0.39949}}
+{"step": 1500, "val_ce": 1.87638, "val_se": 0.01537, "wall_s": 191.6}
+{"step": 1500, "survival": {"cos": 0.69826, "gain": 1.17184, "inject_over_m": 0.4209}}
+{"step": 1600, "survival": {"cos": 0.69901, "gain": 1.13634, "inject_over_m": 0.45182}}
+{"step": 1700, "survival": {"cos": 0.69461, "gain": 1.10267, "inject_over_m": 0.49388}}
+{"step": 1750, "val_ce": 1.88728, "val_se": 0.01516, "wall_s": 222.6}
+{"step": 1800, "survival": {"cos": 0.68482, "gain": 1.07258, "inject_over_m": 0.51602}}
+{"step": 1900, "survival": {"cos": 0.68067, "gain": 1.0712, "inject_over_m": 0.5217}}
+{"step": 2000, "val_ce": 1.89091, "val_se": 0.0152, "wall_s": 254.1}

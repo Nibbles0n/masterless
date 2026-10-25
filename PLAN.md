@@ -57,3 +57,7 @@ then decide.
 - [x] Milestone 2, CPU preset (3 seeds): usable, C1 1.646 ± 0.002, gap +0.019 to milestone 1 (`runs/m2/RESULT.md`)
 - [x] Milestone 3, CPU preset (3 seeds): measured, C3a 1.764 ± 0.004, +0.117 worse than milestone 2, 4.75 bytes per
   weight against 8 (`runs/m3/RESULT.md`)
+- [x] Milestone 4, CPU preset (3 seeds): **FAIL**. Best Muon arm (error added after Newton-Schulz, with a 2-byte error
+  buffer) 1.673 ± 0.004, within 0.03 of milestone 2 in 1 of 3 seeds. Error fed into momentum before Newton-Schulz:
+  1.898, worse than no feedback; only about half the error survives orthogonalisation (cosine 0.69). ECO with Adam:
+  1.928 (`runs/m4/RESULT.md`)
