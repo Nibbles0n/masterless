@@ -1,0 +1,113 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · round 5 · theory: why Muon and low-bit weights fight · one CPU probe</div>
+  <h1>The Zig-Zag Tax</h1>
+  <p class="lede">Storing weights in few bits charges a tax on every move a weight makes, back and forth, while training only gains from where the weight ends up. Muon is built to move every direction equally far, so it pays the most tax for the least gain. This page states that precisely, measures it on a real run, and turns it into a design problem with one free knob.</p>
+  <p class="meta">26 October 2026 · theory plus one measurement run of milestone 1 (Muon, float weights, CPU preset, seed 1) at three momentum settings · source: <code>report/zigzag_theory.md</code>, <code>report/zigzag_probe.py</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><b>One rule predicts all the rounding damage:</b> drift ≈ √(rounding spacing × path), where the path counts every move back and forth. It matches the simulation within about 10% for plain 4-bit, an FP8-like grid and the ticker. Each extra bit cuts the drift by only 1.41 times. Halving the zig-zag is worth as much as one extra bit.</li>
+    <li><b>Under Muon the path is fixed by the learning rate, not by the gradient.</b> Weights travelled 179, 183 and 186 gaps at momentum 0.9, 0.95 and 0.99. Momentum only changed how far they got: the zig-zag factor was 11.1, 7.6 and 3.1. Pure gradient noise predicts these ratios (1.43 and 2.27; measured 1.47 and 2.45). Steps were positively correlated from one to the next (0.57 to 0.92), so the zig-zag is noise, not bouncing.</li>
+    <li><b>Turning up momentum is not the fix.</b> At 0.99 float training got worse (1.690 against 1.622) because the average lags, and the path, which is what plain rounding pays for, did not get shorter.</li>
+    <li><b>Muon spends its movement evenly, but its progress is concentrated.</b> About half of Muon's downhill progress (35–93% over training) comes from the momentum's 8 strongest directions out of 128, yet Muon moves all 128 equally far. The other 120 directions are mostly noise, boosted to full size.</li>
+    <li><b>Simple changes to Muon's step get 1.4 to 6 times more downhill progress per unit of path:</b> keeping only the 8 strongest directions (1.5–3.8×), taking step sizes from the momentum (2.1–3.9×), skipping small moves (1.4×), or moving only where this batch agrees (1.8–6.1×). Twice the progress per unit of path is worth one extra bit. This is a one-step, first-order measure: only a training run can show whether it survives over a whole run.</li>
+    <li><b>The design problem in one line:</b> choose the step to minimise (first-order loss change) + λ × Σ (rounding spacing × |move|), with Muon's own size limit. At high precision this turns back into Muon. Its one knob λ prices rounding against progress.</li>
+  </ol>
+</section>
+
+<h2 id="law"><span class="secnum">1</span>The one rule everything follows from</h2>
+<p>Random rounding stores a value on a grid with spacing <i>r</i>. If the wanted value sits a fraction <i>f</i> of the way to the next grid point, it stores the upper point with probability <i>f</i>. That is right on average, but each rounding adds a spread (variance) of <i>r</i>²·<i>f</i>·(1 − <i>f</i>). For a small step δ, <i>f</i> = |δ|/<i>r</i>, so each rounding adds about <b><i>r</i>·|δ|</b>, never more than <i>r</i>²/4. The roundings are independent, so their variances add:</p>
+<div class="note"><p><b>drift from the float path ≈ √(<i>r</i> × path)</b>, where path = the sum of every |move|, back and forth.<br>
+<b>drift ÷ net movement = √(<i>r</i> ÷ net) × √Z</b>, where <b>Z = path ÷ net</b> is the zig-zag factor (1 = a straight line).</p></div>
+<p>On a real Muon run the weights travel about 183 gaps to move 24 net, so Z ≈ 7.6 and plain 4-bit rounding drifts √183 ≈ 13.5 gaps against a signal of 24. More bits help only slowly: the drift falls with the square root of <i>r</i>, so each extra bit cuts it by a factor of 1.41. Halving Z buys as much as one extra bit.</p>
+<figure class="wide">
+  <div class="chart" id="ch-law"></div>
+  <figcaption><b>The rule predicts the simulation for all three storage types.</b> For the ticker only the carry is rounded at random, at <i>r</i> = 1/14 of a gap. Once a step is bigger than about <i>r</i>/4 it costs a fixed amount per step whatever its size, so the ticker's drift grows with the number of steps, not the path: √(2000 × (1/14)² ÷ 5) ≈ 1.4. <b>So less zig-zag mostly helps plain rounding, and the ticker only late in training</b>, when its steps fall to about 1/60 of a gap.</figcaption>
+</figure>
+<p class="note">The rule ignores the pull-back. Where the loss curves up, the gradient pulls a misplaced weight back, and the drift settles instead of growing. Most directions in a network are nearly flat, and there it keeps growing. Side study B agrees: plain 4-bit's damage tracked how far training had gone, not the batch size.</p>
+
+<h2 id="sources"><span class="secnum">2</span>Where the zig-zag comes from</h2>
+<ol>
+  <li><b>Gradient noise.</b> Each weight's gradient is a steady signal μ plus noise σ. Momentum averages about 1/(1 − β) steps and shrinks the noise to σ·√((1 − β)/(1 + β)): 0.23σ at β = 0.9, 0.16σ at 0.95, 0.07σ at 0.99. If steps follow the momentum, <b>Z ≈ 0.8 × (momentum's noise ÷ μ)</b>. Prediction: going from β = 0.95 to 0.99 cuts Z by 2.2 times, if μ holds still in the meantime.</li>
+  <li><b>Bouncing.</b> In a sharply curved direction a fixed-size step overshoots the bottom and the weight hops side to side. Its sign: one step correlates <i>negatively</i> with the next. Noise passed through momentum gives a <i>positive</i> correlation instead.</li>
+  <li><b>Muon spreads its movement.</b> Newton–Schulz sets every direction of the momentum to the same strength. The strong directions carry the signal and the weak ones are mostly noise, so Muon blows noise up to full size. In maths: Muon is the <b>steepest-descent step under the spectral norm</b> (the most downhill step among those whose largest stretch is η; Bernstein &amp; Newhouse 2024). Low-bit storage bills the <b>sum of |moves|</b> (the L1 norm), and steepest descent under that norm does the opposite of Muon: it puts all movement into the few weights with the strongest signal.</li>
+</ol>
+
+<h2 id="probe"><span class="secnum">3</span>What a real run shows</h2>
+<p>One float Muon run (milestone 1, seed 1) was measured at three momentum settings. At five moments in the 0.95 run, the training was paused to estimate the true gradient from 64 fresh batches, and every candidate step was scored against it, with the same weights and momentum for all of them.</p>
+<div class="tbl"><table>
+<thead><tr><th>momentum β</th><th class="n">path (gaps)</th><th class="n">net (gaps)</th><th class="n">zig-zag Z</th><th class="n">step-to-step correlation</th><th class="n">sign flips per step</th><th class="n">final loss (float)</th></tr></thead>
+<tbody>
+<tr><td>0.9</td><td class="n">179</td><td class="n">16.1</td><td class="n">11.1</td><td class="n">+0.57</td><td class="n">30%</td><td class="n">1.627</td></tr>
+<tr><td>0.95 (milestone 1)</td><td class="n">183</td><td class="n">24.2</td><td class="n">7.6</td><td class="n">+0.71</td><td class="n">23%</td><td class="n">1.622</td></tr>
+<tr><td>0.99</td><td class="n">186</td><td class="n">60.3</td><td class="n">3.1</td><td class="n">+0.92</td><td class="n">12%</td><td class="n">1.690</td></tr>
+</tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-zz"></div>
+  <figcaption><b>Momentum changes the zig-zag just as gradient noise predicts.</b> The theory says Z scales with √((1 − β)/(1 + β)), giving ratios of 1.43 between 0.9 and 0.95 and 2.27 between 0.95 and 0.99. The run gave 1.47 and 2.45. The path stays at about 183 gaps whatever β is, because Newton–Schulz fixes the size of every step and the learning rate sets it. So momentum changes only the net movement. The middle stretch zig-zags most: the signal is weaker there than at the start, and the steps are still large.</figcaption>
+</figure>
+<p>This matters for design. Plain rounding pays for the path, and under Muon the path is fixed by the learning-rate schedule. To pay less, a step must move fewer weights or move them less, at the same progress. That is the job of the next two charts.</p>
+<figure class="wide">
+  <div class="chart" id="ch-top8"></div>
+  <figcaption><b>Most of the useful movement sits in a few directions.</b> In each matrix, the momentum's 8 strongest directions (6% of 128) give about half of Muon's downhill progress late in training, and 93% at step 100. Muon still moves all 128 directions equally far. Meanwhile the signal in one batch's gradient falls from 0.76 to 0.016 (signal² ÷ noise², from steps 100 to 1990).</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-l1"></div>
+  <figcaption><b>Every change to Muon tried here buys more progress per unit of path.</b> These are scored at the same moment, from the same momentum: more downhill progress for each gap of movement paid for. Exact orthogonalisation scores 0.94–1.00, so Newton–Schulz's approximation is not the issue. Keeping only the 8 strongest directions and taking step sizes from the momentum both reach 2–4×. The current batch's raw gradient scores higher still (2–13×), but raw gradient steps train badly, which is why one-step scores cannot be the final word.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-l2"></div>
+  <figcaption><b>The same steps scored the usual way, per unit of step length.</b> Skipping small moves (the soft threshold, and the largest quarter only) costs almost nothing here (0.88–1.00×), but gains 1.4–1.6× per unit of path in the chart above. That is the pure low-bit gain: the same direction, but paid for with fewer moves. The spectral changes (8 strongest directions, weak ones shrunk) gain on both measures, which suggests that Muon's boosted weak directions are mostly noise even for float training.</figcaption>
+</figure>
+
+<h2 id="design"><span class="secnum">4</span>The design problem, as one line of maths</h2>
+<p>Plain Muon solves: choose the step δ that makes ⟨G, δ⟩ (the first-order change in loss, G = momentum) as negative as possible, subject to ‖δ‖<sub>spectral</sub> ≤ η. The low-bit version adds the bill from section 1:</p>
+<div class="note"><p><b>choose δ to minimise ⟨G, δ⟩ + λ · Σ<sub>i</sub> r<sub>i</sub> · |δ<sub>i</sub>|, subject to ‖δ‖<sub>spectral</sub> ≤ η</b></p>
+<p>r<sub>i</sub> = the rounding spacing at weight i (its gap for plain rounding, the carry's spacing for the ticker, about |w|/8 for FP8). λ = how much one unit of rounding spread costs in loss: unknown, the one knob to tune.</p></div>
+<ul>
+  <li><b>Without the spectral limit</b> the bill is a lasso (L1) penalty, and its exact answer per weight is the <b>soft threshold</b>: shrink every move toward zero by λ·r<sub>i</sub>, and moves smaller than that become zero.</li>
+  <li><b>As the bits go up (r → 0) the problem turns back into plain Muon.</b> Any method built from it keeps Muon's behaviour at high precision.</li>
+  <li><b>With both terms</b> there is no closed-form answer. Two cheap approximations: Muon first, then soft-threshold each weight; or shrink the momentum's weak directions before orthogonalising (fix 2.3 at its source), then threshold.</li>
+  <li><b>G is noisy.</b> A weight with a tiny true signal looks like noise, and the threshold stops exactly those. The price is that weights with small but real signals move later. λ sets that trade.</li>
+</ul>
+<div class="tbl"><table>
+<thead><tr><th>design family</th><th>what it does</th><th class="n">extra bytes per weight</th><th>source it fixes</th></tr></thead>
+<tbody>
+<tr><td>longer momentum (β = 0.99)</td><td>averages away more noise</td><td class="n">0</td><td>2.1, but adds lag</td></tr>
+<tr><td>soft threshold after Newton–Schulz</td><td>skip small moves, shrink the rest by λ·r</td><td class="n">0</td><td>2.3, the bill itself</td></tr>
+<tr><td>weak-direction damping or low rank</td><td>U·f(S)·Vᵀ with f small for weak directions, or keep only the top k</td><td class="n">0</td><td>2.3 at its source</td></tr>
+<tr><td>cautious mask</td><td>drop moves whose sign disagrees with this batch's gradient</td><td class="n">0</td><td>2.1, 2.2</td></tr>
+<tr><td>sign-consistency gate</td><td>a 1–2-bit record of recent step signs; shrink weights that keep flipping</td><td class="n">0.125–0.25</td><td>2.1, 2.2</td></tr>
+<tr><td>carry as confidence (ticker)</td><td>a carry that keeps changing sign <i>is</i> zig-zag; use it as the gate</td><td class="n">0</td><td>2.1, 2.2</td></tr>
+</tbody></table></div>
+<p>Low-rank orthogonalised updates exist already, for example Dion (2025), built to save communication between GPUs. As far as I know nobody has tested them for low-bit weights.</p>
+
+<h2 id="next"><span class="secnum">5</span>A first test, for you to shape</h2>
+<p>The theory makes a prediction that can fail: <b>a fix that shortens the path should help plain random rounding (m3) a lot, and the ticker only a little</b> (section 1). Testing both checks the theory as well as the fix. A small first test on the CPU preset, seeds 1–3, on a T4:</p>
+<ol>
+  <li>Pick one or two candidate fixes. My suggestion: <b>Muon on the k strongest directions</b> (k = 8, 16), which gained on both measures, and the <b>soft threshold</b>, which is the exact answer to the bill when the spectral limit is left out. Its λ is the one knob.</li>
+  <li>For each, run three arms: m3 + fix, the ticker + fix, and float Muon + fix. The float arm checks that the fix alone does not hurt training.</li>
+  <li>Measure the path, the net movement, the drift from a float twin, and the final loss.</li>
+  <li>A possible pass line, to fix in <code>PLAN.md</code> before running: m3 + fix closes at least half of m3's 0.117 gap to m1, so m3 + fix ≤ m1 + 0.06 in each seed. Float Muon + fix stays within 0.02 of m1.</li>
+</ol>
+<p>The open design questions are yours:</p>
+<ul>
+  <li>How to set λ: fixed, tied to the learning rate, or tied to the grid spacing r so the rule turns into Muon at high precision.</li>
+  <li>Whether to shrink before or after orthogonalising.</li>
+  <li>Whether the ticker's carry can serve as the free confidence signal.</li>
+</ul>
+
+<h2 id="caveats"><span class="secnum">6</span>Not tested</h2>
+<ul>
+  <li>Everything measured here is one float Muon run (seed 1, CPU preset, 2000 steps, on this machine's CPU in fp32). Path lengths are in units of each weight's 4-bit gap at the start.</li>
+  <li>The progress measures are first-order and one-step: they say how much each step goes downhill <i>right now</i>, per unit of path. They do not show which rule trains better over a whole run, because Muon's even spreading also helps it handle curvature. Only a training run can settle that.</li>
+  <li>The "true gradient" is the mean of 64 fresh batches. Its own noise does not bias the progress numbers, but it makes each one noisy, so single checkpoints should not be over-read.</li>
+  <li>The pull-back from curvature is left out of the rule. Muon's fixed step size makes it hard to model.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">7</span>Reproduce</h2>
+<p><code>python report/zigzag_probe.py --beta 0.95</code>; <code>python report/zigzag_probe.py --beta 0.99 --no-checks</code>; <code>python report/zigzag_probe.py --beta 0.9 --no-checks</code>; <code>python report/noise_sim.py</code>; then <code>python report/build_round5.py</code>. The written theory is <code>report/zigzag_theory.md</code>.</p>
+</main>

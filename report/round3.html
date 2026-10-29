@@ -1,0 +1,661 @@
+<title>Reordered Muon at 4 Bits</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #a9cbf3; --r2: #5f9fe8; --r3: #2a6fc4; --r4: #143f78;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · round 3 · milestone 6 and side study B2 · all runs on one Colab T4</div>
+  <h1>Reordered Muon at 4 Bits</h1>
+  <p class="lede">Two ideas from the owner, tested. Can Muon's momentum act as an accumulator, so that a 4-bit weight moves one grid step only once enough small pushes have added up? And do bigger batches with bigger learning rates make 4-bit rounding hurt less?</p>
+  <p class="meta">25 October 2026 · 93 training runs on one free Colab T4 (fp16) · every number comes from <code>runs/m6</code>, <code>runs/batch_lr</code> and <code>report/data</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>Milestone 6 failed, clearly.</strong> Reordered Muon with 4-bit weights and the leftover kept in the momentum ended at 2.05, against 1.75 for plain random rounding (m3) and 1.65 for 4-bit with a float copy (m2). All three pass lines fail.</li>
+    <li><strong>The cause is known.</strong> The momentum hands a leftover back over about 20 steps, so a weight moves only after about 10 gaps of wanted movement have piled up. A one-weight simulation shows it lagging 9 gaps behind for good.</li>
+    <li><strong>8-bit momentum is free.</strong> Storing the momentum in 8 bits changed the loss by +0.001 ± 0.006. That supports a roughly 2-byte-per-weight budget once a rule that works is found.</li>
+    <li><strong>Reordering costs even with float weights</strong> (+0.069 against Muon), so this order of Muon is a dead end.</li>
+    <li><strong>Bigger learning rates make 4-bit rounding hurt more, not less.</strong> At every batch size, raising the rate widened the m3 − m1 gap. Bigger batches allow bigger rates and reach the same loss in 2–4 times fewer steps, but no lower loss.</li>
+    <li><strong>Keep small scale blocks, in 8 bits.</strong> One scale per matrix doubled one-off rounding damage, for a saving of about 4% of memory.</li>
+  </ol>
+</section>
+
+<h2 id="idea"><span class="secnum">1</span>The idea behind milestone 6</h2>
+<p>A 4-bit weight can only sit on one of 15 values. Without a float copy, a step smaller than the gap between two values is lost unless something remembers it. ECO's trick for Adam keeps the unused part (the <em>leftover</em>) in the momentum, and it comes back out on later steps. That works for Adam because each weight's step depends only on that weight's own momentum. In milestone 4, Muon broke it: Muon squashes the whole momentum matrix before stepping, and only about 70% of a fed-back leftover came out pointing the right way.</p>
+<p>Milestone 6 swaps Muon's two operations, so the step becomes a plain multiple of the momentum again:</p>
+<div class="eq">normal Muon     M ← 0.95·M + 0.05·G         step = lr · NS(M)       (average, then squash)
+reordered       A ← 0.95·A + 0.05·NS(G)     step = lr · A           (squash, then average)
+leftover        e = wanted weight − stored 4-bit weight
+                A ← A + (1 − 1/0.95) · e / lr                       (e comes back out over the next steps)</div>
+<p>Here NS is Muon's squashing step (Newton–Schulz), which gives every direction of a matrix the same strength. With nearest rounding, a weight stays put until its pushes add up past half a gap, then moves one level. That is the owner's Bop-style "tick when the accumulator crosses a threshold", with no extra memory: the momentum holds the leftover.</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m3)"></span>m3, no copy</h4><ol><li>average gradients</li><li>squash</li><li>round at random</li></ol><p class="kept">leftover: thrown away · 4.75 bytes per weight</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-c)"></span>m4c, leftover buffer</h4><ol><li>average gradients</li><li>squash</li><li>add last leftover, round</li><li class="err">leftover → extra 2-byte buffer</li></ol><p class="kept">6.75 bytes per weight</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-a)"></span>m6, reordered 4-bit</h4><ol><li>squash each gradient</li><li>average into A</li><li>round to nearest</li><li class="err">leftover → back into A</li></ol><p class="kept">4.75 bytes per weight; 1.78 with an 8-bit A</p></div>
+</div>
+
+<h2 id="m6"><span class="secnum">2</span>Milestone 6 results</h2>
+<p>All runs were on one Colab T4, with milestones 1, 2, 3 and 4c rerun there as baselines. The m1 and m3 reruns matched study B's T4 numbers to four digits, so the T4 is repeatable. <strong>All three pass lines fail, by a wide margin.</strong> The 4-bit arm ends at 2.05, worse than plain random rounding (m3, 1.75).</p>
+<figure>
+  <div class="chart" id="ch-tune"></div>
+  <figcaption><b>Picking the learning rate (seed 1, tuning, not evidence).</b> Averaging steps that are already squashed gives smaller steps than Muon's, so this version needs a bigger rate. The best was 0.08 (1.696), eight times Muon's 0.01, and it still ends about 0.065 behind Muon. 0.16 was worse again, so the best rate sits inside the range tried. The 4-bit arms used 0.08 without further tuning, as written down in advance.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-m6curves"></div>
+  <figcaption><b>Validation loss during training, mean of three seeds.</b> Switch between the 4-bit arms and the float arms. The m6 4-bit arms (purple, magenta) fall behind from the start and never recover. With float weights, the reordered Muon (grey) runs a steady 0.07 behind normal Muon.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-m6diffs"></div>
+  <figcaption><b>The pass lines, seed by seed.</b> Each dot is one seed's difference. The first three rows are the pass lines (each needs all three dots left of +0.03). The bottom rows are context: m6 4-bit is 0.29 worse than random rounding and 0.36 worse than milestone 4c's leftover buffer.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Pass line (written before the runs)</th><th class="n">Seeds that pass</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-m6mem"></div>
+  <figcaption><b>Quality against memory.</b> The shaded box is the goal: at most 2 bytes per weight and within 0.03 of milestone 2. The 8-bit momentum arm reached the memory (1.78 bytes) but not the quality. Its 8-bit momentum cost nothing measurable against the 32-bit one (+0.001 ± 0.006), so the momentum's storage is not the problem; the rule is.</figcaption>
+</figure>
+<h3>Why it failed</h3>
+<p>The momentum does act as an accumulator, but it hands back what it holds slowly: each step uses only about 1/20 of it (that is what 0.95 momentum means). The rounding looks only at one step's share. So a weight moves one level only when a single step's push passes half a gap. By then about 20 times as much, roughly 9 to 10 gaps, is waiting inside the momentum. The weight ends up trailing where it should be by about 9 gaps, permanently. A separate leftover buffer (milestone 4c) doesn't have this problem, because it applies the whole leftover on the very next step.</p>
+<figure class="wide">
+  <div class="chart" id="ch-sim"></div>
+  <figcaption><b>A one-weight simulation of the three rules</b> (<code>report/accum_sim.py</code>). The push is 0.05 gaps per step, about what Muon does at its peak learning rate. The m6 weight (purple) first moves at step 201 and then trails the float weight by about 9 gaps. The separate buffer (green) first moves at step 24 and never trails by more than half a gap. With a noisy push, the picture is the same.</figcaption>
+</figure>
+<p>Two lessons. First, the momentum can't double as the leftover store this way, because it releases what it holds too slowly. A Bop-style tick needs a counter that the rounding reads in full every step, like milestone 4c's buffer. Second, the reordering itself is worse than Muon even with float weights (+0.069). A likely reason (not measured): squashing each noisy gradient on its own gives every direction equal strength, noise included, so averaging afterwards can no longer tell steady directions from noisy ones.</p>
+
+<h2 id="blr"><span class="secnum">3</span>Bigger batches with bigger learning rates</h2>
+<p>Study B showed that bigger batches alone don't help: with the learning rate unchanged, they just get less far on the same data. The owner's follow-up: maybe bigger steps suffer less from rounding, and bigger batches allow bigger steps. So every learning rate (Muon's and AdamW's) was multiplied by 2, 4 or 8, at 1×, 2×, 4× and 8× the batch of 12. Every run reads the same 1.5 million characters.</p>
+<figure class="wide">
+  <div class="chart" id="ch-blr-m3"></div>
+  <figcaption><b>Milestone 3 (4-bit, no copy).</b> Each line is one batch size; further right is a bigger learning rate. At 1× the old rate is best, and doubling it hurts. At 2× and 4×, doubling the rate is best; at 8×, quadrupling. The best points at 1×, 2× and 4× all land near 1.75, the bigger batches in 2–4 times fewer steps.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-blr-m1"></div>
+  <figcaption><b>Milestone 1 (Muon, float weights), for comparison.</b> The float baseline behaves the same way: bigger batches want bigger rates, and none beats 1× at its best. So a batch-matched rate is a speed setting (fewer, bigger steps), not a quality fix.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-blr-gap"></div>
+  <figcaption><b>How much the 4-bit rounding costs, setting by setting.</b> Read across a line: at a fixed batch size, a bigger rate gives a bigger gap (1× goes +0.12, +0.15, +0.22). Read down at the left edge: at the old rate, bigger batches have smaller gaps, but study B showed that is mostly because they got less far.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-blr-prog"></div>
+  <figcaption><b>Separating the batch effect from "got less far".</b> The dashed line is the gap during ordinary training (1×, old rate), plotted against how far float Muon had got at that point. Each dot is one batch-and-rate setting at its end. Dots on the line mean the gap is fully explained by progress. Well-matched settings (8× at rate ×4, 4× at ×2) sit a little below the line, roughly 0.025 below. Rates too high for their batch (1× at ×4, 2× at ×8) sit far above it. The comparison is rough: a point in the middle of a 2000-step run has a higher learning rate than the last point of a short run.</figcaption>
+</figure>
+<p>So the owner's idea holds only in a weak form. Bigger batches let the learning rate grow, and with a matched rate the rounding damage at equal progress is about a fifth smaller. But a bigger step is never safer on its own: the larger the step, the bigger the gap. For the goal of cheaper training, the useful part is speed. A 4× batch at twice the rate reached m3's best loss in a quarter of the steps.</p>
+
+<h2 id="questions"><span class="secnum">4</span>The owner's other questions</h2>
+<h3>Should we just use one scale per matrix?</h3>
+<p>A scale is the ruler a 4-bit code is measured with: weight = code × scale. The codes run only from −6 to 6, and real weights are around 0.02, so at least one ruler per matrix is needed. With one ruler per matrix, a single large weight sets the ruler for everyone, and most small weights land on 0 or ±0.5. Smaller blocks give each group of weights its own ruler.</p>
+<figure class="wide">
+  <div class="chart" id="ch-scales"></div>
+  <figcaption><b>One-off rounding of a trained model (from the earlier tiny test).</b> One ruler per matrix doubles the damage from rounding (+0.028 against +0.014). Keeping one ruler per 16 weights in 8 bits costs 0.06 bytes per weight, and study F found 8-bit rulers no worse than 32-bit ones. So dropping the rulers would save about 4% of a 1.6-byte budget for twice the rounding damage. The right column is what the rulers cost in memory.</figcaption>
+</figure>
+<p>So no, not yet. Keep one ruler per 16 weights, stored in 8 bits. One thing remains untested: in training without a float copy, a block's ruler changes whenever its largest weight changes, which nudges all 16 weights at once. One ruler per matrix would change far less often. That makes a specific, cheap test for later.</p>
+<h3>Has anyone trained with FP8 weights and 8-bit momentum?</h3>
+<p>We haven't tested it here. Outside, the pieces exist, but not all together:</p>
+<div class="tablewrap"><table>
+  <thead><tr><th>Piece</th><th>Status</th><th>Examples</th></tr></thead>
+  <tbody>
+    <tr><td>FP8 matrix multiplies, float copy kept</td><td><span class="pill pass">STANDARD</span></td><td>NVIDIA Transformer Engine; FP8-LM; DeepSeek-V3</td></tr>
+    <tr><td>8-bit optimizer state (momentum)</td><td><span class="pill pass">STANDARD</span></td><td>8-bit Adam; FP8-LM's first moment in FP8; COAT</td></tr>
+    <tr><td>No float copy, 16-bit weights, random rounding</td><td><span class="pill meas">RESEARCH</span></td><td>Ozkara et al. (2025): competitive with a float copy for large LLMs</td></tr>
+    <tr><td>No float copy, FP8 or 4-bit weights</td><td><span class="pill meas">RESEARCH</span></td><td>ECO (ICML 2026, fine-tuning, Adam and momentum SGD); M+Adam (ICML 2026, FP8 weights, 60M–1B pretraining)</td></tr>
+    <tr><td>Any of this with Muon</td><td><span class="pill fail">OPEN</span></td><td>MuonQ and 4-bit Muon shrink Muon's momentum, not its weights</td></tr>
+  </tbody>
+</table></div>
+<p>FP8 weights with no copy plus an 8-bit momentum is about 2 bytes per weight, against 16 for normal AdamW training. That count covers only the weights and the optimizer: gradients and activations need memory too, unless gradients are applied and dropped layer by layer as the backward pass goes.</p>
+
+<h2 id="next"><span class="secnum">5</span>What to test next</h2>
+<div class="options"><div class="opt"><h4>A · Milestone 4c with small buffers <span class="pill meas">about 2.1–2.6 bytes</span></h4><p>Normal Muon, 4-bit weights, no float copy, and milestone 4c's separate leftover buffer, the rule that works in the simulation. The leftover is never bigger than half a gap, so it fits in 4 or 8 bits, and the momentum goes to 8 bits (free, per this round). Milestone 4c was the best no-copy Muon arm so far: 1.683 on the T4, 0.037 behind milestone 2.</p><div class="tags"><span>one change from m4c</span><span>3 seeds on a T4</span></div></div>
+<div class="opt"><h4>B · FP8 weights, no copy, 8-bit momentum <span class="pill meas">about 2 bytes</span></h4><p>The owner's question, tested directly: milestone 3 with an 8-bit float grid instead of the 4-bit one, plus 8-bit momentum. A 4-bit weight with a 4-bit leftover is an 8-bit number in disguise, so A and B spend about the same memory in two different ways. Testing both shows which way is better.</p><div class="tags"><span>one change from m3</span><span>3 seeds on a T4</span></div></div>
+<div class="opt"><h4>Setting for all later runs · 4× batch at twice the rate</h4><p>Same loss as 1× in a quarter of the steps, so every later sweep runs about 3–4 times faster on a T4. That is a speed choice, not a quality one.</p></div></div>
+
+<h2 id="caveats"><span class="secnum">6</span>Not tested</h2>
+<ul><li>Milestone 6: the 4-bit arms used the float arm's learning rate untuned; nearest rounding only; the leftover rule divides by the learning rate, which during warm-up is 1/100 of its peak. None of these is likely to close a 0.29 gap to milestone 3, but none was tried.</li>
+  <li>A fixed version of the accumulator idea, which would compare the whole stored amount with the gap, was not tried.</li>
+  <li>Study B2: rates only in factors of 2; warm-up and cosine schedule scaled as in study B; the same characters at every batch size (more data per step not tried).</li>
+  <li>Everything is the small CPU-preset model (about 0.8 million parameters) on Shakespeare characters, with 2000 steps or fewer; fp16 on a T4.</li>
+  <li>The scale result comes from rounding a trained model once, not from training without a float copy.</li></ul>
+
+<h2 id="reproduce"><span class="secnum">7</span>Reproduce</h2>
+<p>Milestone 6: <code>python m6_accum.py --arm q4 --seed 1 --muon-lr 0.08</code> (arms <code>float</code>, <code>q4</code>, <code>q4_m8</code>). Study B2: <code>python batch_runs.py m3 4 1 2</code> (arm, batch factor, seed, learning-rate multiplier). Summaries: <code>report/m6_summary.py</code>, <code>report/batch_lr_summary.py</code>; this page: <code>report/build_round3.py</code>. Pass lines and questions were written into <code>PLAN.md</code> before any run.</p>
+</main>
+
+<script>
+const DATA = {"m6":{"tune":{"0.01":{"final":1.9247,"bytes":8,"wall_s":128.2,"curve":[[0,4.2053],[250,2.4265],[500,2.3124],[750,2.1363],[1000,2.0517],[1250,1.9941],[1500,1.9581],[1750,1.9382],[2000,1.9247]]},"0.02":{"final":1.8001,"bytes":8,"wall_s":128.3,"curve":[[0,4.2053],[250,2.3917],[500,2.1178],[750,1.9952],[1000,1.9254],[1250,1.8779],[1500,1.8346],[1750,1.8158],[2000,1.8001]]},"0.04":{"final":1.7275,"bytes":8,"wall_s":129.0,"curve":[[0,4.2053],[250,2.2611],[500,2.0465],[750,1.933],[1000,1.8686],[1250,1.8218],[1500,1.7667],[1750,1.749],[2000,1.7275]]},"0.08":{"final":1.6962,"bytes":8,"wall_s":124.4,"curve":[[0,4.2053],[250,2.1734],[500,2.0064],[750,1.9119],[1000,1.8394],[1250,1.8028],[1500,1.7418],[1750,1.716],[2000,1.6962]]},"0.16":{"final":1.7774,"bytes":8,"wall_s":124.3,"curve":[[0,4.2053],[250,2.1887],[500,2.0697],[750,1.9696],[1000,1.9294],[1250,1.8765],[1500,1.8262],[1750,1.7994],[2000,1.7774]]}},"runs":{"m1":{"1":{"final":1.6343,"bytes":8,"wall_s":126.6,"curve":[[0,4.2053],[250,2.241],[500,2.0125],[750,1.9069],[1000,1.8246],[1250,1.7611],[1500,1.6867],[1750,1.6611],[2000,1.6343]]},"2":{"final":1.6291,"bytes":8,"wall_s":118.7,"curve":[[0,4.1888],[250,2.2694],[500,2.0174],[750,1.9177],[1000,1.8247],[1250,1.7672],[1500,1.6975],[1750,1.6418],[2000,1.6291]]},"3":{"final":1.6311,"bytes":8,"wall_s":119.5,"curve":[[0,4.2248],[250,2.2541],[500,2.0029],[750,1.9018],[1000,1.822],[1250,1.748],[1500,1.7056],[1750,1.6611],[2000,1.6311]]}},"m2":{"1":{"final":1.6524,"bytes":8,"wall_s":156.5,"curve":[[0,4.2067],[250,2.2467],[500,2.0365],[750,1.9183],[1000,1.8412],[1250,1.774],[1500,1.698],[1750,1.6728],[2000,1.6524]]},"2":{"final":1.6444,"bytes":8,"wall_s":158.0,"curve":[[0,4.1884],[250,2.269],[500,2.0208],[750,1.9181],[1000,1.8352],[1250,1.7651],[1500,1.7061],[1750,1.6535],[2000,1.6444]]},"3":{"final":1.6406,"bytes":8,"wall_s":153.2,"curve":[[0,4.2242],[250,2.2639],[500,2.0143],[750,1.9117],[1000,1.8339],[1250,1.7597],[1500,1.7161],[1750,1.6718],[2000,1.6406]]}},"m3":{"1":{"final":1.7626,"bytes":4.75,"wall_s":162.7,"curve":[[0,4.2067],[250,2.2763],[500,2.0675],[750,1.9557],[1000,1.8955],[1250,1.852],[1500,1.7929],[1750,1.7797],[2000,1.7626]]},"2":{"final":1.7528,"bytes":4.75,"wall_s":161.8,"curve":[[0,4.1884],[250,2.2923],[500,2.0875],[750,1.992],[1000,1.9057],[1250,1.8464],[1500,1.8022],[1750,1.7653],[2000,1.7528]]},"3":{"final":1.7494,"bytes":4.75,"wall_s":167.1,"curve":[[0,4.2242],[250,2.295],[500,2.0577],[750,1.9564],[1000,1.9013],[1250,1.8515],[1500,1.8051],[1750,1.7768],[2000,1.7494]]}},"m4post":{"1":{"final":1.6754,"bytes":6.75,"wall_s":166.3,"curve":[[0,4.2067],[250,2.2601],[500,2.0368],[750,1.9341],[1000,1.8552],[1250,1.7926],[1500,1.729],[1750,1.6971],[2000,1.6754]]},"2":{"final":1.6754,"bytes":6.75,"wall_s":169.7,"curve":[[0,4.1884],[250,2.2849],[500,2.0481],[750,1.956],[1000,1.8627],[1250,1.7961],[1500,1.7351],[1750,1.6926],[2000,1.6754]]},"3":{"final":1.698,"bytes":6.75,"wall_s":167.3,"curve":[[0,4.2242],[250,2.2874],[500,2.0264],[750,1.9329],[1000,1.8466],[1250,1.7858],[1500,1.7627],[1750,1.7085],[2000,1.698]]}},"float":{"1":{"final":1.6962,"bytes":8,"wall_s":124.4,"curve":[[0,4.2053],[250,2.1734],[500,2.0064],[750,1.9119],[1000,1.8394],[1250,1.8028],[1500,1.7418],[1750,1.716],[2000,1.6962]]},"2":{"final":1.6998,"bytes":8,"wall_s":229.9,"curve":[[0,4.1888],[250,2.2058],[500,2.0281],[750,1.946],[1000,1.8664],[1250,1.8151],[1500,1.7555],[1750,1.712],[2000,1.6998]]},"3":{"final":1.7047,"bytes":8,"wall_s":230.0,"curve":[[0,4.2248],[250,2.1854],[500,1.9874],[750,1.9084],[1000,1.8467],[1250,1.7927],[1500,1.7633],[1750,1.7306],[2000,1.7047]]}},"q4":{"1":{"final":2.0435,"bytes":4.75,"wall_s":269.2,"curve":[[0,4.2067],[250,2.3869],[500,2.2051],[750,2.1409],[1000,2.0979],[1250,2.0776],[1500,2.0591],[1750,2.0524],[2000,2.0435]]},"2":{"final":2.0334,"bytes":4.75,"wall_s":175.2,"curve":[[0,4.1884],[250,2.3658],[500,2.182],[750,2.1218],[1000,2.0859],[1250,2.059],[1500,2.047],[1750,2.0369],[2000,2.0334]]},"3":{"final":2.0642,"bytes":4.75,"wall_s":174.4,"curve":[[0,4.2242],[250,2.3811],[500,2.2057],[750,2.1461],[1000,2.1124],[1250,2.0913],[1500,2.0772],[1750,2.0707],[2000,2.0642]]}},"q4_m8":{"1":{"final":2.0509,"bytes":1.7812,"wall_s":174.0,"curve":[[0,4.2067],[250,2.3843],[500,2.2086],[750,2.1471],[1000,2.1074],[1250,2.0838],[1500,2.0606],[1750,2.0573],[2000,2.0509]]},"2":{"final":2.0386,"bytes":1.7812,"wall_s":123.0,"curve":[[0,4.1884],[250,2.3689],[500,2.1878],[750,2.1326],[1000,2.0953],[1250,2.0694],[1500,2.054],[1750,2.0417],[2000,2.0386]]},"3":{"final":2.0534,"bytes":1.7812,"wall_s":123.5,"curve":[[0,4.2242],[250,2.3786],[500,2.2104],[750,2.158],[1000,2.1075],[1250,2.0789],[1500,2.0668],[1750,2.0606],[2000,2.0534]]}}},"checks":{"q4":{"diffs":[0.39107,0.38903,0.42365],"passed":false},"q4_m8":{"diffs":[0.39846,0.39424,0.41282],"passed":false},"float":{"diffs":[0.06188,0.07065,0.0736],"passed":false}},"extra":{"q4_vs_m3":{"diffs":[0.2809,0.28059,0.31482],"passed":false},"q4_vs_m4post":{"diffs":[0.36806,0.35799,0.36626],"passed":false},"q4_m8_vs_q4":{"diffs":[0.00739,0.00521,-0.01083],"passed":false}}},"blr":{"m1":{"1":{"1":{"1":{"final":1.6343,"curve":[[0,4.2053],[192000,2.241],[384000,2.0125],[576000,1.9069],[768000,1.8246],[960000,1.7611],[1152000,1.6867],[1344000,1.6611],[1536000,1.6343]]},"2":{"final":1.6291,"curve":[[0,4.1888],[192000,2.2694],[384000,2.0174],[576000,1.9177],[768000,1.8247],[960000,1.7672],[1152000,1.6975],[1344000,1.6418],[1536000,1.6291]]},"3":{"final":1.6311,"curve":[[0,4.2248],[192000,2.2541],[384000,2.0029],[576000,1.9018],[768000,1.822],[960000,1.748],[1152000,1.7056],[1344000,1.6611],[1536000,1.6311]]}},"2":{"1":{"final":1.6201,"curve":[[0,4.2053],[192000,2.188],[384000,1.9825],[576000,1.88],[768000,1.8172],[960000,1.7523],[1152000,1.6792],[1344000,1.6479],[1536000,1.6201]]},"2":{"final":1.6304,"curve":[[0,4.1888],[192000,2.2166],[384000,1.9802],[576000,1.8904],[768000,1.8139],[960000,1.7538],[1152000,1.6945],[1344000,1.6426],[1536000,1.6304]]},"3":{"final":1.6412,"curve":[[0,4.2248],[192000,2.196],[384000,1.9704],[576000,1.8998],[768000,1.8246],[960000,1.7638],[1152000,1.7148],[1344000,1.6701],[1536000,1.6412]]}},"4":{"1":{"final":1.781,"curve":[[0,4.2053],[192000,2.2012],[384000,2.1365],[576000,2.0981],[768000,2.0104],[960000,1.9288],[1152000,1.857],[1344000,1.8131],[1536000,1.781]]},"2":{"final":1.7786,"curve":[[0,4.1888],[192000,2.2529],[384000,2.1301],[576000,2.0861],[768000,1.9954],[960000,1.9287],[1152000,1.8578],[1344000,1.8014],[1536000,1.7786]]},"3":{"final":1.7682,"curve":[[0,4.2248],[192000,2.1909],[384000,2.1033],[576000,2.0112],[768000,1.9531],[960000,1.8853],[1152000,1.8457],[1344000,1.8014],[1536000,1.7682]]}}},"2":{"1":{"1":{"final":1.6527,"curve":[[0,4.2053],[192000,2.3722],[384000,2.0897],[576000,1.9298],[768000,1.8458],[960000,1.7815],[1152000,1.704],[1344000,1.6744],[1536000,1.6527]]},"2":{"final":1.6455,"curve":[[0,4.1888],[192000,2.3694],[384000,2.0767],[576000,1.935],[768000,1.8465],[960000,1.7654],[1152000,1.7129],[1344000,1.667],[1536000,1.6455]]},"3":{"final":1.6492,"curve":[[0,4.2248],[192000,2.365],[384000,2.0619],[576000,1.9205],[768000,1.8406],[960000,1.7594],[1152000,1.7271],[1344000,1.6734],[1536000,1.6492]]}},"2":{"1":{"final":1.6305,"curve":[[0,4.2053],[192000,2.2556],[384000,2.0338],[576000,1.8933],[768000,1.8327],[960000,1.751],[1152000,1.686],[1344000,1.66],[1536000,1.6305]]},"2":{"final":1.6302,"curve":[[0,4.1888],[192000,2.2731],[384000,2.0202],[576000,1.9021],[768000,1.8286],[960000,1.7578],[1152000,1.7004],[1344000,1.6483],[1536000,1.6302]]},"3":{"final":1.6442,"curve":[[0,4.2248],[192000,2.2631],[384000,1.9943],[576000,1.8935],[768000,1.8193],[960000,1.761],[1152000,1.7244],[1344000,1.6729],[1536000,1.6442]]}},"4":{"1":{"final":1.6707,"curve":[[0,4.2053],[192000,2.1934],[384000,2.0142],[576000,1.9196],[768000,1.8655],[960000,1.7954],[1152000,1.7335],[1344000,1.6965],[1536000,1.6707]]},"2":{"final":1.6787,"curve":[[0,4.1888],[192000,2.2108],[384000,2.0158],[576000,1.93],[768000,1.8544],[960000,1.8033],[1152000,1.7419],[1344000,1.6954],[1536000,1.6787]]},"3":{"final":1.6799,"curve":[[0,4.2248],[192000,2.2289],[384000,2.0326],[576000,1.9646],[768000,1.8795],[960000,1.8115],[1152000,1.7777],[1344000,1.7134],[1536000,1.6799]]}},"8":{"1":{"final":1.9941,"curve":[[0,4.2053],[192000,2.2378],[384000,2.2096],[576000,2.1889],[768000,2.1223],[960000,2.0769],[1152000,2.0275],[1344000,2.0158],[1536000,1.9941]]},"2":{"final":1.9648,"curve":[[0,4.1888],[192000,2.2559],[384000,2.1998],[576000,2.187],[768000,2.1425],[960000,2.0766],[1152000,2.0357],[1344000,1.9875],[1536000,1.9648]]},"3":{"final":1.9958,"curve":[[0,4.2248],[192000,2.2673],[384000,2.222],[576000,2.219],[768000,2.15],[960000,2.1265],[1152000,2.0635],[1344000,2.025],[1536000,1.9958]]}}},"4":{"1":{"1":{"final":1.7364,"curve":[[0,4.2053],[190464,2.4717],[380928,2.2485],[571392,2.0659],[761856,1.9599],[952320,1.8722],[1142784,1.7976],[1333248,1.767],[1523712,1.7381],[1536000,1.7364]]},"2":{"final":1.7247,"curve":[[0,4.1888],[190464,2.4733],[380928,2.247],[571392,2.0641],[761856,1.9447],[952320,1.8449],[1142784,1.7949],[1333248,1.7429],[1523712,1.725],[1536000,1.7247]]},"3":{"final":1.7363,"curve":[[0,4.2248],[190464,2.4733],[380928,2.2418],[571392,2.0571],[761856,1.9387],[952320,1.8566],[1142784,1.8128],[1333248,1.7713],[1523712,1.7373],[1536000,1.7363]]}},"2":{"1":{"final":1.6682,"curve":[[0,4.2053],[190464,2.4036],[380928,2.1187],[571392,1.9512],[761856,1.8737],[952320,1.8107],[1142784,1.7355],[1333248,1.6931],[1523712,1.6708],[1536000,1.6682]]},"2":{"final":1.6708,"curve":[[0,4.1888],[190464,2.3953],[380928,2.1047],[571392,1.9625],[761856,1.8792],[952320,1.7948],[1142784,1.7439],[1333248,1.6976],[1523712,1.6714],[1536000,1.6708]]},"3":{"final":1.6688,"curve":[[0,4.2248],[190464,2.3892],[380928,2.097],[571392,1.9509],[761856,1.865],[952320,1.808],[1142784,1.749],[1333248,1.7039],[1523712,1.6709],[1536000,1.6688]]}},"4":{"1":{"final":1.6632,"curve":[[0,4.2053],[190464,2.3359],[380928,2.0653],[571392,1.9305],[761856,1.8672],[952320,1.7923],[1142784,1.7223],[1333248,1.6935],[1523712,1.6669],[1536000,1.6632]]},"2":{"final":1.6579,"curve":[[0,4.1888],[190464,2.3632],[380928,2.041],[571392,1.9323],[761856,1.8605],[952320,1.7777],[1142784,1.727],[1333248,1.6813],[1523712,1.6579],[1536000,1.6579]]},"3":{"final":1.685,"curve":[[0,4.2248],[190464,2.3413],[380928,2.0478],[571392,1.9705],[761856,1.8688],[952320,1.8144],[1142784,1.7623],[1333248,1.7209],[1523712,1.688],[1536000,1.685]]}},"8":{"1":{"final":1.7858,"curve":[[0,4.2053],[190464,2.3134],[380928,2.1158],[571392,2.0482],[761856,2.0032],[952320,1.9381],[1142784,1.8591],[1333248,1.8272],[1523712,1.79],[1536000,1.7858]]},"2":{"final":1.7958,"curve":[[0,4.1888],[190464,2.3132],[380928,2.1234],[571392,2.0427],[761856,2.0181],[952320,1.9321],[1142784,1.8828],[1333248,1.8246],[1523712,1.7979],[1536000,1.7958]]},"3":{"final":1.7921,"curve":[[0,4.2248],[190464,2.3196],[380928,2.1111],[571392,2.0549],[761856,1.9731],[952320,1.9346],[1142784,1.8763],[1333248,1.8371],[1523712,1.7946],[1536000,1.7921]]}}},"8":{"1":{"1":{"final":1.9421,"curve":[[0,4.2053],[190464,2.6443],[380928,2.4032],[571392,2.2745],[761856,2.1704],[952320,2.0773],[1142784,2.0094],[1333248,1.9761],[1523712,1.944],[1536000,1.9421]]},"2":{"final":1.931,"curve":[[0,4.1888],[190464,2.6676],[380928,2.4032],[571392,2.2753],[761856,2.1627],[952320,2.0696],[1142784,2.0047],[1333248,1.9585],[1523712,1.9327],[1536000,1.931]]},"3":{"final":1.9411,"curve":[[0,4.2248],[190464,2.653],[380928,2.396],[571392,2.2899],[761856,2.1704],[952320,2.0822],[1142784,2.0111],[1333248,1.9716],[1523712,1.9418],[1536000,1.9411]]}},"2":{"1":{"final":1.7547,"curve":[[0,4.2053],[190464,2.5096],[380928,2.3021],[571392,2.1079],[761856,1.9915],[952320,1.8958],[1142784,1.8211],[1333248,1.789],[1523712,1.7562],[1536000,1.7547]]},"2":{"final":1.7587,"curve":[[0,4.1888],[190464,2.5158],[380928,2.3008],[571392,2.1239],[761856,1.9955],[952320,1.8994],[1142784,1.8329],[1333248,1.7818],[1523712,1.7598],[1536000,1.7587]]},"3":{"final":1.7689,"curve":[[0,4.2248],[190464,2.5084],[380928,2.301],[571392,2.1105],[761856,1.9804],[952320,1.9069],[1142784,1.8381],[1333248,1.8057],[1523712,1.7703],[1536000,1.7689]]}},"4":{"1":{"final":1.7182,"curve":[[0,4.2053],[190464,2.4682],[380928,2.2103],[571392,2.0254],[761856,1.9206],[952320,1.8467],[1142784,1.7761],[1333248,1.741],[1523712,1.7204],[1536000,1.7182]]},"2":{"final":1.7219,"curve":[[0,4.1888],[190464,2.4758],[380928,2.1976],[571392,2.0364],[761856,1.9387],[952320,1.8478],[1142784,1.7901],[1333248,1.7432],[1523712,1.7216],[1536000,1.7219]]},"3":{"final":1.7154,"curve":[[0,4.2248],[190464,2.513],[380928,2.2056],[571392,2.0209],[761856,1.9034],[952320,1.8407],[1142784,1.7937],[1333248,1.7522],[1523712,1.7168],[1536000,1.7154]]}},"8":{"1":{"final":1.7572,"curve":[[0,4.2053],[190464,2.4968],[380928,2.2072],[571392,2.0496],[761856,1.9626],[952320,1.903],[1142784,1.8371],[1333248,1.7919],[1523712,1.7582],[1536000,1.7572]]},"2":{"final":1.7699,"curve":[[0,4.1888],[190464,2.5053],[380928,2.222],[571392,2.0797],[761856,1.9903],[952320,1.9102],[1142784,1.848],[1333248,1.7972],[1523712,1.7704],[1536000,1.7699]]},"3":{"final":1.7839,"curve":[[0,4.2248],[190464,2.4973],[380928,2.1995],[571392,2.0874],[761856,1.9874],[952320,1.9235],[1142784,1.8721],[1333248,1.8313],[1523712,1.7859],[1536000,1.7839]]}}}},"m3":{"1":{"1":{"1":{"final":1.7626,"curve":[[0,4.2067],[192000,2.2763],[384000,2.0675],[576000,1.9557],[768000,1.8955],[960000,1.852],[1152000,1.7929],[1344000,1.7797],[1536000,1.7626]]},"2":{"final":1.7528,"curve":[[0,4.1884],[192000,2.2923],[384000,2.0875],[576000,1.992],[768000,1.9057],[960000,1.8464],[1152000,1.8022],[1344000,1.7653],[1536000,1.7528]]},"3":{"final":1.7494,"curve":[[0,4.2242],[192000,2.295],[384000,2.0577],[576000,1.9564],[768000,1.9013],[960000,1.8515],[1152000,1.8051],[1344000,1.7768],[1536000,1.7494]]}},"2":{"1":{"final":1.7907,"curve":[[0,4.2067],[192000,2.2241],[384000,2.0851],[576000,2.0014],[768000,1.9403],[960000,1.8907],[1152000,1.8358],[1344000,1.8122],[1536000,1.7907]]},"2":{"final":1.772,"curve":[[0,4.1884],[192000,2.2479],[384000,2.0499],[576000,1.9775],[768000,1.9156],[960000,1.8737],[1152000,1.8221],[1344000,1.781],[1536000,1.772]]},"3":{"final":1.7921,"curve":[[0,4.2242],[192000,2.2054],[384000,2.0287],[576000,1.9477],[768000,1.9052],[960000,1.8681],[1152000,1.8361],[1344000,1.8105],[1536000,1.7921]]}},"4":{"1":{"final":2.0181,"curve":[[0,4.2067],[192000,2.2856],[384000,2.2026],[576000,2.1833],[768000,2.1675],[960000,2.1114],[1152000,2.0781],[1344000,2.0444],[1536000,2.0181]]},"2":{"final":2.0409,"curve":[[0,4.1884],[192000,2.2768],[384000,2.2232],[576000,2.2125],[768000,2.1744],[960000,2.1251],[1152000,2.0735],[1344000,2.0461],[1536000,2.0409]]},"3":{"final":1.9143,"curve":[[0,4.2242],[192000,2.2199],[384000,2.1249],[576000,2.077],[768000,2.0431],[960000,2.0117],[1152000,1.984],[1344000,1.9403],[1536000,1.9143]]}}},"2":{"1":{"1":{"final":1.7707,"curve":[[0,4.2067],[192000,2.3868],[384000,2.1342],[576000,2.0119],[768000,1.9349],[960000,1.8751],[1152000,1.8084],[1344000,1.7931],[1536000,1.7707]]},"2":{"final":1.7564,"curve":[[0,4.1884],[192000,2.3818],[384000,2.1211],[576000,2.0202],[768000,1.9285],[960000,1.8632],[1152000,1.8032],[1344000,1.7665],[1536000,1.7564]]},"3":{"final":1.7548,"curve":[[0,4.2242],[192000,2.3733],[384000,2.111],[576000,1.9897],[768000,1.9299],[960000,1.8677],[1152000,1.8269],[1344000,1.7889],[1536000,1.7548]]}},"2":{"1":{"final":1.7374,"curve":[[0,4.2067],[192000,2.2892],[384000,2.0744],[576000,1.9513],[768000,1.9022],[960000,1.8365],[1152000,1.7807],[1344000,1.7593],[1536000,1.7374]]},"2":{"final":1.7427,"curve":[[0,4.1884],[192000,2.3049],[384000,2.078],[576000,1.9722],[768000,1.8936],[960000,1.8363],[1152000,1.7987],[1344000,1.7472],[1536000,1.7427]]},"3":{"final":1.755,"curve":[[0,4.2242],[192000,2.3073],[384000,2.0666],[576000,1.9795],[768000,1.9085],[960000,1.8477],[1152000,1.8232],[1344000,1.7891],[1536000,1.755]]}},"4":{"1":{"final":1.8013,"curve":[[0,4.2067],[192000,2.2181],[384000,2.105],[576000,2.002],[768000,1.9366],[960000,1.8969],[1152000,1.8424],[1344000,1.8268],[1536000,1.8013]]},"2":{"final":1.8099,"curve":[[0,4.1884],[192000,2.2673],[384000,2.1134],[576000,2.054],[768000,1.9847],[960000,1.9219],[1152000,1.8712],[1344000,1.8187],[1536000,1.8099]]},"3":{"final":1.797,"curve":[[0,4.2242],[192000,2.2232],[384000,2.0499],[576000,1.995],[768000,1.9354],[960000,1.8836],[1152000,1.8515],[1344000,1.821],[1536000,1.797]]}},"8":{"1":{"final":2.1446,"curve":[[0,4.2067],[192000,2.2998],[384000,2.2742],[576000,2.2855],[768000,2.2767],[960000,2.2527],[1152000,2.2119],[1344000,2.1711],[1536000,2.1446]]},"2":{"final":2.1515,"curve":[[0,4.1884],[192000,2.3331],[384000,2.2757],[576000,2.3392],[768000,2.3216],[960000,2.2498],[1152000,2.2158],[1344000,2.1695],[1536000,2.1515]]},"3":{"final":2.1094,"curve":[[0,4.2242],[192000,2.3199],[384000,2.3218],[576000,2.2867],[768000,2.2764],[960000,2.2186],[1152000,2.165],[1344000,2.1269],[1536000,2.1094]]}}},"4":{"1":{"1":{"final":1.8031,"curve":[[0,4.2067],[190464,2.4826],[380928,2.2735],[571392,2.1048],[761856,2.0113],[952320,1.9274],[1142784,1.855],[1333248,1.8355],[1523712,1.8046],[1536000,1.8031]]},"2":{"final":1.8112,"curve":[[0,4.1884],[190464,2.4766],[380928,2.2709],[571392,2.1194],[761856,2.0088],[952320,1.9224],[1142784,1.8675],[1333248,1.8331],[1523712,1.8131],[1536000,1.8112]]},"3":{"final":1.8234,"curve":[[0,4.2242],[190464,2.4746],[380928,2.2786],[571392,2.1182],[761856,2.0052],[952320,1.9368],[1142784,1.8852],[1333248,1.8599],[1523712,1.8261],[1536000,1.8234]]}},"2":{"1":{"final":1.752,"curve":[[0,4.2067],[190464,2.4096],[380928,2.159],[571392,2.0178],[761856,1.9378],[952320,1.8703],[1142784,1.8094],[1333248,1.7775],[1523712,1.7527],[1536000,1.752]]},"2":{"final":1.7568,"curve":[[0,4.1884],[190464,2.4251],[380928,2.1607],[571392,2.0324],[761856,1.9491],[952320,1.8612],[1142784,1.8214],[1333248,1.7724],[1523712,1.7563],[1536000,1.7568]]},"3":{"final":1.7675,"curve":[[0,4.2242],[190464,2.4099],[380928,2.1459],[571392,2.0351],[761856,1.9435],[952320,1.8957],[1142784,1.8477],[1333248,1.8101],[1523712,1.7704],[1536000,1.7675]]}},"4":{"1":{"final":1.7749,"curve":[[0,4.2067],[190464,2.356],[380928,2.1124],[571392,2.0089],[761856,1.9506],[952320,1.9024],[1142784,1.8269],[1333248,1.815],[1523712,1.7799],[1536000,1.7749]]},"2":{"final":1.7617,"curve":[[0,4.1884],[190464,2.3944],[380928,2.1054],[571392,2.0034],[761856,1.9526],[952320,1.8678],[1142784,1.8217],[1333248,1.7895],[1523712,1.7638],[1536000,1.7617]]},"3":{"final":1.7761,"curve":[[0,4.2242],[190464,2.3838],[380928,2.0908],[571392,2.0198],[761856,1.9351],[952320,1.8958],[1142784,1.84],[1333248,1.8163],[1523712,1.7779],[1536000,1.7761]]}},"8":{"1":{"final":1.9105,"curve":[[0,4.2067],[190464,2.3896],[380928,2.1799],[571392,2.1279],[761856,2.1065],[952320,2.0424],[1142784,1.9784],[1333248,1.9454],[1523712,1.9119],[1536000,1.9105]]},"2":{"final":1.9218,"curve":[[0,4.1884],[190464,2.4277],[380928,2.1858],[571392,2.1366],[761856,2.1031],[952320,2.0402],[1142784,1.9918],[1333248,1.9471],[1523712,1.9235],[1536000,1.9218]]},"3":{"final":1.9126,"curve":[[0,4.2242],[190464,2.3344],[380928,2.1625],[571392,2.1073],[761856,2.0848],[952320,2.0174],[1142784,1.982],[1333248,1.9384],[1523712,1.916],[1536000,1.9126]]}}},"8":{"1":{"1":{"final":1.9862,"curve":[[0,4.2067],[190464,2.6484],[380928,2.417],[571392,2.2944],[761856,2.2001],[952320,2.1084],[1142784,2.0522],[1333248,2.0154],[1523712,1.9884],[1536000,1.9862]]},"2":{"final":1.9936,"curve":[[0,4.1884],[190464,2.6809],[380928,2.4132],[571392,2.2964],[761856,2.195],[952320,2.1141],[1142784,2.0611],[1333248,2.0171],[1523712,1.9953],[1536000,1.9936]]},"3":{"final":1.9946,"curve":[[0,4.2242],[190464,2.6679],[380928,2.4038],[571392,2.3062],[761856,2.1965],[952320,2.1154],[1142784,2.0595],[1333248,2.0203],[1523712,1.995],[1536000,1.9946]]}},"2":{"1":{"final":1.8419,"curve":[[0,4.2067],[190464,2.5225],[380928,2.324],[571392,2.155],[761856,2.0645],[952320,1.9802],[1142784,1.9071],[1333248,1.875],[1523712,1.8429],[1536000,1.8419]]},"2":{"final":1.8398,"curve":[[0,4.1884],[190464,2.5315],[380928,2.3255],[571392,2.1574],[761856,2.0432],[952320,1.9644],[1142784,1.9093],[1333248,1.8597],[1523712,1.8385],[1536000,1.8398]]},"3":{"final":1.8469,"curve":[[0,4.2242],[190464,2.5358],[380928,2.3274],[571392,2.1668],[761856,2.0378],[952320,1.9719],[1142784,1.9215],[1333248,1.8871],[1523712,1.8492],[1536000,1.8469]]}},"4":{"1":{"final":1.7917,"curve":[[0,4.2067],[190464,2.4895],[380928,2.2431],[571392,2.0892],[761856,1.9892],[952320,1.9097],[1142784,1.8494],[1333248,1.8251],[1523712,1.7923],[1536000,1.7917]]},"2":{"final":1.7872,"curve":[[0,4.1884],[190464,2.4955],[380928,2.2576],[571392,2.0991],[761856,2.0155],[952320,1.921],[1142784,1.8613],[1333248,1.8098],[1523712,1.7878],[1536000,1.7872]]},"3":{"final":1.7962,"curve":[[0,4.2242],[190464,2.4768],[380928,2.2653],[571392,2.0988],[761856,1.9802],[952320,1.9113],[1142784,1.8727],[1333248,1.8348],[1523712,1.7996],[1536000,1.7962]]}},"8":{"1":{"final":1.8723,"curve":[[0,4.2067],[190464,2.5001],[380928,2.2893],[571392,2.1428],[761856,2.0719],[952320,2.0058],[1142784,1.9437],[1333248,1.9056],[1523712,1.875],[1536000,1.8723]]},"2":{"final":1.8613,"curve":[[0,4.1884],[190464,2.5242],[380928,2.2836],[571392,2.142],[761856,2.063],[952320,1.9933],[1142784,1.9405],[1333248,1.896],[1523712,1.8627],[1536000,1.8613]]},"3":{"final":1.8928,"curve":[[0,4.2242],[190464,2.5326],[380928,2.2795],[571392,2.1435],[761856,2.0655],[952320,2.0234],[1142784,1.9618],[1333248,1.9318],[1523712,1.8917],[1536000,1.8928]]}}}}},"round":{"random":{"nearest / tensor":{"cos":0.98401,"rel_err":0.17844},"nearest / row":{"cos":0.98819,"rel_err":0.153},"nearest / row_opt":{"cos":0.98941,"rel_err":0.14469},"nearest / block_64":{"cos":0.98983,"rel_err":0.14189},"nearest / block_16":{"cos":0.99192,"rel_err":0.12663},"random / block_16":{"cos":0.92093,"rel_err":0.37058},"row / block_16":{"cos":0.98775,"rel_err":0.15658},"row+col / block_16":{"cos":0.98744,"rel_err":0.15835},"gptq / block_16":{"cos":0.99444,"rel_err":0.1051}},"trained":{"full":{"val_ce":1.6216,"cos":1.0},"nearest / tensor":{"val_ce":1.6499,"cos":0.99363},"nearest / row":{"val_ce":1.6421,"cos":0.9956},"nearest / row_opt":{"val_ce":1.6431,"cos":0.99614},"nearest / block_64":{"val_ce":1.64,"cos":0.99606},"nearest / block_16":{"val_ce":1.6358,"cos":0.99685},"random / block_16":{"val_ce":1.6535,"cos":0.99398},"row / block_16":{"val_ce":1.6429,"cos":0.99475},"row+col / block_16":{"val_ce":1.6477,"cos":0.99454},"gptq / block_16":{"val_ce":1.6269,"cos":0.9987}}},"sim":{"steady":{"float":[0.0025,0.007375,0.014506,0.023781,0.035092,0.048337,0.06342,0.080249,0.098737,0.1188,0.14036,0.16334,0.18767,0.21329,0.24013,0.26812,0.29721,0.32735,0.35849,0.39056,0.42353,0.45736,0.49199,0.52739,0.56352,0.60034,0.63783,0.67594,0.71464,0.75391,0.79371,0.83403,0.87482,0.91608,0.95778,0.99989,1.0424,1.0853,1.1285,1.1721,1.216,1.2602,1.3047,1.3494,1.3945,1.4397,1.4853,1.531,1.5769,1.6231,1.6694,1.716,1.7627,1.8095,1.8566,1.9037,1.951,1.9985,2.0461,2.0938,2.1416,2.1895,2.2375,2.2856,2.3339,2.3822,2.4306,2.479,2.5276,2.5762,2.6249,2.6736,2.7225,2.7713,2.8203,2.8693,2.9183,2.9674,3.0165,3.0657,3.1149,3.1642,3.2135,3.2628,3.3121,3.3615,3.411,3.4604,3.5099,3.5594,3.6089,3.6585,3.7081,3.7577,3.8073,3.8569,3.9066,3.9562,4.0059,4.0556,4.1053,4.1551,4.2048,4.2546,4.3044,4.3541,4.4039,4.4537,4.5035,4.5534,4.6032,4.653,4.7029,4.7527,4.8026,4.8525,4.9024,4.9522,5.0021,5.052,5.1019,5.1518,5.2017,5.2516,5.3016,5.3515,5.4014,5.4513,5.5013,5.5512,5.6011,5.6511,5.701,5.751,5.8009,5.8509,5.9008,5.9508,6.0008,6.0507,6.1007,6.1507,6.2006,6.2506,6.3006,6.3505,6.4005,6.4505,6.5005,6.5504,6.6004,6.6504,6.7004,6.7504,6.8003,6.8503,6.9003,6.9503,7.0003,7.0503,7.1002,7.1502,7.2002,7.2502,7.3002,7.3502,7.4002,7.4502,7.5002,7.5502,7.6001,7.6501,7.7001,7.7501,7.8001,7.8501,7.9001,7.9501,8.0001,8.0501,8.1001,8.1501,8.2001,8.2501,8.3001,8.3501,8.4001,8.4501,8.5001,8.5501,8.6001,8.6501,8.7,8.75,8.8,8.85,8.9,8.95,9.0,9.05,9.1,9.15,9.2,9.25,9.3,9.35,9.4,9.45,9.5,9.55,9.6,9.65,9.7,9.75,9.8,9.85,9.9,9.95,10.0,10.05,10.1,10.15,10.2,10.25,10.3,10.35,10.4,10.45,10.5,10.55,10.6,10.65,10.7,10.75,10.8,10.85,10.9,10.95,11.0,11.05,11.1,11.15,11.2,11.25,11.3,11.35,11.4,11.45,11.5,11.55,11.6,11.65,11.7,11.75,11.8,11.85,11.9,11.95,12.0,12.05,12.1,12.15,12.2,12.25,12.3,12.35,12.4,12.45,12.5,12.55,12.6,12.65,12.7,12.75,12.8,12.85,12.9,12.95,13.0,13.05,13.1,13.15,13.2,13.25,13.3,13.35,13.4,13.45,13.5,13.55,13.6,13.65,13.7,13.75,13.8,13.85,13.9,13.95,14.0,14.05,14.1,14.15,14.2,14.25,14.3,14.35,14.4,14.45,14.5,14.55,14.6,14.65,14.7,14.75,14.8,14.85,14.9,14.95,15.0,15.05,15.1,15.15,15.2,15.25,15.3,15.35,15.4,15.45,15.5,15.55,15.6,15.65,15.7,15.75,15.8,15.85,15.9,15.95,16.0,16.05,16.1,16.15,16.2,16.25,16.3,16.35,16.4,16.45,16.5,16.55,16.6,16.65,16.7,16.75,16.8,16.85,16.9,16.95,17.0,17.05,17.1,17.15,17.2,17.25,17.3,17.35,17.4,17.45,17.5,17.55,17.6,17.65,17.7,17.75,17.8,17.85,17.9,17.95,18.0,18.05,18.1,18.15,18.2,18.25,18.3,18.35,18.4,18.45,18.5,18.55,18.6,18.65,18.7,18.75,18.8,18.85,18.9,18.95,19.0,19.05],"m6":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0],"buffer":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0]},"noisy":{"float":[0.011917,0.011773,0.0073383,0.0093306,0.0035599,-0.00014356,0.00063016,-0.0044458,-0.019858,-0.030061,-0.027322,-0.028689,-0.030824,-0.013896,-0.00090375,0.0087977,0.044555,0.065714,0.09628,0.10778,0.11524,0.13986,0.17796,0.20765,0.23381,0.26197,0.27864,0.3025,0.34995,0.38396,0.39897,0.4186,0.43856,0.47807,0.51649,0.55499,0.59216,0.62006,0.6558,0.67901,0.71522,0.75221,0.79488,0.83239,0.86133,0.90932,0.96209,1.0268,1.0926,1.1838,1.2765,1.3567,1.4432,1.532,1.5957,1.6576,1.7287,1.8067,1.8799,1.9398,2.0042,2.0564,2.1217,2.1832,2.2349,2.2808,2.3188,2.3518,2.3783,2.4021,2.4297,2.4643,2.4887,2.5048,2.5182,2.5342,2.5528,2.5526,2.5719,2.5839,2.6159,2.6353,2.6466,2.6573,2.6677,2.6724,2.6867,2.6848,2.6961,2.701,2.7208,2.738,2.7428,2.7544,2.7902,2.8262,2.864,2.8984,2.9248,2.9449,2.9533,2.9497,2.9495,2.968,2.9932,3.0245,3.0592,3.086,3.1158,3.1424,3.1796,3.2297,3.2923,3.358,3.4333,3.5007,3.5663,3.629,3.682,3.7247,3.7588,3.7892,3.8013,3.8358,3.873,3.9114,3.9566,4.0004,4.0495,4.1034,4.1645,4.2028,4.252,4.3028,4.3598,4.421,4.4843,4.5611,4.6329,4.7087,4.7804,4.8509,4.9444,5.0534,5.1623,5.2773,5.3869,5.4745,5.5655,5.6515,5.7235,5.7713,5.8333,5.9001,5.9712,6.0337,6.0955,6.1701,6.2378,6.3067,6.3646,6.424,6.472,6.5152,6.5551,6.6043,6.6574,6.704,6.7492,6.7941,6.8388,6.8747,6.919,6.966,7.0147,7.0881,7.1554,7.2284,7.285,7.3599,7.4243,7.4777,7.5287,7.57,7.5993,7.637,7.6819,7.7271,7.7688,7.8173,7.8595,7.8947,7.9399,7.9761,8.0043,8.0388,8.071,8.0941,8.117,8.1386,8.1543,8.1743,8.2025,8.2421,8.2694,8.2988,8.33,8.3414,8.3461,8.3533,8.3449,8.3431,8.3569,8.3596,8.3793,8.4362,8.4899,8.5404,8.5864,8.6035,8.6099,8.6272,8.6434,8.6676,8.693,8.7189,8.7514,8.7738,8.8017,8.8336,8.8543,8.8602,8.863,8.8954,8.9446,9.0053,9.0623,9.1213,9.1783,9.2457,9.3175,9.369,9.4285,9.4966,9.5584,9.6121,9.6713,9.7241,9.7797,9.8353,9.8853,9.9236,9.9849,10.038,10.093,10.146,10.2,10.237,10.266,10.283,10.314,10.337,10.353,10.38,10.411,10.456,10.507,10.558,10.601,10.659,10.715,10.761,10.806,10.849,10.907,10.989,11.066,11.152,11.229,11.301,11.365,11.43,11.499,11.57,11.636,11.7,11.756,11.818,11.874,11.933,12.001,12.061,12.136,12.187,12.231,12.285,12.336,12.376,12.412,12.464,12.534,12.588,12.636,12.677,12.732,12.785,12.842,12.9,12.957,13.011,13.074,13.138,13.189,13.24,13.277,13.316,13.35,13.377,13.384,13.415,13.446,13.495,13.536,13.581,13.644,13.715,13.778,13.82,13.849,13.882,13.924,13.973,14.023,14.076,14.135,14.192,14.252,14.317,14.373,14.436,14.517,14.62,14.726,14.829,14.917,15.011,15.111,15.201,15.296,15.385,15.46,15.534,15.603,15.666,15.722,15.774,15.812,15.872,15.947,16.009,16.076,16.144,16.21,16.292,16.381,16.456,16.527,16.578,16.634,16.69,16.749,16.805,16.861,16.92,16.997,17.075,17.148,17.226,17.311,17.406,17.51,17.609,17.716,17.812,17.893,17.966,18.043,18.103,18.179,18.253,18.331,18.404,18.463,18.518,18.578,18.628,18.68,18.722,18.748,18.765],"m6":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,7.0,7.0,7.0,7.0,7.0,7.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0],"buffer":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,5.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,6.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,7.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,8.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,10.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,11.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,13.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,14.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,17.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,18.0,19.0,19.0,19.0,19.0,19.0,19.0,19.0]}}};
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1 }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const ARM = {
+  m1: { name: "m1 Muon, float", color: "--c-m1" },
+  m2: { name: "m2 4-bit + float copy", color: "--c-m2" },
+  m3: { name: "m3 4-bit, random rounding", color: "--c-m3" },
+  m4post: { name: "m4c leftover buffer after NS", color: "--c-c" },
+  float: { name: "m6 reordered, float", color: "--c-m0" },
+  q4: { name: "m6 reordered, 4-bit", color: "--c-a" },
+  q4_m8: { name: "m6 4-bit + 8-bit momentum", color: "--c-m5" },
+};
+const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const sgn = (v, d = 3) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const R = DATA.m6.runs;
+const seedsOf = k => Object.keys(R[k] || {}).sort();
+const mean = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
+const se = xs => Math.sqrt(xs.reduce((t, x) => t + (x - mean(xs)) ** 2, 0) / (xs.length - 1) / xs.length);
+const finals = k => seedsOf(k).map(s => R[k][s].final);
+function meanCurve(k) {
+  const ss = seedsOf(k).map(s => R[k][s].curve), n = Math.min(...ss.map(c => c.length));
+  return ss[0].slice(0, n).map((p, i) => [p[0], mean(ss.map(c => c[i][1]))]);
+}
+function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
+  const tip = host._tip || (host._tip = tipBox(host));
+  const hit = el("svg:" + (hitAttrs.width ? "rect" : "circle"), Object.assign({ fill: "transparent", tabindex: "0" }, hitAttrs), svg);
+  const on = () => { tipRows(tip, title, rowsFn()); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+  hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+  hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+}
+
+/* ---------- m6: learning-rate pick ---------- */
+lineChart(document.getElementById("ch-tune"), {
+  title: "Reordered Muon (float weights), seed 1, by learning rate", sub: "validation loss; normal Muon at its usual rate for reference",
+  series: () => [
+    ...Object.entries(DATA.m6.tune).filter(([, r]) => r).map(([lr, r], i, a) => ({ label: "rate " + lr, color: ["--r1", "--r1", "--r2", "--r3", "--r3"][i], width: [1.5, 2, 2, 2, 1.5][i], opacity: [0.6, 1, 1, 1, 0.6][i], points: r.curve.filter(p => p[0] > 0) })),
+    { label: "m1 Muon, rate 0.01", color: "--c-m1", strong: true, points: (R.m1 && R.m1[1] ? R.m1[1].curve : []).filter(p => p[0] > 0) },
+  ],
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { domain: [1.55, 2.4], tip: v => v.toFixed(4), tipAscending: true },
+});
+
+/* ---------- m6: training curves ---------- */
+(function () {
+  const host = document.getElementById("ch-m6curves");
+  let show = "quant";
+  const sets = { quant: ["m2", "m3", "m4post", "q4", "q4_m8"], float: ["m1", "float", "m2", "q4"] };
+  lineChart(host, {
+    title: "Validation loss during training", sub: "mean of seeds 1–3, all on one T4",
+    controls: h => {
+      const c = el("div", { class: "controls" }, h), g = el("div", { class: "grp", role: "group", "aria-label": "which arms" }, c);
+      for (const [k, lab] of [["quant", "4-bit arms"], ["float", "float arms"]]) {
+        const b = el("button", { type: "button", "aria-pressed": String(show === k) }, g, lab);
+        b.addEventListener("click", () => { show = k; REG.find(r => r.host === host).draw(); });
+      }
+    },
+    series: () => sets[show].filter(k => R[k] && seedsOf(k).length).map(k => ({ label: ARM[k].name, color: ARM[k].color, strong: k === "q4", points: meanCurve(k).filter(p => p[0] > 0) })),
+    x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { domain: [1.58, 2.3], tip: v => v.toFixed(4), tipAscending: true },
+  });
+})();
+
+/* ---------- m6: seed-by-seed differences ---------- */
+(function () {
+  const host = document.getElementById("ch-m6diffs");
+  const d = (a, b) => [1, 2, 3].filter(s => R[a] && R[a][s] && R[b] && R[b][s]).map(s => R[a][s].final - R[b][s].final);
+  const rows = [
+    { label: "m6 4-bit − m2", k: "q4", v: d("q4", "m2"), line: 0.03, side: "pass ←" },
+    { label: "m6 4-bit + 8-bit mom. − m2", k: "q4_m8", v: d("q4_m8", "m2"), line: 0.03, side: "pass ←" },
+    { label: "m6 float − m1", k: "float", v: d("float", "m1"), line: 0.03, side: "pass ←" },
+    { label: "m6 4-bit − m3", k: "q4", v: d("q4", "m3"), line: null },
+    { label: "m6 4-bit − m4c", k: "q4", v: d("q4", "m4post"), line: null },
+    { label: "m3 − m2 (for scale)", k: "m3", v: d("m3", "m2"), line: null },
+  ].filter(r => r.v.length);
+  const draw = () => {
+    header(host, { title: "Seed-by-seed differences in final loss", sub: "each dot is one seed; left of the black tick passes" });
+    const vals = rows.flatMap(r => r.v), lo = Math.min(-0.05, ...vals) - 0.02, hi = Math.max(0.15, ...vals) + 0.02;
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 40, m = { l: narrow ? 10 : 210, r: 16, t: 8, b: 34 };
+    const H = m.t + rows.length * (rh + (narrow ? 16 : 0)) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "per-seed differences" }, host);
+    const X = scale(lo, hi, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of niceTicks(lo, hi, narrow ? 4 : 6)) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(Math.abs(v) < 1e-9 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, Math.abs(v) < 1e-9 ? "0" : sgn(v, 2)); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2;
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: "lab" }, g, r.label);
+      if (r.line != null) { el("svg:line", { x1: X(r.line), x2: X(r.line), y1: y - 13, y2: y + 13, stroke: tok("--ink"), "stroke-width": 1.5 }, g); el("svg:text", { x: X(r.line) - 4, y: y - 15, "text-anchor": "end" }, g, r.side); }
+      const col = tok(ARM[r.k].color);
+      el("svg:line", { x1: X(Math.min(...r.v)), x2: X(Math.max(...r.v)), y1: y, y2: y, stroke: col, "stroke-width": 2, opacity: 0.5 }, g);
+      r.v.forEach((v, s) => {
+        el("svg:circle", { cx: X(v), cy: y, r: 5, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+        hover(host, svg, W, H, { cx: X(v), cy: y, r: 12 }, () => [{ value: sgn(v, 4), label: "seed " + (s + 1), color: col }], r.label, X(v), y);
+      });
+    });
+    numbers(host, ["comparison", "seed 1", "seed 2", "seed 3", "pass line"], rows.map(r => [r.label, ...r.v.map(v => sgn(v, 4)), r.line == null ? "measure only" : "≤ " + sgn(r.line, 2)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- m6: loss against memory ---------- */
+(function () {
+  const host = document.getElementById("ch-m6mem");
+  const keys = Object.keys(ARM).filter(k => R[k] && seedsOf(k).length);
+  const draw = () => {
+    header(host, { title: "Final loss against training memory", sub: "bytes per weight of the four big matrices (weights + optimizer state); mean of 3 seeds, small dots are single seeds" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, H = narrow ? 300 : 340, m = { l: 50, r: 16, t: 14, b: 40 };
+    const ys = keys.flatMap(finals), y0 = Math.min(...ys) - 0.03, y1 = Math.max(...ys) + 0.03;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "loss against memory" }, host);
+    const X = scale(0, 9, m.l, W - m.r), Y = scale(y0, y1, H - m.b, m.t), g = el("svg:g", {}, svg);
+    if (R.m2) { const t = mean(finals("m2")) + 0.03; el("svg:rect", { x: X(0), y: Y(Math.min(t, y1)), width: X(2) - X(0), height: Math.max(0, Y(y0) - Y(Math.min(t, y1))), fill: tok("--wash") }, g); el("svg:text", { x: X(0.15), y: Y(y0) - 8, class: "lab" }, g, narrow ? "goal" : "goal: ≤ 2 bytes, ≤ m2 + 0.03"); }
+    for (const v of niceTicks(y0, y1, 5)) { el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid") }, g); el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, v.toFixed(2)); }
+    for (const v of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v);
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis") }, g);
+    el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, "bytes per weight");
+    const bytes = k => seedsOf(k).map(s => R[k][s].bytes)[0];
+    const placed = [];
+    for (const k of keys) {
+      const col = tok(ARM[k].color), f = finals(k), cx = X(bytes(k)), cy = Y(mean(f));
+      for (const v of f) el("svg:circle", { cx, cy: Y(v), r: 2.5, fill: col, opacity: 0.55 }, g);
+      el("svg:circle", { cx, cy, r: 6, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      let ly = cy + 4; while (placed.some(p => Math.abs(p.x - cx) < 60 && Math.abs(p.y - ly) < 13)) ly += 13; placed.push({ x: cx, y: ly });
+      const right = cx < W * 0.6;
+      if (!narrow) el("svg:text", { x: cx + (right ? 10 : -10), y: ly, "text-anchor": right ? "start" : "end", class: "lab-strong" }, g, ARM[k].name);
+      hover(host, svg, W, H, { cx, cy, r: 14 }, () => [{ value: fmt(mean(f), 4) + " ± " + fmt(se(f), 4), label: "loss, mean ± SE", color: col }, { value: String(bytes(k)), label: "bytes per weight" }], ARM[k].name, cx, cy);
+    }
+    if (narrow) legend(host, keys.map(k => ({ label: ARM[k].name, color: tok(ARM[k].color) })), true);
+    numbers(host, ["arm", "bytes per weight", "mean loss", "SE", "seed 1", "seed 2", "seed 3"], keys.map(k => [ARM[k].name, bytes(k), fmt(mean(finals(k)), 4), fmt(se(finals(k)), 4), ...finals(k).map(v => fmt(v, 4))]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- batch x learning rate ---------- */
+const B = DATA.blr;
+const KCOL = { 1: "--r1", 2: "--r2", 4: "--r3", 8: "--r4" };
+function cellStats(arm, k, m) {
+  const c = (B[arm][k] || {})[m]; if (!c) return null;
+  const ok = Object.values(c).map(r => r.final).filter(v => v != null);
+  return { n: Object.keys(c).length, ok: ok.length, mean: ok.length === 3 ? mean(ok) : null, se: ok.length === 3 ? se(ok) : null };
+}
+function mults(k) { return Object.keys(B.m3[k]).map(Number).sort((a, b) => a - b); }
+function rateChart(id, title, sub, valueFn, yfmt, hl) {
+  lineChart(document.getElementById(id), {
+    title, sub, noEndLabels: false,
+    series: () => ["1", "2", "4", "8"].map(k => ({ label: "batch " + k + "×", color: KCOL[k], points: mults(k).map(m => [m, valueFn(k, m)]).filter(p => p[1] != null) })),
+    x: { log: true, domain: [0.85, 9.5], ticks: [1, 2, 4, 8], fmt: v => v + "×", label: "learning-rate multiplier (log scale)", tipLabel: "rate", tipFmt: v => v + "×" },
+    y: { tip: v => yfmt(v), tipAscending: true, ...(hl || {}) },
+  });
+}
+rateChart("ch-blr-m3", "m3 (4-bit, no copy): final loss", "mean of 3 seeds; a missing point means a run blew up", (k, m) => { const c = cellStats("m3", k, m); return c && c.mean; }, v => v.toFixed(4));
+rateChart("ch-blr-m1", "m1 (Muon, float): final loss", "mean of 3 seeds", (k, m) => { const c = cellStats("m1", k, m); return c && c.mean; }, v => v.toFixed(4));
+rateChart("ch-blr-gap", "Damage from 4-bit rounding: m3 − m1", "seed-matched, mean of 3 seeds", (k, m) => {
+  const a = (B.m1[k] || {})[m], b = (B.m3[k] || {})[m]; if (!a || !b) return null;
+  const g = [1, 2, 3].filter(s => a[s] && b[s] && a[s].final != null && b[s].final != null).map(s => b[s].final - a[s].final);
+  return g.length === 3 ? mean(g) : null;
+}, v => sgn(v, 4));
+
+/* ---------- scales: how much one ruler per matrix costs (round test, trained m1 model) ---------- */
+(function () {
+  const host = document.getElementById("ch-scales"), T = DATA.round.trained, base = T.full.val_ce;
+  const rows = [
+    { k: "nearest / tensor", label: "one per matrix", bytes: "≈ 0" },
+    { k: "nearest / row", label: "one per row", bytes: "0.008–0.03" },
+    { k: "nearest / block_64", label: "one per 64 weights", bytes: "FP8 0.016 · fp32 0.06" },
+    { k: "nearest / block_16", label: "one per 16 (what we use)", bytes: "FP8 0.06 · fp32 0.25" },
+    { k: "gptq / block_16", label: "one per 16, GPTQ rounding", bytes: "FP8 0.06 · fp32 0.25" },
+  ];
+  const draw = () => {
+    header(host, { title: "Loss added by rounding a trained model to 4 bits once", sub: "milestone 1's model (seed 1), validation loss increase over full precision; nearest rounding unless named" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 30, m = { l: narrow ? 8 : 190, r: narrow ? 56 : 190, t: 6, b: 30 };
+    const H = m.t + rows.length * (rh + (narrow ? 16 : 0)) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "loss increase by scale granularity" }, host);
+    const X = scale(0, 0.03, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [0, 0.01, 0.02, 0.03]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v ? "--grid" : "--axis") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v ? "+" + v.toFixed(2) : "0"); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2, v = T[r.k].val_ce - base;
+      el("svg:text", { x: narrow ? m.l : m.l - 10, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: "lab" }, g, r.label);
+      const col = tok(r.k.startsWith("gptq") ? "--c-c" : "--c-m2");
+      el("svg:rect", { x: X(0), y: y - 8, width: Math.max(1, X(v) - X(0)), height: 16, rx: 3, fill: col }, g);
+      el("svg:text", { x: X(v) + 6, y: y + 4, class: "lab-strong" }, g, "+" + v.toFixed(3));
+      if (!narrow) el("svg:text", { x: W - m.r + 58, y: y + 4 }, g, r.bytes);
+      hover(host, svg, W, H, { x: m.l, y: y - rh / 2, width: W - m.r - m.l, height: rh }, () => [{ value: "+" + v.toFixed(4), label: "loss added", color: col }, { value: r.bytes, label: "bytes per weight for the scales" }], r.label, X(v), y);
+    });
+    numbers(host, ["scales", "loss added", "scale bytes per weight"], rows.map(r => [r.label, "+" + (T[r.k].val_ce - base).toFixed(4), r.bytes]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- pass-line table ---------- */
+(function () {
+  const tb = document.querySelector("#tbl-pass tbody"), C = DATA.m6.checks;
+  const rows = [["q4", "m6 reordered 4-bit: each seed ≤ m2 + 0.03"], ["q4_m8", "m6 4-bit with 8-bit momentum: each seed ≤ m2 + 0.03"], ["float", "m6 reordered float: each seed ≤ m1 + 0.03"]];
+  for (const [k, label] of rows) {
+    const c = C[k], tr = el("tr", {}, tb);
+    el("td", {}, tr, label);
+    el("td", { class: "n" }, tr, c ? c.diffs.filter(d => d <= 0.03).length + " of " + c.diffs.length : "–");
+    el("span", { class: "pill " + (c && c.passed ? "pass" : "fail") }, el("td", {}, tr), c ? (c.passed ? "PASS" : "FAIL") : "NOT RUN");
+  }
+})();
+
+/* ---------- why m6 failed: one-weight simulation ---------- */
+(function () {
+  const host = document.getElementById("ch-sim");
+  let which = "steady";
+  lineChart(host, {
+    title: "One weight on a grid with gap 1, pushed 0.05 gaps per step", sub: "where the stored weight is, in grid gaps",
+    controls: h => {
+      const c = el("div", { class: "controls" }, h), g = el("div", { class: "grp", role: "group", "aria-label": "push" }, c);
+      for (const [k, lab] of [["steady", "steady push"], ["noisy", "noisy push"]]) {
+        const b = el("button", { type: "button", "aria-pressed": String(which === k) }, g, lab);
+        b.addEventListener("click", () => { which = k; REG.find(r => r.host === host).draw(); });
+      }
+    },
+    series: () => {
+      const d = DATA.sim[which], pts = a => a.map((v, i) => [i + 1, v]);
+      return [
+        { label: "float weight (the target)", color: "--c-m0", points: pts(d.float) },
+        { label: "separate leftover buffer (m4c)", color: "--c-c", points: pts(d.buffer) },
+        { label: "leftover in the momentum (m6)", color: "--c-a", strong: true, points: pts(d.m6) },
+      ];
+    },
+    x: { domain: [1, 400], ticks: [1, 100, 200, 300, 400], label: "step" }, y: { tip: v => v.toFixed(2) + " gaps" },
+  });
+})();
+
+/* ---------- B2: gap against how far float training got ---------- */
+(function () {
+  const host = document.getElementById("ch-blr-prog");
+  const pts = [];
+  for (const k of ["1", "2", "4", "8"]) for (const m of mults(k)) {
+    const a = B.m1[k][m], b = B.m3[k][m];
+    if (!a || !b || Object.keys(a).length < 3) continue;
+    const ss = ["1", "2", "3"].filter(s => a[s] && b[s] && a[s].final != null && b[s].final != null);
+    if (ss.length < 3) continue;
+    pts.push({ k, m, x: mean(ss.map(s => a[s].final)), y: mean(ss.map(s => b[s].final - a[s].final)) });
+  }
+  const a1 = B.m1["1"]["1"], b1 = B.m3["1"]["1"], n = a1["1"].curve.length;
+  const ref = [...Array(n).keys()].map(i => [mean(["1", "2", "3"].map(s => a1[s].curve[i][1])), mean(["1", "2", "3"].map(s => b1[s].curve[i][1] - a1[s].curve[i][1]))]).filter(p => p[0] < 2.1);
+  const draw = () => {
+    header(host, { title: "Rounding damage against how far training got", sub: "x: float Muon's final loss in that setting; y: m3 − m1; line: batch 1×, old rate, read along training" });
+    legend(host, ["1", "2", "4", "8"].map(k => ({ label: "batch " + k + "×", color: tok(KCOL[k]) })), true);
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, H = narrow ? 300 : 340, m = { l: 50, r: 16, t: 14, b: 40 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "gap against progress" }, host);
+    const X = scale(2.05, 1.6, m.l, W - m.r), Y = scale(0, 0.24, H - m.b, m.t), g = el("svg:g", {}, svg);
+    for (const v of [0, 0.05, 0.1, 0.15, 0.2]) { el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid") }, g); el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, v ? "+" + v.toFixed(2) : "0"); }
+    for (const v of [2.0, 1.9, 1.8, 1.7, 1.6]) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v.toFixed(1));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis") }, g);
+    el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, "float Muon's loss (further right = further along)");
+    el("svg:path", { d: ref.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join(""), fill: "none", stroke: tok("--ink-2"), "stroke-width": 2, "stroke-dasharray": "5 4" }, g);
+    if (!narrow) el("svg:text", { x: X(ref[1][0]) + 6, y: Y(ref[1][1]) - 8, class: "lab" }, g, "batch 1×, old rate, during training");
+    for (const p of pts) {
+      const col = tok(KCOL[p.k]), cx = X(p.x), cy = Y(Math.min(p.y, 0.24));
+      el("svg:circle", { cx, cy, r: 6, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!narrow) el("svg:text", { x: cx + 9, y: cy + 4 }, g, "×" + p.m);
+      hover(host, svg, W, H, { cx, cy, r: 12 }, () => [{ value: sgn(p.y, 4), label: "m3 − m1", color: col }, { value: fmt(p.x, 4), label: "m1 final loss" }], `batch ${p.k}×, rate ×${p.m}`, cx, cy);
+    }
+    numbers(host, ["setting", "m1 final", "m3 − m1"], pts.map(p => [`batch ${p.k}×, rate ×${p.m}`, fmt(p.x, 4), sgn(p.y, 4)]));
+  };
+  register(host, draw);
+})();
+
+})();
+</script>

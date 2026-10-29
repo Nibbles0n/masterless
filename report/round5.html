@@ -1,0 +1,488 @@
+<title>The Zig-Zag Tax</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #a9cbf3; --r2: #5f9fe8; --r3: #2a6fc4; --r4: #143f78;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.note { background: var(--wash); padding: 10px 14px; border-radius: 6px; }
+</style>
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · round 5 · theory: why Muon and low-bit weights fight · one CPU probe</div>
+  <h1>The Zig-Zag Tax</h1>
+  <p class="lede">Storing weights in few bits charges a tax on every move a weight makes, back and forth, while training only gains from where the weight ends up. Muon is built to move every direction equally far, so it pays the most tax for the least gain. This page states that precisely, measures it on a real run, and turns it into a design problem with one free knob.</p>
+  <p class="meta">26 October 2026 · theory plus one measurement run of milestone 1 (Muon, float weights, CPU preset, seed 1) at three momentum settings · source: <code>report/zigzag_theory.md</code>, <code>report/zigzag_probe.py</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><b>One rule predicts all the rounding damage:</b> drift ≈ √(rounding spacing × path), where the path counts every move back and forth. It matches the simulation within about 10% for plain 4-bit, an FP8-like grid and the ticker. Each extra bit cuts the drift by only 1.41 times. Halving the zig-zag is worth as much as one extra bit.</li>
+    <li><b>Under Muon the path is fixed by the learning rate, not by the gradient.</b> Weights travelled 179, 183 and 186 gaps at momentum 0.9, 0.95 and 0.99. Momentum only changed how far they got: the zig-zag factor was 11.1, 7.6 and 3.1. Pure gradient noise predicts these ratios (1.43 and 2.27; measured 1.47 and 2.45). Steps were positively correlated from one to the next (0.57 to 0.92), so the zig-zag is noise, not bouncing.</li>
+    <li><b>Turning up momentum is not the fix.</b> At 0.99 float training got worse (1.690 against 1.622) because the average lags, and the path, which is what plain rounding pays for, did not get shorter.</li>
+    <li><b>Muon spends its movement evenly, but its progress is concentrated.</b> About half of Muon's downhill progress (35–93% over training) comes from the momentum's 8 strongest directions out of 128, yet Muon moves all 128 equally far. The other 120 directions are mostly noise, boosted to full size.</li>
+    <li><b>Simple changes to Muon's step get 1.4 to 6 times more downhill progress per unit of path:</b> keeping only the 8 strongest directions (1.5–3.8×), taking step sizes from the momentum (2.1–3.9×), skipping small moves (1.4×), or moving only where this batch agrees (1.8–6.1×). Twice the progress per unit of path is worth one extra bit. This is a one-step, first-order measure: only a training run can show whether it survives over a whole run.</li>
+    <li><b>The design problem in one line:</b> choose the step to minimise (first-order loss change) + λ × Σ (rounding spacing × |move|), with Muon's own size limit. At high precision this turns back into Muon. Its one knob λ prices rounding against progress.</li>
+  </ol>
+</section>
+
+<h2 id="law"><span class="secnum">1</span>The one rule everything follows from</h2>
+<p>Random rounding stores a value on a grid with spacing <i>r</i>. If the wanted value sits a fraction <i>f</i> of the way to the next grid point, it stores the upper point with probability <i>f</i>. That is right on average, but each rounding adds a spread (variance) of <i>r</i>²·<i>f</i>·(1 − <i>f</i>). For a small step δ, <i>f</i> = |δ|/<i>r</i>, so each rounding adds about <b><i>r</i>·|δ|</b>, never more than <i>r</i>²/4. The roundings are independent, so their variances add:</p>
+<div class="note"><p><b>drift from the float path ≈ √(<i>r</i> × path)</b>, where path = the sum of every |move|, back and forth.<br>
+<b>drift ÷ net movement = √(<i>r</i> ÷ net) × √Z</b>, where <b>Z = path ÷ net</b> is the zig-zag factor (1 = a straight line).</p></div>
+<p>On a real Muon run the weights travel about 183 gaps to move 24 net, so Z ≈ 7.6 and plain 4-bit rounding drifts √183 ≈ 13.5 gaps against a signal of 24. More bits help only slowly: the drift falls with the square root of <i>r</i>, so each extra bit cuts it by a factor of 1.41. Halving Z buys as much as one extra bit.</p>
+<figure class="wide">
+  <div class="chart" id="ch-law"></div>
+  <figcaption><b>The rule predicts the simulation for all three storage types.</b> For the ticker only the carry is rounded at random, at <i>r</i> = 1/14 of a gap. Once a step is bigger than about <i>r</i>/4 it costs a fixed amount per step whatever its size, so the ticker's drift grows with the number of steps, not the path: √(2000 × (1/14)² ÷ 5) ≈ 1.4. <b>So less zig-zag mostly helps plain rounding, and the ticker only late in training</b>, when its steps fall to about 1/60 of a gap.</figcaption>
+</figure>
+<p class="note">The rule ignores the pull-back. Where the loss curves up, the gradient pulls a misplaced weight back, and the drift settles instead of growing. Most directions in a network are nearly flat, and there it keeps growing. Side study B agrees: plain 4-bit's damage tracked how far training had gone, not the batch size.</p>
+
+<h2 id="sources"><span class="secnum">2</span>Where the zig-zag comes from</h2>
+<ol>
+  <li><b>Gradient noise.</b> Each weight's gradient is a steady signal μ plus noise σ. Momentum averages about 1/(1 − β) steps and shrinks the noise to σ·√((1 − β)/(1 + β)): 0.23σ at β = 0.9, 0.16σ at 0.95, 0.07σ at 0.99. If steps follow the momentum, <b>Z ≈ 0.8 × (momentum's noise ÷ μ)</b>. Prediction: going from β = 0.95 to 0.99 cuts Z by 2.2 times, if μ holds still in the meantime.</li>
+  <li><b>Bouncing.</b> In a sharply curved direction a fixed-size step overshoots the bottom and the weight hops side to side. Its sign: one step correlates <i>negatively</i> with the next. Noise passed through momentum gives a <i>positive</i> correlation instead.</li>
+  <li><b>Muon spreads its movement.</b> Newton–Schulz sets every direction of the momentum to the same strength. The strong directions carry the signal and the weak ones are mostly noise, so Muon blows noise up to full size. In maths: Muon is the <b>steepest-descent step under the spectral norm</b> (the most downhill step among those whose largest stretch is η; Bernstein &amp; Newhouse 2024). Low-bit storage bills the <b>sum of |moves|</b> (the L1 norm), and steepest descent under that norm does the opposite of Muon: it puts all movement into the few weights with the strongest signal.</li>
+</ol>
+
+<h2 id="probe"><span class="secnum">3</span>What a real run shows</h2>
+<p>One float Muon run (milestone 1, seed 1) was measured at three momentum settings. At five moments in the 0.95 run, the training was paused to estimate the true gradient from 64 fresh batches, and every candidate step was scored against it, with the same weights and momentum for all of them.</p>
+<div class="tbl"><table>
+<thead><tr><th>momentum β</th><th class="n">path (gaps)</th><th class="n">net (gaps)</th><th class="n">zig-zag Z</th><th class="n">step-to-step correlation</th><th class="n">sign flips per step</th><th class="n">final loss (float)</th></tr></thead>
+<tbody>
+<tr><td>0.9</td><td class="n">179</td><td class="n">16.1</td><td class="n">11.1</td><td class="n">+0.57</td><td class="n">30%</td><td class="n">1.627</td></tr>
+<tr><td>0.95 (milestone 1)</td><td class="n">183</td><td class="n">24.2</td><td class="n">7.6</td><td class="n">+0.71</td><td class="n">23%</td><td class="n">1.622</td></tr>
+<tr><td>0.99</td><td class="n">186</td><td class="n">60.3</td><td class="n">3.1</td><td class="n">+0.92</td><td class="n">12%</td><td class="n">1.690</td></tr>
+</tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-zz"></div>
+  <figcaption><b>Momentum changes the zig-zag just as gradient noise predicts.</b> The theory says Z scales with √((1 − β)/(1 + β)), giving ratios of 1.43 between 0.9 and 0.95 and 2.27 between 0.95 and 0.99. The run gave 1.47 and 2.45. The path stays at about 183 gaps whatever β is, because Newton–Schulz fixes the size of every step and the learning rate sets it. So momentum changes only the net movement. The middle stretch zig-zags most: the signal is weaker there than at the start, and the steps are still large.</figcaption>
+</figure>
+<p>This matters for design. Plain rounding pays for the path, and under Muon the path is fixed by the learning-rate schedule. To pay less, a step must move fewer weights or move them less, at the same progress. That is the job of the next two charts.</p>
+<figure class="wide">
+  <div class="chart" id="ch-top8"></div>
+  <figcaption><b>Most of the useful movement sits in a few directions.</b> In each matrix, the momentum's 8 strongest directions (6% of 128) give about half of Muon's downhill progress late in training, and 93% at step 100. Muon still moves all 128 directions equally far. Meanwhile the signal in one batch's gradient falls from 0.76 to 0.016 (signal² ÷ noise², from steps 100 to 1990).</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-l1"></div>
+  <figcaption><b>Every change to Muon tried here buys more progress per unit of path.</b> These are scored at the same moment, from the same momentum: more downhill progress for each gap of movement paid for. Exact orthogonalisation scores 0.94–1.00, so Newton–Schulz's approximation is not the issue. Keeping only the 8 strongest directions and taking step sizes from the momentum both reach 2–4×. The current batch's raw gradient scores higher still (2–13×), but raw gradient steps train badly, which is why one-step scores cannot be the final word.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-l2"></div>
+  <figcaption><b>The same steps scored the usual way, per unit of step length.</b> Skipping small moves (the soft threshold, and the largest quarter only) costs almost nothing here (0.88–1.00×), but gains 1.4–1.6× per unit of path in the chart above. That is the pure low-bit gain: the same direction, but paid for with fewer moves. The spectral changes (8 strongest directions, weak ones shrunk) gain on both measures, which suggests that Muon's boosted weak directions are mostly noise even for float training.</figcaption>
+</figure>
+
+<h2 id="design"><span class="secnum">4</span>The design problem, as one line of maths</h2>
+<p>Plain Muon solves: choose the step δ that makes ⟨G, δ⟩ (the first-order change in loss, G = momentum) as negative as possible, subject to ‖δ‖<sub>spectral</sub> ≤ η. The low-bit version adds the bill from section 1:</p>
+<div class="note"><p><b>choose δ to minimise ⟨G, δ⟩ + λ · Σ<sub>i</sub> r<sub>i</sub> · |δ<sub>i</sub>|, subject to ‖δ‖<sub>spectral</sub> ≤ η</b></p>
+<p>r<sub>i</sub> = the rounding spacing at weight i (its gap for plain rounding, the carry's spacing for the ticker, about |w|/8 for FP8). λ = how much one unit of rounding spread costs in loss: unknown, the one knob to tune.</p></div>
+<ul>
+  <li><b>Without the spectral limit</b> the bill is a lasso (L1) penalty, and its exact answer per weight is the <b>soft threshold</b>: shrink every move toward zero by λ·r<sub>i</sub>, and moves smaller than that become zero.</li>
+  <li><b>As the bits go up (r → 0) the problem turns back into plain Muon.</b> Any method built from it keeps Muon's behaviour at high precision.</li>
+  <li><b>With both terms</b> there is no closed-form answer. Two cheap approximations: Muon first, then soft-threshold each weight; or shrink the momentum's weak directions before orthogonalising (fix 2.3 at its source), then threshold.</li>
+  <li><b>G is noisy.</b> A weight with a tiny true signal looks like noise, and the threshold stops exactly those. The price is that weights with small but real signals move later. λ sets that trade.</li>
+</ul>
+<div class="tbl"><table>
+<thead><tr><th>design family</th><th>what it does</th><th class="n">extra bytes per weight</th><th>source it fixes</th></tr></thead>
+<tbody>
+<tr><td>longer momentum (β = 0.99)</td><td>averages away more noise</td><td class="n">0</td><td>2.1, but adds lag</td></tr>
+<tr><td>soft threshold after Newton–Schulz</td><td>skip small moves, shrink the rest by λ·r</td><td class="n">0</td><td>2.3, the bill itself</td></tr>
+<tr><td>weak-direction damping or low rank</td><td>U·f(S)·Vᵀ with f small for weak directions, or keep only the top k</td><td class="n">0</td><td>2.3 at its source</td></tr>
+<tr><td>cautious mask</td><td>drop moves whose sign disagrees with this batch's gradient</td><td class="n">0</td><td>2.1, 2.2</td></tr>
+<tr><td>sign-consistency gate</td><td>a 1–2-bit record of recent step signs; shrink weights that keep flipping</td><td class="n">0.125–0.25</td><td>2.1, 2.2</td></tr>
+<tr><td>carry as confidence (ticker)</td><td>a carry that keeps changing sign <i>is</i> zig-zag; use it as the gate</td><td class="n">0</td><td>2.1, 2.2</td></tr>
+</tbody></table></div>
+<p>Low-rank orthogonalised updates exist already, for example Dion (2025), built to save communication between GPUs. As far as I know nobody has tested them for low-bit weights.</p>
+
+<h2 id="next"><span class="secnum">5</span>A first test, for you to shape</h2>
+<p>The theory makes a prediction that can fail: <b>a fix that shortens the path should help plain random rounding (m3) a lot, and the ticker only a little</b> (section 1). Testing both checks the theory as well as the fix. A small first test on the CPU preset, seeds 1–3, on a T4:</p>
+<ol>
+  <li>Pick one or two candidate fixes. My suggestion: <b>Muon on the k strongest directions</b> (k = 8, 16), which gained on both measures, and the <b>soft threshold</b>, which is the exact answer to the bill when the spectral limit is left out. Its λ is the one knob.</li>
+  <li>For each, run three arms: m3 + fix, the ticker + fix, and float Muon + fix. The float arm checks that the fix alone does not hurt training.</li>
+  <li>Measure the path, the net movement, the drift from a float twin, and the final loss.</li>
+  <li>A possible pass line, to fix in <code>PLAN.md</code> before running: m3 + fix closes at least half of m3's 0.117 gap to m1, so m3 + fix ≤ m1 + 0.06 in each seed. Float Muon + fix stays within 0.02 of m1.</li>
+</ol>
+<p>The open design questions are yours:</p>
+<ul>
+  <li>How to set λ: fixed, tied to the learning rate, or tied to the grid spacing r so the rule turns into Muon at high precision.</li>
+  <li>Whether to shrink before or after orthogonalising.</li>
+  <li>Whether the ticker's carry can serve as the free confidence signal.</li>
+</ul>
+
+<h2 id="caveats"><span class="secnum">6</span>Not tested</h2>
+<ul>
+  <li>Everything measured here is one float Muon run (seed 1, CPU preset, 2000 steps, on this machine's CPU in fp32). Path lengths are in units of each weight's 4-bit gap at the start.</li>
+  <li>The progress measures are first-order and one-step: they say how much each step goes downhill <i>right now</i>, per unit of path. They do not show which rule trains better over a whole run, because Muon's even spreading also helps it handle curvature. Only a training run can settle that.</li>
+  <li>The "true gradient" is the mean of 64 fresh batches. Its own noise does not bias the progress numbers, but it makes each one noisy, so single checkpoints should not be over-read.</li>
+  <li>The pull-back from curvature is left out of the rule. Muon's fixed step size makes it hard to model.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">7</span>Reproduce</h2>
+<p><code>python report/zigzag_probe.py --beta 0.95</code>; <code>python report/zigzag_probe.py --beta 0.99 --no-checks</code>; <code>python report/zigzag_probe.py --beta 0.9 --no-checks</code>; <code>python report/noise_sim.py</code>; then <code>python report/build_round5.py</code>. The written theory is <code>report/zigzag_theory.md</code>.</p>
+</main>
+
+<script>
+const DATA = {"zz":{"0.9":{"beta":0.9,"travelled":179.36,"net":16.145,"zigzag":11.109,"lag1_corr":0.56865,"flip_rate":0.29678,"phases":[{"steps":[0,500],"travelled":70.887,"net":11.122,"zigzag":6.3738},{"steps":[500,1500],"travelled":96.03,"net":10.091,"zigzag":9.5166},{"steps":[1500,2000],"travelled":12.444,"net":1.9063,"zigzag":6.528}],"checks":[],"final_val_ce":1.6274,"final_val_se":0.018271,"wall_s":190.54},"0.95":{"beta":0.95,"travelled":183.32,"net":24.234,"zigzag":7.5644,"lag1_corr":0.71462,"flip_rate":0.23422,"phases":[{"steps":[0,500],"travelled":72.632,"net":16.597,"zigzag":4.3762},{"steps":[500,1500],"travelled":98.007,"net":15.575,"zigzag":6.2925},{"steps":[1500,2000],"travelled":12.676,"net":2.8821,"zigzag":4.3982}],"checks":[{"step":100,"snr2":0.76305,"per_l1":{"grad":12.892,"momentum":1.1676,"muon":1.0,"sign":2.5327,"muon_shrink":1.4141,"muon_top25":1.4977,"muon_cautious":6.1171,"muon_by_mom":3.9195,"polar":0.99666,"rank8":3.8362,"damped":1.673},"per_l2":{"grad":10.779,"momentum":1.0673,"muon":1.0,"sign":3.2188,"muon_shrink":0.96702,"muon_top25":0.91637,"muon_cautious":4.6725,"muon_by_mom":2.4196,"polar":0.99835,"rank8":3.5412,"damped":1.6308},"mag_corr":0.23145,"top8_share":0.93438},{"step":500,"snr2":0.12662,"per_l1":{"grad":8.2212,"momentum":0.14566,"muon":1.0,"sign":1.177,"muon_shrink":1.3586,"muon_top25":1.4386,"muon_cautious":3.8059,"muon_by_mom":2.4089,"polar":0.94429,"rank8":2.002,"damped":1.3546},"per_l2":{"grad":7.2782,"momentum":0.1374,"muon":1.0,"sign":1.5423,"muon_shrink":0.92997,"muon_top25":0.89655,"muon_cautious":2.959,"muon_by_mom":1.458,"polar":0.94701,"rank8":1.8097,"damped":1.3303},"mag_corr":0.39092,"top8_share":0.5126},{"step":1000,"snr2":0.075904,"per_l1":{"grad":7.4635,"momentum":-0.61023,"muon":1.0,"sign":1.0288,"muon_shrink":1.4432,"muon_top25":1.5194,"muon_cautious":3.8843,"muon_by_mom":2.0919,"polar":1.0015,"rank8":1.4958,"damped":1.3802},"per_l2":{"grad":7.0687,"momentum":-0.59227,"muon":1.0,"sign":1.3095,"muon_shrink":0.98198,"muon_top25":0.93131,"muon_cautious":3.1262,"muon_by_mom":1.415,"polar":1.0012,"rank8":1.3861,"damped":1.3593},"mag_corr":0.42315,"top8_share":0.3461},{"step":1500,"snr2":0.035336,"per_l1":{"grad":7.1731,"momentum":0.48227,"muon":1.0,"sign":1.3218,"muon_shrink":1.4545,"muon_top25":1.5779,"muon_cautious":3.6182,"muon_by_mom":2.8598,"polar":0.9749,"rank8":2.85,"damped":1.4716},"per_l2":{"grad":6.7196,"momentum":0.45177,"muon":1.0,"sign":1.6997,"muon_shrink":0.99912,"muon_top25":0.97182,"muon_cautious":2.8959,"muon_by_mom":1.8617,"polar":0.97534,"rank8":2.6192,"damped":1.4487},"mag_corr":0.43011,"top8_share":0.61204},{"step":1990,"snr2":0.015787,"per_l1":{"grad":2.1116,"momentum":1.546,"muon":1.0,"sign":0.95955,"muon_shrink":1.3794,"muon_top25":1.4321,"muon_cautious":1.7848,"muon_by_mom":2.2802,"polar":0.98376,"rank8":2.0098,"damped":1.3057},"per_l2":{"grad":2.0041,"momentum":1.4588,"muon":1.0,"sign":1.2248,"muon_shrink":0.94352,"muon_top25":0.88171,"muon_cautious":1.4297,"muon_by_mom":1.4181,"polar":0.98354,"rank8":1.9619,"damped":1.293},"mag_corr":0.42976,"top8_share":0.50707}],"final_val_ce":1.6216,"final_val_se":0.018601,"wall_s":228.11},"0.99":{"beta":0.99,"travelled":186.25,"net":60.264,"zigzag":3.0905,"lag1_corr":0.91904,"flip_rate":0.11807,"phases":[{"steps":[0,500],"travelled":73.616,"net":41.222,"zigzag":1.7858},{"steps":[500,1500],"travelled":99.835,"net":38.524,"zigzag":2.5915},{"steps":[1500,2000],"travelled":12.796,"net":6.5788,"zigzag":1.9451}],"checks":[],"final_val_ce":1.6899,"final_val_se":0.0176,"wall_s":204.73}},"noise":{"dist":{"random":[[25,0.73035],[50,1.3927],[75,2.0185],[100,2.6206],[125,3.153],[150,3.6094],[175,4.0331],[200,4.403],[225,4.7333],[250,5.0747],[275,5.3705],[300,5.6669],[325,5.9508],[350,6.2126],[375,6.4596],[400,6.6928],[425,6.9174],[450,7.1313],[475,7.3122],[500,7.5081],[525,7.7009],[550,7.886],[575,8.0524],[600,8.2489],[625,8.4195],[650,8.564],[675,8.7328],[700,8.8879],[725,9.0067],[750,9.1404],[775,9.2704],[800,9.4082],[825,9.5309],[850,9.6602],[875,9.7745],[900,9.8997],[925,10.022],[950,10.121],[975,10.216],[1000,10.31],[1025,10.407],[1050,10.509],[1075,10.615],[1100,10.699],[1125,10.78],[1150,10.861],[1175,10.947],[1200,11.024],[1225,11.112],[1250,11.175],[1275,11.247],[1300,11.322],[1325,11.386],[1350,11.468],[1375,11.528],[1400,11.582],[1425,11.617],[1450,11.661],[1475,11.712],[1500,11.759],[1525,11.801],[1550,11.836],[1575,11.871],[1600,11.899],[1625,11.925],[1650,11.954],[1675,11.977],[1700,12.006],[1725,12.032],[1750,12.047],[1775,12.064],[1800,12.094],[1825,12.117],[1850,12.134],[1875,12.154],[1900,12.175],[1925,12.193],[1950,12.202],[1975,12.224],[2000,12.234]],"fine8":[[25,0.21051],[50,0.32994],[75,0.42],[100,0.49425],[125,0.55613],[150,0.61372],[175,0.66461],[200,0.71365],[225,0.75801],[250,0.79955],[275,0.84224],[300,0.87755],[325,0.91507],[350,0.94972],[375,0.98482],[400,1.0158],[425,1.0475],[450,1.0797],[475,1.1091],[500,1.1352],[525,1.1642],[550,1.192],[575,1.2183],[600,1.245],[625,1.2718],[650,1.3011],[675,1.3269],[700,1.3485],[725,1.3764],[750,1.3998],[775,1.424],[800,1.4464],[825,1.4681],[850,1.4904],[875,1.5107],[900,1.5295],[925,1.5502],[950,1.571],[975,1.5912],[1000,1.6105],[1025,1.6318],[1050,1.6511],[1075,1.6709],[1100,1.6913],[1125,1.71],[1150,1.7266],[1175,1.7484],[1200,1.7683],[1225,1.7858],[1250,1.8085],[1275,1.8247],[1300,1.8445],[1325,1.8636],[1350,1.8808],[1375,1.8968],[1400,1.916],[1425,1.9345],[1450,1.9515],[1475,1.9685],[1500,1.9887],[1525,2.0042],[1550,2.0206],[1575,2.0375],[1600,2.0547],[1625,2.0685],[1650,2.0865],[1675,2.0989],[1700,2.1144],[1725,2.1288],[1750,2.1412],[1775,2.1504],[1800,2.1605],[1825,2.1734],[1850,2.1832],[1875,2.1892],[1900,2.2021],[1925,2.2119],[1950,2.2188],[1975,2.2249],[2000,2.2325]],"tick4":[[25,0.18911],[50,0.34924],[75,0.37749],[100,0.4047],[125,0.42724],[150,0.4548],[175,0.47731],[200,0.501],[225,0.52101],[250,0.54279],[275,0.56402],[300,0.58123],[325,0.59917],[350,0.61508],[375,0.62924],[400,0.65084],[425,0.66549],[450,0.67785],[475,0.69273],[500,0.70714],[525,0.72213],[550,0.73555],[575,0.74757],[600,0.76278],[625,0.77669],[650,0.79129],[675,0.80378],[700,0.81984],[725,0.83473],[750,0.84867],[775,0.8573],[800,0.87421],[825,0.88346],[850,0.89164],[875,0.90641],[900,0.91796],[925,0.92911],[950,0.94369],[975,0.95367],[1000,0.96016],[1025,0.97555],[1050,0.9865],[1075,1.0023],[1100,1.0047],[1125,1.0162],[1150,1.03],[1175,1.0374],[1200,1.0492],[1225,1.0548],[1250,1.0658],[1275,1.0787],[1300,1.0867],[1325,1.0956],[1350,1.1065],[1375,1.1149],[1400,1.125],[1425,1.136],[1450,1.1434],[1475,1.1512],[1500,1.1614],[1525,1.1733],[1550,1.1816],[1575,1.1933],[1600,1.2028],[1625,1.2107],[1650,1.2226],[1675,1.2288],[1700,1.2366],[1725,1.2456],[1750,1.2565],[1775,1.2668],[1800,1.2746],[1825,1.2835],[1850,1.2926],[1875,1.3007],[1900,1.3056],[1925,1.3121],[1950,1.323],[1975,1.33],[2000,1.3347]],"tick":[[25,0.17186],[50,0.28989],[75,0.28842],[100,0.28898],[125,0.28829],[150,0.28952],[175,0.28891],[200,0.28826],[225,0.28913],[250,0.28711],[275,0.28899],[300,0.28684],[325,0.28913],[350,0.28856],[375,0.28884],[400,0.28851],[425,0.28835],[450,0.2896],[475,0.28829],[500,0.29069],[525,0.28934],[550,0.2876],[575,0.28839],[600,0.28873],[625,0.28968],[650,0.28719],[675,0.2891],[700,0.28887],[725,0.28772],[750,0.29028],[775,0.28709],[800,0.28918],[825,0.28857],[850,0.28934],[875,0.28878],[900,0.28856],[925,0.28965],[950,0.28897],[975,0.28866],[1000,0.28947],[1025,0.28967],[1050,0.28912],[1075,0.28772],[1100,0.28814],[1125,0.28959],[1150,0.28955],[1175,0.28852],[1200,0.28893],[1225,0.29013],[1250,0.28918],[1275,0.28989],[1300,0.28859],[1325,0.28828],[1350,0.28764],[1375,0.2879],[1400,0.28839],[1425,0.28898],[1450,0.28873],[1475,0.28921],[1500,0.28889],[1525,0.28944],[1550,0.28839],[1575,0.28827],[1600,0.2889],[1625,0.2893],[1650,0.28939],[1675,0.2906],[1700,0.28873],[1725,0.28744],[1750,0.28812],[1775,0.28759],[1800,0.28769],[1825,0.28899],[1850,0.28863],[1875,0.28965],[1900,0.28877],[1925,0.28869],[1950,0.28798],[1975,0.28737],[2000,0.28781]]},"push":[[1,0.0021043],[26,0.054572],[51,0.10772],[76,0.16],[101,0.20952],[126,0.21106],[151,0.21156],[176,0.20789],[201,0.2103],[226,0.21042],[251,0.20875],[276,0.20721],[301,0.20565],[326,0.20345],[351,0.20306],[376,0.19972],[401,0.199],[426,0.19722],[451,0.19424],[476,0.19247],[501,0.19121],[526,0.18878],[551,0.18599],[576,0.18437],[601,0.18173],[626,0.17645],[651,0.17483],[676,0.17253],[701,0.1677],[726,0.16419],[751,0.16227],[776,0.15762],[801,0.15383],[826,0.15077],[851,0.14779],[876,0.14204],[901,0.13961],[926,0.1366],[951,0.13088],[976,0.12798],[1001,0.124],[1026,0.12034],[1051,0.11546],[1076,0.11168],[1101,0.10857],[1126,0.10406],[1151,0.10129],[1176,0.096543],[1201,0.092959],[1226,0.089313],[1251,0.085804],[1276,0.081342],[1301,0.077464],[1326,0.074389],[1351,0.070897],[1376,0.067696],[1401,0.064105],[1426,0.061454],[1451,0.058061],[1476,0.054379],[1501,0.05197],[1526,0.048775],[1551,0.046274],[1576,0.043488],[1601,0.0411],[1626,0.038749],[1651,0.036533],[1676,0.034352],[1701,0.032523],[1726,0.031001],[1751,0.029155],[1776,0.027714],[1801,0.026343],[1826,0.025048],[1851,0.024014],[1876,0.023175],[1901,0.022364],[1926,0.021953],[1951,0.021527],[1976,0.021044]]}};
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1, "stroke-dasharray": s.dash || "none" }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const Z = DATA.zz, B = ["0.9", "0.95", "0.99"].filter(b => Z[b]);
+const BETA = { "0.9": "--c-m0", "0.95": "--c-m2", "0.99": "--c-m3" };
+const CAND = {
+  muon_cautious: { name: "Muon, only where this batch agrees", color: "--c-c" },
+  rank8: { name: "Muon on the 8 strongest directions", color: "--c-a" },
+  damped: { name: "Muon, weak directions shrunk", color: "--c-b" },
+  muon_top25: { name: "Muon, largest quarter only", color: "--c-m5" },
+  muon_shrink: { name: "Muon, soft threshold (half stay)", color: "--c-m3" },
+  sign: { name: "sign of momentum", color: "--c-m0" },
+};
+
+function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
+  const tip = host._tip || (host._tip = tipBox(host));
+  const hit = el("svg:" + (hitAttrs.width ? "rect" : "circle"), Object.assign({ fill: "transparent", tabindex: "0" }, hitAttrs), svg);
+  const on = () => { tipRows(tip, title, rowsFn()); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+  hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+  hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+}
+
+/* ---------- the rounding law: prediction vs simulation ---------- */
+(function () {
+  const host = document.getElementById("ch-law");
+  const sim = k => { const d = DATA.noise.dist[k]; return d[d.length - 1][1]; };
+  const rows = [
+    { label: "plain 4-bit, random rounding (m3)", pred: Math.sqrt(183), sim: sim("random") },
+    { label: "a grid 8 times finer (about FP8)", pred: 2.4, sim: sim("fine8") },
+    { label: "ticker, 4-bit carry", pred: Math.sqrt(2000 / 196 / 5), sim: sim("tick4") },
+  ];
+  const draw = () => {
+    header(host, { title: "How far the stored weight drifts from where float training would put it", sub: "after 2000 steps, in gaps of the 4-bit grid; formula from section 2 against the simulation" });
+    legend(host, [{ label: "formula", color: tok("--c-m1") }, { label: "simulation", color: tok("--c-m2") }], true);
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, bh = 12, gap = narrow ? 34 : 20, m = { l: narrow ? 10 : 250, r: 46, t: 6, b: 30 };
+    const H = m.t + rows.length * (2 * bh + 2 + gap) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "drift by storage type" }, host);
+    const X = scale(0, 14, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [0, 2, 4, 6, 8, 10, 12, 14]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v ? "--grid" : "--axis") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v); }
+    rows.forEach((r, i) => {
+      const y0 = m.t + i * (2 * bh + 2 + gap) + (narrow ? 18 : 0);
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? y0 - 6 : y0 + bh + 4, "text-anchor": narrow ? "start" : "end", class: "lab" }, g, r.label);
+      [["formula", r.pred, "--c-m1", 0], ["simulation", r.sim, "--c-m2", bh + 2]].forEach(([lab, v, c, dy]) => {
+        el("svg:rect", { x: X(0), y: y0 + dy, width: Math.max(1, X(v) - X(0)), height: bh, rx: 3, fill: tok(c) }, g);
+        el("svg:text", { x: X(v) + 6, y: y0 + dy + bh - 2, class: "lab" }, g, fmt(v, 1));
+        hover(host, svg, W, H, { x: X(0), y: y0 + dy, width: Math.max(8, X(v) - X(0)), height: bh }, () => [{ value: fmt(v, 2) + " gaps", label: lab, color: tok(c) }], r.label, X(v), y0 + dy);
+      });
+    });
+    numbers(host, ["storage", "formula", "simulation"], rows.map(r => [r.label, fmt(r.pred, 2), fmt(r.sim, 2)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- zig-zag by phase and momentum ---------- */
+lineChart(document.getElementById("ch-zz"), {
+  title: "Zig-zag factor Z = distance travelled ÷ net movement",
+  sub: "real Muon run, float weights; each point is one stretch of training (steps 0–500, 500–1500, 1500–2000)",
+  x: { label: "middle of the stretch (step)", ticks: [0, 500, 1000, 1500, 2000], domain: [0, 2000] },
+  y: { log: true, ticks: [1, 2, 5, 10, 20, 50], fmt: v => v, tip: v => fmt(v, 1) },
+  series: () => B.map(b => ({ label: "momentum " + b, color: BETA[b], strong: b === "0.95",
+    points: Z[b].phases.map(p => [(p.steps[0] + p.steps[1]) / 2, p.zigzag]) })),
+});
+
+/* ---------- progress per unit of path, Muon variants ---------- */
+function effChart(id, key, title, sub) {
+  lineChart(document.getElementById(id), {
+    title, sub, height: 300,
+    x: { ticks: [100, 500, 1000, 1500, 2000], domain: [0, 2000], label: "step" },
+    y: { log: true, ticks: [0.5, 1, 2, 4, 8], fmt: v => v + "×", tip: v => fmt(v, 2) + "×" },
+    hlines: [{ y: 1, label: "Muon = 1" }],
+    series: () => Object.entries(CAND).map(([k, c]) => ({ label: c.name, color: c.color,
+      points: Z["0.95"].checks.map(r => [r.step, Math.max(0.3, r[key][k])]) })),
+  });
+}
+effChart("ch-l1", "per_l1", "Downhill progress per unit of path (what low-bit storage pays for)", "⟨step, true gradient⟩ ÷ sum of |moves|, as a multiple of Muon's; same momentum, same moment, median over the 16 matrices");
+effChart("ch-l2", "per_l2", "Downhill progress per unit of step length (the usual measure)", "⟨step, true gradient⟩ ÷ length of the step, as a multiple of Muon's");
+
+/* ---------- where Muon's progress comes from ---------- */
+lineChart(document.getElementById("ch-top8"), {
+  title: "Share of Muon's downhill progress from the momentum's 8 strongest directions",
+  sub: "of 128 directions per matrix (median over the 16 matrices); Muon moves all 128 equally far",
+  x: { ticks: [100, 500, 1000, 1500, 2000], domain: [0, 2000], label: "step" },
+  y: { domain: [0, 1], ticks: [0, 0.25, 0.5, 0.75, 1], fmt: v => Math.round(v * 100) + "%", tip: v => Math.round(v * 100) + "%" },
+  hlines: [{ y: 8 / 128, label: "if spread evenly (6%)" }],
+  series: () => [{ label: "top 8 of 128", color: "--c-a", points: Z["0.95"].checks.map(r => [r.step, r.top8_share]) }],
+});
+
+})();
+</script>

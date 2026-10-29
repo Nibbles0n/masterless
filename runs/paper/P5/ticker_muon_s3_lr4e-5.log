@@ -1,0 +1,1237 @@
+(MainProcess pid=5131) INFO 10-29 14:02:24 [api_utils.py:286] non-default args: {'dtype': 'bfloat16', 'seed': 3, 'max_model_len': 1536, 'enable_prefix_caching': False, 'gpu_memory_utilization': 0.35, 'max_num_seqs': 256, 'disable_log_stats': True, 'language_model_only': True, 'generation_config': 'vllm', 'model': 'Qwen/Qwen3.5-0.8B'}
+(MainProcess pid=5131) WARNING 10-29 14:02:24 [arg_utils.py:1945] The global random seed is set to 3. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+(MainProcess pid=5131) INFO 10-29 14:02:25 [model.py:733] Resolved architecture: Qwen3_5ForConditionalGeneration
+(MainProcess pid=5131) INFO 10-29 14:02:25 [model.py:2152] Using max model len 1536
+Fetching 12 files:   0%|          | 0/12 [00:00<?, ?it/s]Fetching 12 files: 100%|██████████| 12/12 [00:00<00:00, 1553.25it/s]
+(MainProcess pid=5131) INFO 10-29 14:02:27 [model.py:951] All limits of multimodal modalities supported by the model are set to 0, running in text-only mode.
+(MainProcess pid=5131) INFO 10-29 14:02:27 [model.py:1008] Disabled mm_prefix attention mode because multimodal inputs are configuration-disabled. Attention backends without mm_prefix support may now be selected.
+(MainProcess pid=5131) INFO 10-29 14:02:27 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Parse safetensors files:   0%|          | 0/1 [00:00<?, ?it/s]Parse safetensors files: 100%|██████████| 1/1 [00:00<00:00,  3.29it/s]Parse safetensors files: 100%|██████████| 1/1 [00:00<00:00,  3.29it/s]
+(MainProcess pid=5131) INFO 10-29 14:02:27 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=5131) INFO 10-29 14:02:32 [core.py:133] Initializing a V1 LLM engine (v0.32.0) with config: model='Qwen/Qwen3.5-0.8B', speculative_config=None, tokenizer='Qwen/Qwen3.5-0.8B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=main, tokenizer_revision=main, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=1536, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, aux_output_config=AuxOutputConfig(enable_return_routed_experts=False, max_bytes=None), kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, custom_histogram_buckets=None, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=3, served_model_name=Qwen/Qwen3.5-0.8B, enable_prefix_caching=False, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::qwen4_exp_ple_short_conv', 'vllm::qwen4_exp_qsa_with_output', 'vllm::qwen4_exp_qsa_prepare_with_output', 'vllm::linear_attention', 'vllm::qwen_gdn_attention_core', 'vllm::qwen_gdn_attention_core_fused_norm_packed', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'cudagraph_decoder_replay': True, 'decoder_replay_cudagraph_capture_sizes': [], 'decoder_replay_trim_threshold': 768, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['triton', 'native']), enable_flashinfer_autotune=True, enable_rocm_segmented_attn_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, moe_backend='auto', sparse_indexer_topk_backend='auto', linear_backend='auto', linear_backend_per_quant=None)
+(MainProcess pid=5131) INFO 10-29 14:02:32 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_194f043624cb4deaae6013041c3582b6 backend=nccl
+(MainProcess pid=5131) INFO 10-29 14:02:32 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank N/A, EPLB rank N/A
+(MainProcess pid=5131) INFO 10-29 14:02:32 [gpu_worker.py:518] Using V2 Model Runner
+(MainProcess pid=5131) INFO 10-29 14:02:33 [model_runner.py:392] Loading model from scratch...
+(MainProcess pid=5131) INFO 10-29 14:02:33 [cuda.py:565] Using backend AttentionBackendEnum.FLASH_ATTN for vit attention
+(MainProcess pid=5131) INFO 10-29 14:02:33 [mm_encoder_attention.py:372] Using AttentionBackendEnum.FLASH_ATTN for MMEncoderAttention.
+(MainProcess pid=5131) INFO 10-29 14:02:33 [qwen_gdn_linear_attn.py:221] Using Triton/FLA GDN prefill kernel (requested=auto, head_k_dim=128).
+(MainProcess pid=5131) INFO 10-29 14:02:34 [cuda.py:506] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(MainProcess pid=5131) INFO 10-29 14:02:34 [flash_attn.py:1117] Using FlashAttention version 2
+(MainProcess pid=5131) INFO 10-29 14:02:35 [base_loader.py:82] Initializing model took 1.245950 seconds
+(MainProcess pid=5131) INFO 10-29 14:02:35 [weight_utils.py:1108] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 1.63 GiB. Available RAM: 79.73 GiB.
+(MainProcess pid=5131) INFO 10-29 14:02:35 [weight_utils.py:1131] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.0.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.1.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.10.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.12.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.13.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.14.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.16.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.17.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.18.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.2.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.20.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.21.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.22.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.4.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.5.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.6.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.8.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+(MainProcess pid=5131) WARNING 10-29 14:02:35 [utils.py:333] Attempted to load weight layers.9.linear_attn.norm.weight with dtype torch.float32 into parameter with dtype torch.bfloat16
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  2.06it/s]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  2.06it/s]
+
+(MainProcess pid=5131) INFO 10-29 14:02:35 [default_loader.py:501] Loading weights took 0.52 seconds
+(MainProcess pid=5131) INFO 10-29 14:02:37 [model_runner.py:424] Model loading took 1.43 GiB memory and 4.309072 seconds
+(MainProcess pid=5131) INFO 10-29 14:02:37 [topk_topp_sampler.py:124] Using FlashInfer for top-p & top-k sampling.
+(MainProcess pid=5131) INFO 10-29 14:02:37 [torch_utils.py:295] Reducing Torch threads from 6 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.
+(MainProcess pid=5131) INFO 10-29 14:02:37 [interface.py:1096] Setting attention block size to 544 tokens to ensure that attention page size is >= mamba page size.
+(MainProcess pid=5131) INFO 10-29 14:02:37 [interface.py:1120] Padding mamba page size by 2.64% to ensure that mamba page size and attention page size are exactly equal.
+(MainProcess pid=5131) INFO 10-29 14:02:37 [utils.py:347] Using LBNHC KV cache layout.
+(MainProcess pid=5131) INFO 10-29 14:02:40 [caching.py:342] reconstructed serializable fn from standalone compile artifacts. num_artifacts=10 num_submods=25
+(MainProcess pid=5131) INFO 10-29 14:02:40 [decorators.py:319] [backbone] Directly load AOT compilation from path /root/.cache/vllm/torch_compile_cache/torch_aot_compile/a324cbdedf483fdaff03aaca2aa5d93d15f6284790559eae16be1701bdc3d612/rank_0_0/model
+(MainProcess pid=5131) INFO 10-29 14:02:40 [monitor.py:62] [backbone] torch.compile took 0.51 s in total
+(MainProcess pid=5131) INFO 10-29 14:02:40 [monitor.py:91] [backbone] Initial profiling/warmup run took 0.37 s
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (PIECEWISE):   2%|▏         | 1/51 [00:00<00:19,  2.61it/s]Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:13,  3.61it/s]Capturing CUDA graphs (PIECEWISE):   6%|▌         | 3/51 [00:00<00:11,  4.25it/s]Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:09,  4.72it/s]Capturing CUDA graphs (PIECEWISE):  10%|▉         | 5/51 [00:01<00:09,  5.09it/s]Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:01<00:08,  5.40it/s]Capturing CUDA graphs (PIECEWISE):  14%|█▎        | 7/51 [00:01<00:07,  5.67it/s]Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:01<00:07,  5.87it/s]Capturing CUDA graphs (PIECEWISE):  18%|█▊        | 9/51 [00:01<00:07,  5.96it/s]Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:01<00:06,  6.17it/s]Capturing CUDA graphs (PIECEWISE):  22%|██▏       | 11/51 [00:02<00:06,  6.44it/s]Capturing CUDA graphs (PIECEWISE):  24%|██▎       | 12/51 [00:02<00:05,  6.70it/s]Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:02<00:05,  7.00it/s]Capturing CUDA graphs (PIECEWISE):  27%|██▋       | 14/51 [00:02<00:05,  7.32it/s]Capturing CUDA graphs (PIECEWISE):  29%|██▉       | 15/51 [00:02<00:04,  7.67it/s]Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:02<00:04,  7.95it/s]Capturing CUDA graphs (PIECEWISE):  35%|███▌      | 18/51 [00:02<00:03, 10.24it/s]Capturing CUDA graphs (PIECEWISE):  41%|████      | 21/51 [00:02<00:02, 13.54it/s]Capturing CUDA graphs (PIECEWISE):  47%|████▋     | 24/51 [00:03<00:01, 15.86it/s]Capturing CUDA graphs (PIECEWISE):  53%|█████▎    | 27/51 [00:03<00:01, 17.38it/s]Capturing CUDA graphs (PIECEWISE):  59%|█████▉    | 30/51 [00:03<00:01, 18.50it/s]Capturing CUDA graphs (PIECEWISE):  65%|██████▍   | 33/51 [00:03<00:00, 19.31it/s]Capturing CUDA graphs (PIECEWISE):  71%|███████   | 36/51 [00:03<00:00, 20.10it/s]Capturing CUDA graphs (PIECEWISE):  76%|███████▋  | 39/51 [00:03<00:00, 20.51it/s]Capturing CUDA graphs (PIECEWISE):  82%|████████▏ | 42/51 [00:03<00:00, 20.84it/s]Capturing CUDA graphs (PIECEWISE):  88%|████████▊ | 45/51 [00:04<00:00, 21.14it/s]Capturing CUDA graphs (PIECEWISE):  94%|█████████▍| 48/51 [00:04<00:00, 21.30it/s]Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:04<00:00, 20.78it/s]Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:04<00:00, 11.70it/s]
+Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]Capturing CUDA graphs (FULL): 100%|██████████| 2/2 [00:00<00:00, 26.24it/s]
+(MainProcess pid=5131) INFO 10-29 14:02:48 [model_runner.py:1127] Graph capturing finished in 5 secs, took 0.30 GiB
+(MainProcess pid=5131) INFO 10-29 14:02:48 [gpu_worker.py:759] Available KV cache memory: 11.28 GiB
+(MainProcess pid=5131) INFO 10-29 14:02:48 [gpu_worker.py:774] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.3500 is equivalent to --gpu-memory-utilization=0.3415 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.3585. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(MainProcess pid=5131) INFO 10-29 14:02:48 [kv_cache_utils.py:2327] GPU KV cache size: 463,872 tokens, Maximum concurrency for 1,536 tokens per request: 302.00x
+(MainProcess pid=5131) INFO 10-29 14:02:48 [kv_cache_utils.py:853] kv cache group sizes (1536, 1536, 1536, 544)
+(MainProcess pid=5131) INFO 10-29 14:02:48 [kv_cache_utils.py:854] kv lcm block sizes 26112
+(MainProcess pid=5131) INFO 10-29 14:02:48 [kernel_warmup.py:176] JIT kernel warmup starting.
+(MainProcess pid=5131) INFO 10-29 14:02:48 [kernel_warmup.py:189] JIT kernel warmup finished in 0.00s.
+(MainProcess pid=5131) INFO 10-29 14:02:48 [qwen_triton_warmup.py:296] Warming up Qwen GDN Triton kernels for model_type=qwen3_5_text.
+(MainProcess pid=5131) INFO 10-29 14:02:48 [mamba_triton_warmup.py:42] Warmed Mamba batch_memcpy_kernel.
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (PIECEWISE):   2%|▏         | 1/51 [00:00<00:10,  4.67it/s]Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:00<00:09,  4.97it/s]Capturing CUDA graphs (PIECEWISE):   6%|▌         | 3/51 [00:00<00:09,  5.19it/s]Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:00<00:08,  5.38it/s]Capturing CUDA graphs (PIECEWISE):  10%|▉         | 5/51 [00:00<00:08,  5.54it/s]Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:01<00:08,  5.62it/s]Capturing CUDA graphs (PIECEWISE):  14%|█▎        | 7/51 [00:01<00:08,  5.26it/s]Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:01<00:08,  5.22it/s]Capturing CUDA graphs (PIECEWISE):  18%|█▊        | 9/51 [00:01<00:07,  5.44it/s]Capturing CUDA graphs (PIECEWISE):  20%|█▉        | 10/51 [00:01<00:07,  5.77it/s]Capturing CUDA graphs (PIECEWISE):  22%|██▏       | 11/51 [00:01<00:06,  6.14it/s]Capturing CUDA graphs (PIECEWISE):  24%|██▎       | 12/51 [00:02<00:06,  6.49it/s]Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:02<00:05,  6.88it/s]Capturing CUDA graphs (PIECEWISE):  27%|██▋       | 14/51 [00:02<00:05,  7.25it/s]Capturing CUDA graphs (PIECEWISE):  29%|██▉       | 15/51 [00:02<00:04,  7.63it/s]Capturing CUDA graphs (PIECEWISE):  31%|███▏      | 16/51 [00:02<00:04,  8.04it/s]Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:02<00:02, 12.37it/s]Capturing CUDA graphs (PIECEWISE):  43%|████▎     | 22/51 [00:02<00:01, 15.18it/s]Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:03<00:01, 16.99it/s]Capturing CUDA graphs (PIECEWISE):  55%|█████▍    | 28/51 [00:03<00:01, 18.27it/s]Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:03<00:01, 19.10it/s]Capturing CUDA graphs (PIECEWISE):  67%|██████▋   | 34/51 [00:03<00:00, 19.88it/s]Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:03<00:00, 20.61it/s]Capturing CUDA graphs (PIECEWISE):  78%|███████▊  | 40/51 [00:03<00:00, 21.11it/s]Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:03<00:00, 21.38it/s]Capturing CUDA graphs (PIECEWISE):  90%|█████████ | 46/51 [00:03<00:00, 21.67it/s]Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:04<00:00, 21.88it/s]Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:04<00:00, 12.18it/s]
+Capturing CUDA graphs (FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (FULL):   9%|▊         | 3/35 [00:00<00:01, 26.80it/s]Capturing CUDA graphs (FULL):  17%|█▋        | 6/35 [00:00<00:01, 27.04it/s]Capturing CUDA graphs (FULL):  26%|██▌       | 9/35 [00:00<00:00, 27.00it/s]Capturing CUDA graphs (FULL):  34%|███▍      | 12/35 [00:00<00:00, 27.12it/s]Capturing CUDA graphs (FULL):  43%|████▎     | 15/35 [00:00<00:00, 27.32it/s]Capturing CUDA graphs (FULL):  51%|█████▏    | 18/35 [00:00<00:00, 27.50it/s]Capturing CUDA graphs (FULL):  60%|██████    | 21/35 [00:00<00:00, 27.78it/s]Capturing CUDA graphs (FULL):  69%|██████▊   | 24/35 [00:00<00:00, 27.71it/s]Capturing CUDA graphs (FULL):  77%|███████▋  | 27/35 [00:00<00:00, 27.81it/s]Capturing CUDA graphs (FULL):  86%|████████▌ | 30/35 [00:01<00:00, 27.92it/s]Capturing CUDA graphs (FULL):  94%|█████████▍| 33/35 [00:01<00:00, 28.09it/s]Capturing CUDA graphs (FULL): 100%|██████████| 35/35 [00:01<00:00, 27.76it/s]
+(MainProcess pid=5131) INFO 10-29 14:02:55 [model_runner.py:1127] Graph capturing finished in 6 secs, took 0.20 GiB
+(MainProcess pid=5131) INFO 10-29 14:02:55 [gpu_worker.py:971] CUDA graph pool memory: 0.2 GiB (actual), 0.33 GiB (estimated), difference: 0.13 GiB (66.0%).
+(MainProcess pid=5131) INFO 10-29 14:02:55 [gpu_worker.py:1034] Free memory on device (39.08/39.49 GiB) on startup. Desired GPU memory utilization is (0.35, 13.82 GiB). Actual usage is 1.84 GiB for consumed memory (weights + non-torch), 0.7 GiB for peak activation, and 0.2 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=11740290356` (10.93 GiB) to fit into requested memory, or `--kv-cache-memory=38855371264` (36.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 11.28 GiB.
+(MainProcess pid=5131) INFO 10-29 14:02:56 [jit_monitor.py:84] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(MainProcess pid=5131) INFO 10-29 14:02:56 [core.py:395] init engine (profile, create kv cache, warmup model) took 18.99 s (compilation: 0.51 s)
+(MainProcess pid=5131) INFO 10-29 14:02:59 [hf.py:648] Detected the chat template content format to be 'openai'. You can set `--chat-template-content-format` to override this.
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:   0%|          | 1/320 [00:00<02:37,  2.02it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 630.37it/s]
+{"study": "P5", "arm": "ticker", "opt": "muon", "model": "Qwen/Qwen3.5-0.8B", "gen": "vllm", "carry_bits": 8, "lr": 1e-06, "muon_lr": 4e-05, "lora_lr": null, "lora_rank": 32, "lora_alpha": 32, "weight_decay": 0.0, "clip": 1.0, "seed": 3, "steps": 200, "questions": 32, "answers": 8, "temperature": 1.0, "max_new_tokens": 768, "eval_max_new_tokens": 1024, "eval_n": 1319, "instruction": "Solve the problem step by step. At the end, write the final answer as a single number after '####'.", "dtype": "bf16", "device": "cuda", "gpu": "NVIDIA A100-SXM4-40GB", "torch": "2.13.0+cu130", "transformers": "5.19.0", "vllm": "0.32.0", "decoder_matrix_weights": 497614848, "trainable_params": 752393024, "state_bytes_per_weight": 2.78125, "fla": "0.6.0"}
+{"step": 0, "acc": 0.48143, "se": 0.01376, "n": 1319, "mean_len": 496.2, "truncated": 0.1744, "eval_s": 60.2, "kind": "eval"}
+(MainProcess pid=5131) WARNING 10-29 14:04:03 [jit_monitor.py:140] Triton kernel JIT compilation during inference: _topk_log_softmax_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+(MainProcess pid=5131) WARNING 10-29 14:04:13 [jit_monitor.py:140] Triton kernel JIT compilation during inference: l2norm_fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function l2norm_fwd_kernel,
+with key as (128, 4, 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 9.73s,
+best config selected: BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+(MainProcess pid=5131) WARNING 10-29 14:04:22 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_local_cumsum_scalar_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (39, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+(MainProcess pid=5131) WARNING 10-29 14:04:23 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_gated_delta_rule_fwd_kkt_solve_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:23 [jit_monitor.py:140] Triton kernel JIT compilation during inference: recompute_w_u_fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:23 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_gated_delta_rule_fwd_kernel_h_blockdim64. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:23 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_fwd_kernel_o. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:24 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_bwd_kernel_dv_local. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:24 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_gated_delta_rule_bwd_kernel_dhu_blockdim64. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:25 [jit_monitor.py:140] Triton kernel JIT compilation during inference: chunk_bwd_kernel_dqkwg. This causes a latency spike; consider extending warmup to cover this shape/config.
+(MainProcess pid=5131) WARNING 10-29 14:04:25 [jit_monitor.py:140] Triton kernel JIT compilation during inference: prepare_wy_repr_bwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (39, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+(MainProcess pid=5131) WARNING 10-29 14:04:26 [jit_monitor.py:140] Triton kernel JIT compilation during inference: l2norm_bwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function l2norm_bwd_kernel,
+with key as (128, 4, 'torch.bfloat16', 'torch.float32', 'torch.bfloat16', 'torch.bfloat16'),
+finished after 12.49s,
+best config selected: BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (29, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.77s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (29, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (19, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.67s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (19, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (18, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (18, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (1, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (1, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 1, "reward": 0.2148, "solved_any": 0.5625, "zero_var": 0.4375, "loss": -0.091673, "grad_norm": 0.7992, "mean_len": 613.2, "truncated": 0.5742, "trained_seqs": 144, "changed": 0.0022599144790792095, "update_rms": 1.0743299811692796e-06, "gen_s": 9.11, "train_s": 46.88, "opt_sync_s": 1.42, "step_s": 57.51, "mem_gb": 26.01, "gen_minus_train_logp": 0.00041, "prob_gap_mean": 0.00381, "logp_gap_max": 1.7914}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (40, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.67s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (40, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (30, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.67s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (30, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (22, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.67s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (22, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function l2norm_fwd_kernel,
+with key as (128, 2, 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 9.77s,
+best config selected: BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (8, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.67s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (8, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function l2norm_bwd_kernel,
+with key as (128, 2, 'torch.bfloat16', 'torch.float32', 'torch.bfloat16', 'torch.bfloat16'),
+finished after 12.90s,
+best config selected: BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 2, "reward": 0.2383, "solved_any": 0.75, "zero_var": 0.25, "loss": -0.095504, "grad_norm": 0.8724, "mean_len": 606.0, "truncated": 0.5625, "trained_seqs": 192, "changed": 0.001833618919666963, "update_rms": 1.0720445870033114e-06, "gen_s": 9.05, "train_s": 47.7, "opt_sync_s": 1.21, "step_s": 58.08, "mem_gb": 29.77, "gen_minus_train_logp": 0.00048, "prob_gap_mean": 0.00387, "logp_gap_max": 2.4678}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (44, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (44, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (32, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (32, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (25, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (25, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (17, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (17, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (3, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (3, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 3, "reward": 0.3125, "solved_any": 0.6875, "zero_var": 0.3125, "loss": -0.124226, "grad_norm": 0.9671, "mean_len": 543.3, "truncated": 0.4453, "trained_seqs": 176, "changed": 0.0016990027596604192, "update_rms": 1.0723457998593288e-06, "gen_s": 8.4, "train_s": 25.94, "opt_sync_s": 1.21, "step_s": 35.65, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.00383, "logp_gap_max": 2.6715}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (26, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (26, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (15, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (15, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 4, "reward": 0.2539, "solved_any": 0.5312, "zero_var": 0.4688, "loss": -0.068922, "grad_norm": 0.7646, "mean_len": 622.3, "truncated": 0.5938, "trained_seqs": 136, "changed": 0.0014847507122617049, "update_rms": 1.0707763614453128e-06, "gen_s": 9.4, "train_s": 14.99, "opt_sync_s": 1.22, "step_s": 25.72, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00376, "logp_gap_max": 1.9094}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (41, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (41, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (31, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (31, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 5, "reward": 0.2578, "solved_any": 0.6562, "zero_var": 0.4062, "loss": -0.090642, "grad_norm": 0.8107, "mean_len": 525.5, "truncated": 0.3945, "trained_seqs": 152, "changed": 0.0014565240625617345, "update_rms": 1.0702384956768572e-06, "gen_s": 8.2, "train_s": 15.58, "opt_sync_s": 1.21, "step_s": 25.08, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00373, "logp_gap_max": 1.8741}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (43, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (43, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (36, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (36, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (28, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.68s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (28, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 8, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 16, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 32, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 64, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_fwd_kernel with config BT: 128, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function l2norm_fwd_kernel,
+with key as (128, 3, 'torch.bfloat16', 'torch.bfloat16', 'torch.float32'),
+finished after 9.82s,
+best config selected: BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (9, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (9, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 8, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 16, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 32, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 64, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel l2norm_bwd_kernel with config BT: 128, num_warps: 16, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function l2norm_bwd_kernel,
+with key as (128, 3, 'torch.bfloat16', 'torch.float32', 'torch.bfloat16', 'torch.bfloat16'),
+finished after 13.29s,
+best config selected: BT: 8, num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 6, "reward": 0.375, "solved_any": 0.7188, "zero_var": 0.3125, "loss": -0.097828, "grad_norm": 1.0554, "mean_len": 498.2, "truncated": 0.3125, "trained_seqs": 176, "changed": 0.0015022903818175458, "update_rms": 1.0704085699110216e-06, "gen_s": 7.9, "train_s": 45.05, "opt_sync_s": 1.21, "step_s": 54.26, "mem_gb": 29.77, "gen_minus_train_logp": 0.00041, "prob_gap_mean": 0.00369, "logp_gap_max": 1.7814}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (34, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (34, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (24, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (24, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 7, "reward": 0.4766, "solved_any": 0.75, "zero_var": 0.4688, "loss": -0.097187, "grad_norm": 0.9125, "mean_len": 443.8, "truncated": 0.2617, "trained_seqs": 136, "changed": 0.0014004144024255482, "update_rms": 1.0699585743125136e-06, "gen_s": 7.43, "train_s": 13.52, "opt_sync_s": 1.22, "step_s": 22.25, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00374, "logp_gap_max": 1.4579}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (33, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (33, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (7, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (7, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 8, "reward": 0.3359, "solved_any": 0.6875, "zero_var": 0.3438, "loss": -0.107465, "grad_norm": 0.9543, "mean_len": 493.5, "truncated": 0.2969, "trained_seqs": 168, "changed": 0.001384446229385824, "update_rms": 1.0706919150574102e-06, "gen_s": 7.93, "train_s": 15.94, "opt_sync_s": 1.22, "step_s": 25.17, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00356, "logp_gap_max": 2.0902}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (47, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (47, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.72s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (20, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (20, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (10, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (10, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 9, "reward": 0.5, "solved_any": 0.875, "zero_var": 0.375, "loss": -0.049032, "grad_norm": 1.1603, "mean_len": 381.9, "truncated": 0.1797, "trained_seqs": 160, "changed": 0.00135315697010713, "update_rms": 1.0708834635063095e-06, "gen_s": 6.71, "train_s": 17.26, "opt_sync_s": 1.22, "step_s": 25.26, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.00374, "logp_gap_max": 2.3624}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (49, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (49, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (42, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (42, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (35, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (35, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (27, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (27, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.73s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (2, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (2, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.72s,
+best config selected: num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 10, "reward": 0.3555, "solved_any": 0.7812, "zero_var": 0.25, "loss": -0.048233, "grad_norm": 1.1793, "mean_len": 398.8, "truncated": 0.1836, "trained_seqs": 192, "changed": 0.0013182946663199246, "update_rms": 1.0724773437349137e-06, "gen_s": 6.76, "train_s": 24.47, "opt_sync_s": 1.22, "step_s": 32.52, "mem_gb": 29.77, "gen_minus_train_logp": 0.00028, "prob_gap_mean": 0.00344, "logp_gap_max": 2.0849}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (54, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (54, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (37, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (37, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 11, "reward": 0.4961, "solved_any": 0.8438, "zero_var": 0.25, "loss": -0.043928, "grad_norm": 1.2486, "mean_len": 344.0, "truncated": 0.1211, "trained_seqs": 192, "changed": 0.0012874696214852496, "update_rms": 1.0700234588177168e-06, "gen_s": 6.46, "train_s": 14.34, "opt_sync_s": 1.22, "step_s": 22.08, "mem_gb": 29.77, "gen_minus_train_logp": 0.00029, "prob_gap_mean": 0.00352, "logp_gap_max": 1.8666}
+{"step": 12, "reward": 0.3594, "solved_any": 0.7188, "zero_var": 0.375, "loss": -0.126998, "grad_norm": 1.0121, "mean_len": 459.8, "truncated": 0.2969, "trained_seqs": 160, "changed": 0.0012673476334854059, "update_rms": 1.0701878419268425e-06, "gen_s": 7.69, "train_s": 9.12, "opt_sync_s": 1.22, "step_s": 18.11, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00369, "logp_gap_max": 1.6513}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (46, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (46, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (23, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (23, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.71s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 13, "reward": 0.4453, "solved_any": 0.9062, "zero_var": 0.2812, "loss": -0.068694, "grad_norm": 1.2207, "mean_len": 388.0, "truncated": 0.1641, "trained_seqs": 184, "changed": 0.0012490262348441822, "update_rms": 1.070028039614492e-06, "gen_s": 7.01, "train_s": 16.01, "opt_sync_s": 1.22, "step_s": 24.32, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00379, "logp_gap_max": 2.2865}
+{"step": 14, "reward": 0.4336, "solved_any": 0.8125, "zero_var": 0.2812, "loss": -0.057822, "grad_norm": 1.1602, "mean_len": 393.0, "truncated": 0.1523, "trained_seqs": 184, "changed": 0.0012507966804077358, "update_rms": 1.0697689764450553e-06, "gen_s": 6.92, "train_s": 9.58, "opt_sync_s": 1.22, "step_s": 17.8, "mem_gb": 29.77, "gen_minus_train_logp": 0.00024, "prob_gap_mean": 0.00343, "logp_gap_max": 2.2783}
+{"step": 15, "reward": 0.4492, "solved_any": 0.875, "zero_var": 0.2812, "loss": -0.072706, "grad_norm": 1.1837, "mean_len": 349.0, "truncated": 0.0859, "trained_seqs": 184, "changed": 0.0012378911169467356, "update_rms": 1.0692095046406958e-06, "gen_s": 6.51, "train_s": 9.04, "opt_sync_s": 1.22, "step_s": 16.84, "mem_gb": 29.77, "gen_minus_train_logp": 0.00026, "prob_gap_mean": 0.00352, "logp_gap_max": 1.9497}
+{"step": 16, "reward": 0.5156, "solved_any": 0.8438, "zero_var": 0.3125, "loss": -0.072101, "grad_norm": 1.1425, "mean_len": 387.5, "truncated": 0.1211, "trained_seqs": 176, "changed": 0.0012061577390873996, "update_rms": 1.0706141354207476e-06, "gen_s": 6.79, "train_s": 9.25, "opt_sync_s": 1.22, "step_s": 17.32, "mem_gb": 29.77, "gen_minus_train_logp": 0.00052, "prob_gap_mean": 0.00325, "logp_gap_max": 1.5875}
+{"step": 17, "reward": 0.4453, "solved_any": 0.8125, "zero_var": 0.25, "loss": -0.063688, "grad_norm": 1.2902, "mean_len": 326.6, "truncated": 0.0664, "trained_seqs": 192, "changed": 0.0011927678653190026, "update_rms": 1.0698912316295915e-06, "gen_s": 6.12, "train_s": 8.45, "opt_sync_s": 1.22, "step_s": 15.85, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00339, "logp_gap_max": 2.2685}
+{"step": 18, "reward": 0.4102, "solved_any": 0.7188, "zero_var": 0.3125, "loss": -0.04107, "grad_norm": 1.1776, "mean_len": 346.2, "truncated": 0.1016, "trained_seqs": 176, "changed": 0.0011679474644615106, "update_rms": 1.0727079485472952e-06, "gen_s": 6.4, "train_s": 7.45, "opt_sync_s": 1.22, "step_s": 15.13, "mem_gb": 29.77, "gen_minus_train_logp": 0.0002, "prob_gap_mean": 0.00309, "logp_gap_max": 2.8287}
+{"step": 19, "reward": 0.5586, "solved_any": 0.9062, "zero_var": 0.25, "loss": -0.079009, "grad_norm": 1.3142, "mean_len": 339.4, "truncated": 0.0781, "trained_seqs": 192, "changed": 0.0011895645846966368, "update_rms": 1.071390519180776e-06, "gen_s": 6.31, "train_s": 9.18, "opt_sync_s": 1.22, "step_s": 16.76, "mem_gb": 29.77, "gen_minus_train_logp": 0.0005, "prob_gap_mean": 0.00328, "logp_gap_max": 1.943}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (48, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (48, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (38, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (38, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 20, "reward": 0.5352, "solved_any": 0.8438, "zero_var": 0.25, "loss": -0.047173, "grad_norm": 1.2486, "mean_len": 337.7, "truncated": 0.0508, "trained_seqs": 192, "changed": 0.0011762832285904781, "update_rms": 1.0714734549606146e-06, "gen_s": 6.05, "train_s": 14.37, "opt_sync_s": 1.22, "step_s": 21.7, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00319, "logp_gap_max": 2.4096}
+{"step": 21, "reward": 0.4141, "solved_any": 0.6562, "zero_var": 0.5, "loss": -0.052217, "grad_norm": 1.022, "mean_len": 373.6, "truncated": 0.1016, "trained_seqs": 128, "changed": 0.0011424719384579135, "update_rms": 1.0736430437550553e-06, "gen_s": 6.41, "train_s": 6.58, "opt_sync_s": 1.22, "step_s": 14.27, "mem_gb": 29.77, "gen_minus_train_logp": 0.00046, "prob_gap_mean": 0.00336, "logp_gap_max": 1.71}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (21, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (21, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 22, "reward": 0.418, "solved_any": 0.7188, "zero_var": 0.4062, "loss": -0.070343, "grad_norm": 1.1502, "mean_len": 392.4, "truncated": 0.1016, "trained_seqs": 152, "changed": 0.0011614504718315802, "update_rms": 1.072528711083515e-06, "gen_s": 6.66, "train_s": 10.96, "opt_sync_s": 1.21, "step_s": 18.91, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.00336, "logp_gap_max": 1.772}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (5, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (5, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 23, "reward": 0.3789, "solved_any": 0.8125, "zero_var": 0.2188, "loss": -0.01835, "grad_norm": 1.145, "mean_len": 370.7, "truncated": 0.0742, "trained_seqs": 200, "changed": 0.001160757164545058, "update_rms": 1.0719494739746106e-06, "gen_s": 6.44, "train_s": 12.68, "opt_sync_s": 1.22, "step_s": 20.4, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.00292, "logp_gap_max": 2.0017}
+{"step": 24, "reward": 0.5039, "solved_any": 0.9062, "zero_var": 0.25, "loss": -0.027417, "grad_norm": 1.1864, "mean_len": 368.6, "truncated": 0.0703, "trained_seqs": 192, "changed": 0.00116124549402513, "update_rms": 1.070233201632963e-06, "gen_s": 6.4, "train_s": 9.4, "opt_sync_s": 1.22, "step_s": 17.09, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00304, "logp_gap_max": 1.9007}
+{"step": 25, "reward": 0.4727, "solved_any": 0.75, "zero_var": 0.4688, "loss": -0.026962, "grad_norm": 1.0229, "mean_len": 418.8, "truncated": 0.1406, "trained_seqs": 136, "changed": 0.001125687873365065, "update_rms": 1.0728503315759842e-06, "gen_s": 7.14, "train_s": 7.59, "opt_sync_s": 1.21, "step_s": 16.02, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00305, "logp_gap_max": 1.5439}
+{"step": 26, "reward": 0.4688, "solved_any": 0.7812, "zero_var": 0.4062, "loss": -0.04032, "grad_norm": 1.1609, "mean_len": 378.3, "truncated": 0.0625, "trained_seqs": 152, "changed": 0.0011313508876648311, "update_rms": 1.0711304524124694e-06, "gen_s": 6.71, "train_s": 8.15, "opt_sync_s": 1.21, "step_s": 16.14, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00317, "logp_gap_max": 1.843}
+{"step": 27, "reward": 0.4609, "solved_any": 0.75, "zero_var": 0.4062, "loss": -0.005647, "grad_norm": 1.1272, "mean_len": 391.6, "truncated": 0.082, "trained_seqs": 152, "changed": 0.0011195144241355113, "update_rms": 1.07230040272698e-06, "gen_s": 6.8, "train_s": 8.23, "opt_sync_s": 1.21, "step_s": 16.32, "mem_gb": 29.77, "gen_minus_train_logp": 0.00013, "prob_gap_mean": 0.00301, "logp_gap_max": 2.602}
+{"step": 28, "reward": 0.5781, "solved_any": 0.875, "zero_var": 0.4688, "loss": -0.027187, "grad_norm": 1.1229, "mean_len": 352.9, "truncated": 0.0703, "trained_seqs": 136, "changed": 0.0011102562598775188, "update_rms": 1.0741462234446701e-06, "gen_s": 6.17, "train_s": 7.08, "opt_sync_s": 1.22, "step_s": 14.53, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00322, "logp_gap_max": 2.9355}
+{"step": 29, "reward": 0.4961, "solved_any": 0.8125, "zero_var": 0.2812, "loss": -0.017308, "grad_norm": 1.1456, "mean_len": 433.2, "truncated": 0.1211, "trained_seqs": 184, "changed": 0.0011404201508070757, "update_rms": 1.0708834447956234e-06, "gen_s": 7.26, "train_s": 10.08, "opt_sync_s": 1.22, "step_s": 18.64, "mem_gb": 29.77, "gen_minus_train_logp": 0.00031, "prob_gap_mean": 0.0033, "logp_gap_max": 2.0091}
+{"step": 30, "reward": 0.5859, "solved_any": 0.8438, "zero_var": 0.5, "loss": -0.027393, "grad_norm": 0.9981, "mean_len": 418.5, "truncated": 0.0859, "trained_seqs": 128, "changed": 0.0011093680227162353, "update_rms": 1.0722748310080218e-06, "gen_s": 7.05, "train_s": 7.45, "opt_sync_s": 1.21, "step_s": 15.79, "mem_gb": 29.77, "gen_minus_train_logp": 0.00042, "prob_gap_mean": 0.00324, "logp_gap_max": 2.035}
+{"step": 31, "reward": 0.5234, "solved_any": 0.8438, "zero_var": 0.4062, "loss": -0.007493, "grad_norm": 1.2503, "mean_len": 375.7, "truncated": 0.0859, "trained_seqs": 152, "changed": 0.0011019767641660082, "update_rms": 1.0737437184782466e-06, "gen_s": 6.6, "train_s": 8.1, "opt_sync_s": 1.21, "step_s": 15.98, "mem_gb": 29.77, "gen_minus_train_logp": 0.0003, "prob_gap_mean": 0.00336, "logp_gap_max": 1.9228}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (4, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (4, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 32, "reward": 0.5312, "solved_any": 0.7812, "zero_var": 0.4062, "loss": -0.024289, "grad_norm": 0.9894, "mean_len": 407.4, "truncated": 0.0977, "trained_seqs": 152, "changed": 0.0011198761496763055, "update_rms": 1.0725788636858277e-06, "gen_s": 6.95, "train_s": 11.04, "opt_sync_s": 1.22, "step_s": 19.28, "mem_gb": 29.77, "gen_minus_train_logp": 0.00017, "prob_gap_mean": 0.00307, "logp_gap_max": 2.3608}
+{"step": 33, "reward": 0.6172, "solved_any": 0.875, "zero_var": 0.4062, "loss": -0.026805, "grad_norm": 1.1663, "mean_len": 385.1, "truncated": 0.0664, "trained_seqs": 152, "changed": 0.0011257561993005482, "update_rms": 1.0729541918353766e-06, "gen_s": 6.65, "train_s": 7.68, "opt_sync_s": 1.21, "step_s": 15.61, "mem_gb": 29.77, "gen_minus_train_logp": 0.00041, "prob_gap_mean": 0.00318, "logp_gap_max": 1.7557}
+{"step": 34, "reward": 0.5, "solved_any": 0.8125, "zero_var": 0.3125, "loss": -0.044292, "grad_norm": 1.0783, "mean_len": 450.6, "truncated": 0.1758, "trained_seqs": 176, "changed": 0.0011400483773345927, "update_rms": 1.0716449086204187e-06, "gen_s": 7.42, "train_s": 10.33, "opt_sync_s": 1.21, "step_s": 19.04, "mem_gb": 29.77, "gen_minus_train_logp": 0.00019, "prob_gap_mean": 0.00314, "logp_gap_max": 2.4613}
+{"step": 35, "reward": 0.625, "solved_any": 0.8125, "zero_var": 0.4375, "loss": -0.038386, "grad_norm": 1.1515, "mean_len": 366.3, "truncated": 0.0898, "trained_seqs": 144, "changed": 0.0011313267726287782, "update_rms": 1.071782364450505e-06, "gen_s": 6.44, "train_s": 6.9, "opt_sync_s": 1.22, "step_s": 14.62, "mem_gb": 29.77, "gen_minus_train_logp": 0.00026, "prob_gap_mean": 0.00281, "logp_gap_max": 1.6742}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (12, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (12, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 36, "reward": 0.5742, "solved_any": 0.8438, "zero_var": 0.3438, "loss": -0.015315, "grad_norm": 1.2627, "mean_len": 385.2, "truncated": 0.0469, "trained_seqs": 168, "changed": 0.0011246670035054902, "update_rms": 1.0711995815443098e-06, "gen_s": 6.69, "train_s": 11.8, "opt_sync_s": 1.21, "step_s": 19.76, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00312, "logp_gap_max": 2.1425}
+{"step": 37, "reward": 0.5234, "solved_any": 0.875, "zero_var": 0.25, "loss": -0.033953, "grad_norm": 1.2427, "mean_len": 405.8, "truncated": 0.0898, "trained_seqs": 192, "changed": 0.0011310454305414937, "update_rms": 1.0699283598157111e-06, "gen_s": 6.85, "train_s": 9.95, "opt_sync_s": 1.21, "step_s": 18.09, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00334, "logp_gap_max": 3.103}
+{"step": 38, "reward": 0.5547, "solved_any": 0.8438, "zero_var": 0.375, "loss": -0.034645, "grad_norm": 1.1686, "mean_len": 398.0, "truncated": 0.082, "trained_seqs": 160, "changed": 0.0011103687967124326, "update_rms": 1.072646756916604e-06, "gen_s": 6.77, "train_s": 8.63, "opt_sync_s": 1.22, "step_s": 16.68, "mem_gb": 29.77, "gen_minus_train_logp": 0.00027, "prob_gap_mean": 0.00332, "logp_gap_max": 2.3195}
+{"step": 39, "reward": 0.5898, "solved_any": 0.8438, "zero_var": 0.5, "loss": -0.04495, "grad_norm": 1.1373, "mean_len": 351.7, "truncated": 0.0625, "trained_seqs": 128, "changed": 0.0010938399490844776, "update_rms": 1.0737125516067599e-06, "gen_s": 6.31, "train_s": 6.96, "opt_sync_s": 1.22, "step_s": 14.55, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00323, "logp_gap_max": 1.9018}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (13, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (13, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 40, "reward": 0.5625, "solved_any": 0.875, "zero_var": 0.25, "loss": -0.041678, "grad_norm": 1.2346, "mean_len": 425.8, "truncated": 0.125, "trained_seqs": 192, "changed": 0.0011186945129097112, "update_rms": 1.0732303385836655e-06, "gen_s": 7.15, "train_s": 13.46, "opt_sync_s": 1.21, "step_s": 21.9, "mem_gb": 29.77, "gen_minus_train_logp": 0.00029, "prob_gap_mean": 0.00332, "logp_gap_max": 2.6679}
+{"step": 41, "reward": 0.6055, "solved_any": 0.9062, "zero_var": 0.3125, "loss": -0.055986, "grad_norm": 1.3457, "mean_len": 391.3, "truncated": 0.0977, "trained_seqs": 176, "changed": 0.0011198781592626432, "update_rms": 1.071853352894994e-06, "gen_s": 6.74, "train_s": 9.76, "opt_sync_s": 1.22, "step_s": 17.78, "mem_gb": 29.77, "gen_minus_train_logp": 0.00033, "prob_gap_mean": 0.00327, "logp_gap_max": 2.8664}
+{"step": 42, "reward": 0.6211, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.03654, "grad_norm": 1.0491, "mean_len": 362.9, "truncated": 0.0781, "trained_seqs": 112, "changed": 0.0011024088252286233, "update_rms": 1.0739579572485399e-06, "gen_s": 6.44, "train_s": 6.09, "opt_sync_s": 1.22, "step_s": 13.81, "mem_gb": 29.77, "gen_minus_train_logp": 0.00053, "prob_gap_mean": 0.00319, "logp_gap_max": 3.1099}
+{"step": 43, "reward": 0.5508, "solved_any": 0.8125, "zero_var": 0.4062, "loss": -0.026376, "grad_norm": 1.199, "mean_len": 381.6, "truncated": 0.0703, "trained_seqs": 152, "changed": 0.0011010644119686718, "update_rms": 1.0729613776619536e-06, "gen_s": 6.65, "train_s": 8.41, "opt_sync_s": 1.21, "step_s": 16.34, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00321, "logp_gap_max": 2.0357}
+{"step": 44, "reward": 0.6055, "solved_any": 0.8438, "zero_var": 0.4375, "loss": -0.016065, "grad_norm": 1.0839, "mean_len": 420.0, "truncated": 0.0859, "trained_seqs": 144, "changed": 0.001092431229061718, "update_rms": 1.074071792012778e-06, "gen_s": 7.06, "train_s": 8.39, "opt_sync_s": 1.22, "step_s": 16.74, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.00287, "logp_gap_max": 2.3705}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (14, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (14, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 45, "reward": 0.4609, "solved_any": 0.75, "zero_var": 0.4062, "loss": -0.012598, "grad_norm": 1.012, "mean_len": 476.1, "truncated": 0.1875, "trained_seqs": 152, "changed": 0.0011087671564012495, "update_rms": 1.0744624575764636e-06, "gen_s": 7.73, "train_s": 11.9, "opt_sync_s": 1.22, "step_s": 20.92, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00319, "logp_gap_max": 3.5558}
+{"step": 46, "reward": 0.6953, "solved_any": 1.0, "zero_var": 0.3438, "loss": -0.035927, "grad_norm": 1.3085, "mean_len": 433.4, "truncated": 0.1562, "trained_seqs": 168, "changed": 0.0011072217845075234, "update_rms": 1.0746745214042849e-06, "gen_s": 7.17, "train_s": 10.35, "opt_sync_s": 1.22, "step_s": 18.81, "mem_gb": 29.77, "gen_minus_train_logp": 0.00067, "prob_gap_mean": 0.00371, "logp_gap_max": 3.178}
+{"step": 47, "reward": 0.6328, "solved_any": 0.8438, "zero_var": 0.5, "loss": -0.029975, "grad_norm": 1.1648, "mean_len": 454.6, "truncated": 0.1602, "trained_seqs": 128, "changed": 0.0010779481403255878, "update_rms": 1.0753345799573013e-06, "gen_s": 7.37, "train_s": 7.71, "opt_sync_s": 1.22, "step_s": 16.38, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00322, "logp_gap_max": 2.5634}
+{"step": 48, "reward": 0.5273, "solved_any": 0.75, "zero_var": 0.5, "loss": -0.020879, "grad_norm": 1.0498, "mean_len": 450.2, "truncated": 0.2578, "trained_seqs": 128, "changed": 0.0010921740020104866, "update_rms": 1.0749026645268884e-06, "gen_s": 7.49, "train_s": 7.49, "opt_sync_s": 1.22, "step_s": 16.27, "mem_gb": 29.77, "gen_minus_train_logp": 0.00027, "prob_gap_mean": 0.00348, "logp_gap_max": 2.5388}
+{"step": 49, "reward": 0.5352, "solved_any": 0.9062, "zero_var": 0.3125, "loss": -0.051126, "grad_norm": 1.3356, "mean_len": 437.1, "truncated": 0.2266, "trained_seqs": 176, "changed": 0.001115840900310113, "update_rms": 1.0729240938277892e-06, "gen_s": 7.32, "train_s": 10.54, "opt_sync_s": 1.21, "step_s": 19.16, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00373, "logp_gap_max": 3.3392}
+{"step": 50, "reward": 0.6406, "solved_any": 0.9375, "zero_var": 0.5, "loss": -0.03194, "grad_norm": 1.2316, "mean_len": 432.3, "truncated": 0.1797, "trained_seqs": 128, "changed": 0.001110483343133684, "update_rms": 1.0748211811169506e-06, "gen_s": 7.19, "train_s": 8.32, "opt_sync_s": 1.22, "step_s": 16.8, "mem_gb": 29.77, "gen_minus_train_logp": 0.00057, "prob_gap_mean": 0.0039, "logp_gap_max": 2.3484}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (6, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (6, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.70s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 51, "reward": 0.6289, "solved_any": 0.9375, "zero_var": 0.2812, "loss": -0.043517, "grad_norm": 1.5268, "mean_len": 419.6, "truncated": 0.1211, "trained_seqs": 184, "changed": 0.0010777994309365945, "update_rms": 1.0756783478516519e-06, "gen_s": 7.04, "train_s": 12.83, "opt_sync_s": 1.22, "step_s": 21.16, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00353, "logp_gap_max": 4.3169}
+{"step": 52, "reward": 0.6211, "solved_any": 0.9062, "zero_var": 0.375, "loss": -0.015977, "grad_norm": 1.2938, "mean_len": 444.0, "truncated": 0.1445, "trained_seqs": 160, "changed": 0.0010762781740789214, "update_rms": 1.075820012477203e-06, "gen_s": 7.31, "train_s": 10.1, "opt_sync_s": 1.22, "step_s": 18.71, "mem_gb": 29.77, "gen_minus_train_logp": 0.00024, "prob_gap_mean": 0.0034, "logp_gap_max": 2.8846}
+{"step": 53, "reward": 0.6836, "solved_any": 0.9375, "zero_var": 0.4688, "loss": -0.042669, "grad_norm": 1.2199, "mean_len": 437.9, "truncated": 0.1562, "trained_seqs": 136, "changed": 0.0010929456831641807, "update_rms": 1.0761944511728308e-06, "gen_s": 7.23, "train_s": 8.73, "opt_sync_s": 1.22, "step_s": 17.26, "mem_gb": 29.77, "gen_minus_train_logp": 0.00053, "prob_gap_mean": 0.0036, "logp_gap_max": 2.9551}
+{"step": 54, "reward": 0.543, "solved_any": 0.8438, "zero_var": 0.4688, "loss": -0.022127, "grad_norm": 1.1538, "mean_len": 422.6, "truncated": 0.1484, "trained_seqs": 136, "changed": 0.0010954194839459452, "update_rms": 1.0744066562099128e-06, "gen_s": 7.05, "train_s": 8.35, "opt_sync_s": 1.22, "step_s": 16.7, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00338, "logp_gap_max": 2.4723}
+{"step": 55, "reward": 0.5781, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.023074, "grad_norm": 1.0416, "mean_len": 495.8, "truncated": 0.25, "trained_seqs": 112, "changed": 0.0010940127735095235, "update_rms": 1.076328021448842e-06, "gen_s": 7.88, "train_s": 7.83, "opt_sync_s": 1.21, "step_s": 17.02, "mem_gb": 29.77, "gen_minus_train_logp": 0.00022, "prob_gap_mean": 0.00395, "logp_gap_max": 2.2333}
+{"step": 56, "reward": 0.7539, "solved_any": 0.9688, "zero_var": 0.5312, "loss": -0.037001, "grad_norm": 1.2377, "mean_len": 395.4, "truncated": 0.1367, "trained_seqs": 120, "changed": 0.0011039059670502436, "update_rms": 1.0751125167747283e-06, "gen_s": 6.62, "train_s": 7.44, "opt_sync_s": 1.22, "step_s": 15.36, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00377, "logp_gap_max": 2.0139}
+{"step": 57, "reward": 0.6523, "solved_any": 0.7812, "zero_var": 0.5938, "loss": -0.020406, "grad_norm": 1.2786, "mean_len": 367.4, "truncated": 0.0938, "trained_seqs": 104, "changed": 0.0010800079663217767, "update_rms": 1.0772780327826667e-06, "gen_s": 6.34, "train_s": 5.38, "opt_sync_s": 1.22, "step_s": 13.01, "mem_gb": 29.77, "gen_minus_train_logp": 0.00056, "prob_gap_mean": 0.00375, "logp_gap_max": 1.8385}
+{"step": 58, "reward": 0.5938, "solved_any": 0.875, "zero_var": 0.4062, "loss": -0.034399, "grad_norm": 1.286, "mean_len": 395.9, "truncated": 0.0781, "trained_seqs": 152, "changed": 0.0011049670286365732, "update_rms": 1.0744253126575887e-06, "gen_s": 6.68, "train_s": 8.54, "opt_sync_s": 1.22, "step_s": 16.51, "mem_gb": 29.77, "gen_minus_train_logp": 0.00044, "prob_gap_mean": 0.00373, "logp_gap_max": 2.7792}
+{"step": 59, "reward": 0.5312, "solved_any": 0.8125, "zero_var": 0.4062, "loss": -0.020666, "grad_norm": 1.3235, "mean_len": 410.2, "truncated": 0.1211, "trained_seqs": 152, "changed": 0.001093663105486756, "update_rms": 1.0763140728013042e-06, "gen_s": 6.85, "train_s": 8.37, "opt_sync_s": 1.21, "step_s": 16.52, "mem_gb": 29.77, "gen_minus_train_logp": 0.00061, "prob_gap_mean": 0.00377, "logp_gap_max": 2.6375}
+{"step": 60, "reward": 0.6523, "solved_any": 0.9375, "zero_var": 0.375, "loss": -0.062661, "grad_norm": 1.573, "mean_len": 371.1, "truncated": 0.1211, "trained_seqs": 160, "changed": 0.0011122377120065356, "update_rms": 1.0741185721817242e-06, "gen_s": 6.4, "train_s": 8.97, "opt_sync_s": 1.22, "step_s": 16.66, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00389, "logp_gap_max": 2.8866}
+{"step": 61, "reward": 0.6562, "solved_any": 0.9062, "zero_var": 0.3438, "loss": -0.041779, "grad_norm": 1.5693, "mean_len": 403.9, "truncated": 0.125, "trained_seqs": 168, "changed": 0.0010949211065341845, "update_rms": 1.0754690616398745e-06, "gen_s": 6.72, "train_s": 9.25, "opt_sync_s": 1.22, "step_s": 17.27, "mem_gb": 29.77, "gen_minus_train_logp": 0.00066, "prob_gap_mean": 0.0037, "logp_gap_max": 2.418}
+{"step": 62, "reward": 0.6641, "solved_any": 0.9062, "zero_var": 0.5, "loss": -0.02266, "grad_norm": 1.3632, "mean_len": 358.8, "truncated": 0.0859, "trained_seqs": 128, "changed": 0.0010660292837564203, "update_rms": 1.0773994055398928e-06, "gen_s": 6.25, "train_s": 6.8, "opt_sync_s": 1.22, "step_s": 14.34, "mem_gb": 29.77, "gen_minus_train_logp": 0.00034, "prob_gap_mean": 0.00352, "logp_gap_max": 1.8541}
+{"step": 63, "reward": 0.6328, "solved_any": 0.9062, "zero_var": 0.3438, "loss": -0.044357, "grad_norm": 1.4537, "mean_len": 405.5, "truncated": 0.1016, "trained_seqs": 168, "changed": 0.0010945493330617015, "update_rms": 1.074943476593583e-06, "gen_s": 6.86, "train_s": 9.83, "opt_sync_s": 1.22, "step_s": 17.99, "mem_gb": 29.77, "gen_minus_train_logp": 0.00034, "prob_gap_mean": 0.00386, "logp_gap_max": 2.7715}
+{"step": 64, "reward": 0.6484, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.042791, "grad_norm": 1.1298, "mean_len": 415.7, "truncated": 0.1953, "trained_seqs": 128, "changed": 0.001103311129494271, "update_rms": 1.076371428708762e-06, "gen_s": 6.94, "train_s": 7.99, "opt_sync_s": 1.22, "step_s": 16.23, "mem_gb": 29.77, "gen_minus_train_logp": 0.00046, "prob_gap_mean": 0.00374, "logp_gap_max": 2.3177}
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (11, 16, 64, False, False, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 2, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 4, num_ctas: 1, num_stages: 3, maxnreg: None
+Autotuning kernel chunk_local_cumsum_scalar_kernel with config num_warps: 8, num_ctas: 1, num_stages: 3, maxnreg: None
+Triton autotuning for function chunk_local_cumsum_scalar_kernel,
+with key as (11, 16, 64, False, True, 'torch.float32', 'torch.float32'),
+finished after 0.69s,
+best config selected: num_warps: 1, num_ctas: 1, num_stages: 3, maxnreg: None;
+{"step": 65, "reward": 0.5977, "solved_any": 0.8125, "zero_var": 0.4375, "loss": -0.016451, "grad_norm": 1.3608, "mean_len": 421.4, "truncated": 0.1562, "trained_seqs": 144, "changed": 0.0010842823564621608, "update_rms": 1.0762859052413758e-06, "gen_s": 7.19, "train_s": 11.56, "opt_sync_s": 1.22, "step_s": 20.05, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00371, "logp_gap_max": 2.4931}
+{"step": 66, "reward": 0.6094, "solved_any": 0.8438, "zero_var": 0.4688, "loss": -0.043815, "grad_norm": 1.2721, "mean_len": 408.8, "truncated": 0.1758, "trained_seqs": 136, "changed": 0.0010846661874526703, "update_rms": 1.076313103316539e-06, "gen_s": 6.98, "train_s": 7.68, "opt_sync_s": 1.21, "step_s": 15.96, "mem_gb": 29.77, "gen_minus_train_logp": 0.0006, "prob_gap_mean": 0.00384, "logp_gap_max": 2.0864}
+{"step": 67, "reward": 0.6016, "solved_any": 0.8125, "zero_var": 0.4688, "loss": -0.019065, "grad_norm": 1.29, "mean_len": 385.7, "truncated": 0.0898, "trained_seqs": 136, "changed": 0.0010799054774185517, "update_rms": 1.0771421359536847e-06, "gen_s": 6.75, "train_s": 7.41, "opt_sync_s": 1.22, "step_s": 15.45, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.0036, "logp_gap_max": 1.9407}
+{"step": 68, "reward": 0.625, "solved_any": 0.875, "zero_var": 0.4375, "loss": -0.02843, "grad_norm": 1.2519, "mean_len": 382.7, "truncated": 0.1641, "trained_seqs": 144, "changed": 0.0010733843697525681, "update_rms": 1.0772509702013713e-06, "gen_s": 6.78, "train_s": 8.02, "opt_sync_s": 1.21, "step_s": 16.09, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00374, "logp_gap_max": 2.4766}
+{"step": 69, "reward": 0.6289, "solved_any": 0.9062, "zero_var": 0.4375, "loss": -0.008132, "grad_norm": 1.3901, "mean_len": 330.6, "truncated": 0.0742, "trained_seqs": 144, "changed": 0.001099870717684051, "update_rms": 1.077347722021842e-06, "gen_s": 5.94, "train_s": 7.34, "opt_sync_s": 1.21, "step_s": 14.57, "mem_gb": 29.77, "gen_minus_train_logp": 0.00034, "prob_gap_mean": 0.00352, "logp_gap_max": 2.1422}
+{"step": 70, "reward": 0.5586, "solved_any": 0.8438, "zero_var": 0.4375, "loss": -0.034597, "grad_norm": 1.3746, "mean_len": 369.4, "truncated": 0.0898, "trained_seqs": 144, "changed": 0.0011017838438775846, "update_rms": 1.0758227324985458e-06, "gen_s": 6.38, "train_s": 8.51, "opt_sync_s": 1.21, "step_s": 16.17, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.00362, "logp_gap_max": 2.5379}
+{"step": 71, "reward": 0.6484, "solved_any": 0.9062, "zero_var": 0.4375, "loss": -0.034005, "grad_norm": 1.3143, "mean_len": 368.7, "truncated": 0.0977, "trained_seqs": 144, "changed": 0.0010971316515057043, "update_rms": 1.0766345697237119e-06, "gen_s": 6.36, "train_s": 8.16, "opt_sync_s": 1.22, "step_s": 15.81, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.0036, "logp_gap_max": 2.4347}
+{"step": 72, "reward": 0.6445, "solved_any": 0.9688, "zero_var": 0.2812, "loss": -0.048349, "grad_norm": 1.2939, "mean_len": 421.8, "truncated": 0.1484, "trained_seqs": 184, "changed": 0.0011122236449021715, "update_rms": 1.0750588057289674e-06, "gen_s": 6.91, "train_s": 10.99, "opt_sync_s": 1.22, "step_s": 19.2, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00325, "logp_gap_max": 2.9607}
+{"step": 73, "reward": 0.6758, "solved_any": 0.875, "zero_var": 0.625, "loss": -0.040104, "grad_norm": 1.092, "mean_len": 384.7, "truncated": 0.1562, "trained_seqs": 96, "changed": 0.001085881987187006, "update_rms": 1.0778404941201379e-06, "gen_s": 6.59, "train_s": 6.7, "opt_sync_s": 1.22, "step_s": 14.58, "mem_gb": 29.77, "gen_minus_train_logp": 0.00029, "prob_gap_mean": 0.00346, "logp_gap_max": 2.963}
+{"step": 74, "reward": 0.625, "solved_any": 0.8438, "zero_var": 0.5625, "loss": -0.019563, "grad_norm": 1.0922, "mean_len": 390.0, "truncated": 0.1289, "trained_seqs": 112, "changed": 0.0010879438227695327, "update_rms": 1.0774021797452607e-06, "gen_s": 6.64, "train_s": 7.3, "opt_sync_s": 1.22, "step_s": 15.24, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00365, "logp_gap_max": 1.6734}
+{"step": 75, "reward": 0.7266, "solved_any": 0.9375, "zero_var": 0.5, "loss": -0.042487, "grad_norm": 1.2701, "mean_len": 346.6, "truncated": 0.1094, "trained_seqs": 128, "changed": 0.0010823109522648327, "update_rms": 1.0774862569506394e-06, "gen_s": 6.15, "train_s": 6.64, "opt_sync_s": 1.22, "step_s": 14.09, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00337, "logp_gap_max": 1.981}
+{"step": 76, "reward": 0.6836, "solved_any": 0.8438, "zero_var": 0.625, "loss": -0.014784, "grad_norm": 1.2694, "mean_len": 303.1, "truncated": 0.0625, "trained_seqs": 96, "changed": 0.0010706272172971815, "update_rms": 1.079277463622198e-06, "gen_s": 5.8, "train_s": 5.09, "opt_sync_s": 1.22, "step_s": 12.16, "mem_gb": 29.77, "gen_minus_train_logp": 0.00044, "prob_gap_mean": 0.0033, "logp_gap_max": 1.5716}
+{"step": 77, "reward": 0.668, "solved_any": 0.9375, "zero_var": 0.4375, "loss": -0.029276, "grad_norm": 1.2589, "mean_len": 384.4, "truncated": 0.1797, "trained_seqs": 144, "changed": 0.001092069503520924, "update_rms": 1.0772522775850512e-06, "gen_s": 6.7, "train_s": 8.39, "opt_sync_s": 1.22, "step_s": 16.38, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00336, "logp_gap_max": 2.7853}
+{"step": 78, "reward": 0.7695, "solved_any": 0.875, "zero_var": 0.6562, "loss": -0.015161, "grad_norm": 1.0589, "mean_len": 327.3, "truncated": 0.0781, "trained_seqs": 88, "changed": 0.0010657117691150566, "update_rms": 1.0783594078224651e-06, "gen_s": 6.05, "train_s": 4.83, "opt_sync_s": 1.22, "step_s": 12.16, "mem_gb": 29.77, "gen_minus_train_logp": 0.00066, "prob_gap_mean": 0.00309, "logp_gap_max": 1.2099}
+{"step": 79, "reward": 0.6133, "solved_any": 0.8438, "zero_var": 0.5312, "loss": -0.01594, "grad_norm": 1.1934, "mean_len": 326.4, "truncated": 0.0977, "trained_seqs": 120, "changed": 0.0010794513109062213, "update_rms": 1.0781313084199733e-06, "gen_s": 6.06, "train_s": 5.89, "opt_sync_s": 1.22, "step_s": 13.23, "mem_gb": 29.77, "gen_minus_train_logp": 0.0002, "prob_gap_mean": 0.00334, "logp_gap_max": 2.1599}
+{"step": 80, "reward": 0.5547, "solved_any": 0.7812, "zero_var": 0.5938, "loss": -0.024623, "grad_norm": 1.0322, "mean_len": 381.8, "truncated": 0.1602, "trained_seqs": 104, "changed": 0.0010889345488340413, "update_rms": 1.0774931810100575e-06, "gen_s": 6.7, "train_s": 6.08, "opt_sync_s": 1.22, "step_s": 14.08, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00345, "logp_gap_max": 1.4887}
+{"step": 81, "reward": 0.5977, "solved_any": 0.75, "zero_var": 0.6562, "loss": -0.02009, "grad_norm": 0.9263, "mean_len": 374.8, "truncated": 0.1953, "trained_seqs": 88, "changed": 0.0010261450237111895, "update_rms": 1.0795839623971624e-06, "gen_s": 6.63, "train_s": 4.94, "opt_sync_s": 1.22, "step_s": 12.86, "mem_gb": 29.77, "gen_minus_train_logp": 0.00023, "prob_gap_mean": 0.00343, "logp_gap_max": 1.4316}
+{"step": 82, "reward": 0.6914, "solved_any": 0.9062, "zero_var": 0.4688, "loss": -0.043541, "grad_norm": 1.3947, "mean_len": 356.7, "truncated": 0.1055, "trained_seqs": 136, "changed": 0.0010804601232477693, "update_rms": 1.0784138712141142e-06, "gen_s": 6.23, "train_s": 7.73, "opt_sync_s": 1.22, "step_s": 15.26, "mem_gb": 29.77, "gen_minus_train_logp": 0.00042, "prob_gap_mean": 0.00338, "logp_gap_max": 2.0316}
+{"step": 83, "reward": 0.6172, "solved_any": 0.8125, "zero_var": 0.5312, "loss": -0.03128, "grad_norm": 1.1055, "mean_len": 417.2, "truncated": 0.207, "trained_seqs": 120, "changed": 0.0010895655589440933, "update_rms": 1.0785758733752265e-06, "gen_s": 6.95, "train_s": 7.35, "opt_sync_s": 1.22, "step_s": 15.61, "mem_gb": 29.77, "gen_minus_train_logp": 0.00018, "prob_gap_mean": 0.00319, "logp_gap_max": 1.8423}
+{"step": 84, "reward": 0.6445, "solved_any": 0.9062, "zero_var": 0.5, "loss": -0.031226, "grad_norm": 1.0879, "mean_len": 448.2, "truncated": 0.1992, "trained_seqs": 128, "changed": 0.0010956646534791502, "update_rms": 1.0773444688824152e-06, "gen_s": 7.48, "train_s": 8.95, "opt_sync_s": 1.22, "step_s": 17.73, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.00319, "logp_gap_max": 2.5454}
+{"step": 85, "reward": 0.5547, "solved_any": 0.8125, "zero_var": 0.5, "loss": -0.028223, "grad_norm": 1.0215, "mean_len": 441.8, "truncated": 0.1719, "trained_seqs": 128, "changed": 0.0010925719001053601, "update_rms": 1.0783662646504852e-06, "gen_s": 7.37, "train_s": 8.32, "opt_sync_s": 1.21, "step_s": 16.99, "mem_gb": 29.77, "gen_minus_train_logp": 0.00018, "prob_gap_mean": 0.00316, "logp_gap_max": 2.6383}
+{"step": 86, "reward": 0.5781, "solved_any": 0.8438, "zero_var": 0.4375, "loss": -0.030015, "grad_norm": 1.1216, "mean_len": 447.5, "truncated": 0.1953, "trained_seqs": 144, "changed": 0.001097826968378564, "update_rms": 1.0782958297807498e-06, "gen_s": 7.43, "train_s": 9.76, "opt_sync_s": 1.21, "step_s": 18.49, "mem_gb": 29.77, "gen_minus_train_logp": 0.00057, "prob_gap_mean": 0.00339, "logp_gap_max": 3.5305}
+{"step": 87, "reward": 0.7305, "solved_any": 0.9062, "zero_var": 0.5312, "loss": -0.022363, "grad_norm": 1.3769, "mean_len": 348.3, "truncated": 0.0859, "trained_seqs": 120, "changed": 0.0010845094397183262, "update_rms": 1.0789134093898223e-06, "gen_s": 6.29, "train_s": 6.96, "opt_sync_s": 1.22, "step_s": 14.54, "mem_gb": 29.77, "gen_minus_train_logp": 0.00055, "prob_gap_mean": 0.00336, "logp_gap_max": 2.6603}
+{"step": 88, "reward": 0.5117, "solved_any": 0.6562, "zero_var": 0.625, "loss": -0.009192, "grad_norm": 0.8748, "mean_len": 438.0, "truncated": 0.2461, "trained_seqs": 96, "changed": 0.001003402535126926, "update_rms": 1.0791002300177241e-06, "gen_s": 7.33, "train_s": 5.6, "opt_sync_s": 1.22, "step_s": 14.24, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00324, "logp_gap_max": 1.6421}
+{"step": 89, "reward": 0.7148, "solved_any": 1.0, "zero_var": 0.4375, "loss": -0.029148, "grad_norm": 1.2567, "mean_len": 405.4, "truncated": 0.1992, "trained_seqs": 144, "changed": 0.001085560453372967, "update_rms": 1.0784316486378825e-06, "gen_s": 6.97, "train_s": 9.91, "opt_sync_s": 1.21, "step_s": 18.17, "mem_gb": 29.77, "gen_minus_train_logp": 0.0003, "prob_gap_mean": 0.00339, "logp_gap_max": 2.8521}
+{"step": 90, "reward": 0.6367, "solved_any": 0.9062, "zero_var": 0.4375, "loss": -0.024201, "grad_norm": 1.0893, "mean_len": 483.2, "truncated": 0.2461, "trained_seqs": 144, "changed": 0.0011123763734638401, "update_rms": 1.077792124532391e-06, "gen_s": 7.77, "train_s": 10.13, "opt_sync_s": 1.22, "step_s": 19.21, "mem_gb": 29.77, "gen_minus_train_logp": 0.00042, "prob_gap_mean": 0.00361, "logp_gap_max": 2.5339}
+{"step": 91, "reward": 0.6562, "solved_any": 0.8438, "zero_var": 0.5625, "loss": -0.024881, "grad_norm": 1.0969, "mean_len": 433.7, "truncated": 0.1836, "trained_seqs": 112, "changed": 0.0010900498692514899, "update_rms": 1.0791014416021223e-06, "gen_s": 7.18, "train_s": 7.89, "opt_sync_s": 1.21, "step_s": 16.36, "mem_gb": 29.77, "gen_minus_train_logp": 0.00046, "prob_gap_mean": 0.00322, "logp_gap_max": 2.8108}
+{"step": 92, "reward": 0.6602, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.042714, "grad_norm": 1.1199, "mean_len": 414.0, "truncated": 0.1875, "trained_seqs": 128, "changed": 0.0010870957773350043, "update_rms": 1.0785620221491005e-06, "gen_s": 6.98, "train_s": 7.77, "opt_sync_s": 1.22, "step_s": 16.04, "mem_gb": 29.77, "gen_minus_train_logp": 0.0002, "prob_gap_mean": 0.00338, "logp_gap_max": 1.7074}
+{"step": 93, "reward": 0.6914, "solved_any": 0.8438, "zero_var": 0.5938, "loss": -0.035044, "grad_norm": 1.0205, "mean_len": 452.2, "truncated": 0.2188, "trained_seqs": 104, "changed": 0.0010838523049858833, "update_rms": 1.0805238442930096e-06, "gen_s": 7.43, "train_s": 6.83, "opt_sync_s": 1.22, "step_s": 15.56, "mem_gb": 29.77, "gen_minus_train_logp": 0.00023, "prob_gap_mean": 0.00328, "logp_gap_max": 1.6898}
+{"step": 94, "reward": 0.7734, "solved_any": 0.9375, "zero_var": 0.625, "loss": -0.022584, "grad_norm": 1.0033, "mean_len": 399.7, "truncated": 0.1328, "trained_seqs": 96, "changed": 0.001084179867558936, "update_rms": 1.0798004675871905e-06, "gen_s": 6.79, "train_s": 6.27, "opt_sync_s": 1.22, "step_s": 14.35, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.00326, "logp_gap_max": 1.7981}
+{"step": 95, "reward": 0.6797, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.01333, "grad_norm": 1.0671, "mean_len": 459.1, "truncated": 0.2227, "trained_seqs": 128, "changed": 0.0010832815824659637, "update_rms": 1.0813340291937762e-06, "gen_s": 7.48, "train_s": 8.39, "opt_sync_s": 1.21, "step_s": 17.17, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00314, "logp_gap_max": 2.1761}
+{"step": 96, "reward": 0.6094, "solved_any": 0.8125, "zero_var": 0.625, "loss": -0.008401, "grad_norm": 1.0289, "mean_len": 442.1, "truncated": 0.2383, "trained_seqs": 96, "changed": 0.0010833921097145396, "update_rms": 1.0793789348935075e-06, "gen_s": 7.23, "train_s": 6.69, "opt_sync_s": 1.22, "step_s": 15.22, "mem_gb": 29.77, "gen_minus_train_logp": 0.0003, "prob_gap_mean": 0.00347, "logp_gap_max": 2.3919}
+{"step": 97, "reward": 0.5664, "solved_any": 0.875, "zero_var": 0.4062, "loss": -0.028475, "grad_norm": 1.1743, "mean_len": 485.7, "truncated": 0.2383, "trained_seqs": 152, "changed": 0.0010658825839537649, "update_rms": 1.0821124635278633e-06, "gen_s": 7.86, "train_s": 10.31, "opt_sync_s": 1.22, "step_s": 19.49, "mem_gb": 29.77, "gen_minus_train_logp": 0.00016, "prob_gap_mean": 0.00335, "logp_gap_max": 3.0081}
+{"step": 98, "reward": 0.6289, "solved_any": 0.9062, "zero_var": 0.4375, "loss": -0.027125, "grad_norm": 1.1143, "mean_len": 499.5, "truncated": 0.2266, "trained_seqs": 144, "changed": 0.001080510362906213, "update_rms": 1.0799881296931712e-06, "gen_s": 7.98, "train_s": 10.12, "opt_sync_s": 1.21, "step_s": 19.41, "mem_gb": 29.77, "gen_minus_train_logp": 0.00044, "prob_gap_mean": 0.00329, "logp_gap_max": 2.7109}
+{"step": 99, "reward": 0.6953, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.018197, "grad_norm": 1.1154, "mean_len": 443.2, "truncated": 0.1328, "trained_seqs": 128, "changed": 0.0010927608012211083, "update_rms": 1.0802601625531324e-06, "gen_s": 7.32, "train_s": 8.16, "opt_sync_s": 1.23, "step_s": 16.8, "mem_gb": 29.77, "gen_minus_train_logp": 0.00035, "prob_gap_mean": 0.00318, "logp_gap_max": 3.1317}
+{"step": 100, "reward": 0.5391, "solved_any": 0.8125, "zero_var": 0.5, "loss": -0.014255, "grad_norm": 0.9902, "mean_len": 528.0, "truncated": 0.3047, "trained_seqs": 128, "changed": 0.0010726448419802778, "update_rms": 1.0809986648771093e-06, "gen_s": 8.22, "train_s": 9.39, "opt_sync_s": 1.22, "step_s": 18.93, "mem_gb": 29.77, "gen_minus_train_logp": 0.00016, "prob_gap_mean": 0.00318, "logp_gap_max": 3.6838}
+{"step": 101, "reward": 0.6641, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.018815, "grad_norm": 1.1422, "mean_len": 487.7, "truncated": 0.2031, "trained_seqs": 128, "changed": 0.001082441575376786, "update_rms": 1.0804831839058877e-06, "gen_s": 7.87, "train_s": 8.77, "opt_sync_s": 1.22, "step_s": 17.95, "mem_gb": 29.77, "gen_minus_train_logp": 0.0003, "prob_gap_mean": 0.00318, "logp_gap_max": 2.5674}
+{"step": 102, "reward": 0.6289, "solved_any": 0.8438, "zero_var": 0.5, "loss": -0.012525, "grad_norm": 1.0014, "mean_len": 500.9, "truncated": 0.2109, "trained_seqs": 128, "changed": 0.0010958816888036267, "update_rms": 1.0803651264997016e-06, "gen_s": 7.98, "train_s": 8.77, "opt_sync_s": 1.22, "step_s": 18.06, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00298, "logp_gap_max": 2.2909}
+{"step": 103, "reward": 0.7031, "solved_any": 0.9062, "zero_var": 0.5625, "loss": -0.010763, "grad_norm": 1.0296, "mean_len": 467.9, "truncated": 0.1445, "trained_seqs": 112, "changed": 0.00106840059563496, "update_rms": 1.08152182025133e-06, "gen_s": 7.61, "train_s": 7.69, "opt_sync_s": 1.22, "step_s": 16.6, "mem_gb": 29.77, "gen_minus_train_logp": 0.00031, "prob_gap_mean": 0.00296, "logp_gap_max": 2.3267}
+{"step": 104, "reward": 0.6875, "solved_any": 0.875, "zero_var": 0.5625, "loss": -0.009758, "grad_norm": 1.0272, "mean_len": 500.4, "truncated": 0.2188, "trained_seqs": 112, "changed": 0.0011030639503747284, "update_rms": 1.0788331032208042e-06, "gen_s": 7.97, "train_s": 8.31, "opt_sync_s": 1.22, "step_s": 17.59, "mem_gb": 29.77, "gen_minus_train_logp": 0.00028, "prob_gap_mean": 0.00302, "logp_gap_max": 2.2576}
+{"step": 105, "reward": 0.5664, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.010517, "grad_norm": 1.0453, "mean_len": 483.1, "truncated": 0.1758, "trained_seqs": 112, "changed": 0.00108103888411304, "update_rms": 1.0805773465773447e-06, "gen_s": 7.75, "train_s": 8.31, "opt_sync_s": 1.22, "step_s": 17.37, "mem_gb": 29.77, "gen_minus_train_logp": 0.00042, "prob_gap_mean": 0.00324, "logp_gap_max": 2.1963}
+{"step": 106, "reward": 0.7227, "solved_any": 0.9375, "zero_var": 0.5938, "loss": -0.014158, "grad_norm": 1.041, "mean_len": 466.7, "truncated": 0.1172, "trained_seqs": 104, "changed": 0.0010705046325305792, "update_rms": 1.0810147738489845e-06, "gen_s": 7.64, "train_s": 7.52, "opt_sync_s": 1.22, "step_s": 16.47, "mem_gb": 29.77, "gen_minus_train_logp": 0.00059, "prob_gap_mean": 0.00324, "logp_gap_max": 2.2813}
+{"step": 107, "reward": 0.668, "solved_any": 0.875, "zero_var": 0.5625, "loss": -0.00965, "grad_norm": 0.9649, "mean_len": 530.6, "truncated": 0.1992, "trained_seqs": 112, "changed": 0.0010710512400144458, "update_rms": 1.0804124184889265e-06, "gen_s": 8.34, "train_s": 8.41, "opt_sync_s": 1.22, "step_s": 18.07, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00296, "logp_gap_max": 2.6058}
+{"step": 108, "reward": 0.6367, "solved_any": 0.7812, "zero_var": 0.625, "loss": -0.005298, "grad_norm": 0.9056, "mean_len": 502.3, "truncated": 0.1484, "trained_seqs": 96, "changed": 0.0010460881585269738, "update_rms": 1.0805468038862266e-06, "gen_s": 7.92, "train_s": 6.76, "opt_sync_s": 1.22, "step_s": 16.0, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00292, "logp_gap_max": 1.7858}
+{"step": 109, "reward": 0.6719, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.020703, "grad_norm": 1.0262, "mean_len": 544.5, "truncated": 0.2266, "trained_seqs": 128, "changed": 0.0010740595907620506, "update_rms": 1.0818175924224312e-06, "gen_s": 8.46, "train_s": 9.74, "opt_sync_s": 1.22, "step_s": 19.52, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00307, "logp_gap_max": 2.8512}
+{"step": 110, "reward": 0.625, "solved_any": 0.75, "zero_var": 0.6562, "loss": -0.018658, "grad_norm": 0.8546, "mean_len": 478.0, "truncated": 0.1875, "trained_seqs": 88, "changed": 0.001022638295551824, "update_rms": 1.0809574701448388e-06, "gen_s": 7.73, "train_s": 5.75, "opt_sync_s": 1.22, "step_s": 14.79, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.00286, "logp_gap_max": 2.3881}
+{"step": 111, "reward": 0.4883, "solved_any": 0.625, "zero_var": 0.7812, "loss": -0.005934, "grad_norm": 0.7032, "mean_len": 510.5, "truncated": 0.1992, "trained_seqs": 56, "changed": 0.0009413043077042589, "update_rms": 1.0804384604453088e-06, "gen_s": 8.1, "train_s": 4.31, "opt_sync_s": 1.22, "step_s": 13.73, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00313, "logp_gap_max": 2.7182}
+{"step": 112, "reward": 0.668, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.010774, "grad_norm": 0.9396, "mean_len": 494.8, "truncated": 0.1758, "trained_seqs": 112, "changed": 0.0010520184478096603, "update_rms": 1.0812597700303675e-06, "gen_s": 7.91, "train_s": 7.38, "opt_sync_s": 1.22, "step_s": 16.6, "mem_gb": 29.77, "gen_minus_train_logp": 0.00018, "prob_gap_mean": 0.00278, "logp_gap_max": 2.0361}
+{"step": 113, "reward": 0.7266, "solved_any": 0.9062, "zero_var": 0.5312, "loss": -0.011784, "grad_norm": 1.1163, "mean_len": 466.6, "truncated": 0.1172, "trained_seqs": 120, "changed": 0.0010855885875816953, "update_rms": 1.0822647847605445e-06, "gen_s": 7.54, "train_s": 7.79, "opt_sync_s": 1.22, "step_s": 16.64, "mem_gb": 29.77, "gen_minus_train_logp": 0.0005, "prob_gap_mean": 0.00295, "logp_gap_max": 2.6129}
+{"step": 114, "reward": 0.668, "solved_any": 0.9062, "zero_var": 0.375, "loss": -0.016415, "grad_norm": 1.1652, "mean_len": 503.6, "truncated": 0.1836, "trained_seqs": 160, "changed": 0.0011035502702684628, "update_rms": 1.0820464830857466e-06, "gen_s": 7.95, "train_s": 10.13, "opt_sync_s": 1.22, "step_s": 19.39, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00297, "logp_gap_max": 3.0311}
+{"step": 115, "reward": 0.5781, "solved_any": 0.8438, "zero_var": 0.5, "loss": -0.009977, "grad_norm": 1.0452, "mean_len": 521.7, "truncated": 0.1836, "trained_seqs": 128, "changed": 0.0011098020933651884, "update_rms": 1.080853557670481e-06, "gen_s": 8.2, "train_s": 9.13, "opt_sync_s": 1.22, "step_s": 18.64, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00308, "logp_gap_max": 2.1269}
+{"step": 116, "reward": 0.6875, "solved_any": 0.875, "zero_var": 0.4688, "loss": -0.010031, "grad_norm": 1.0087, "mean_len": 526.8, "truncated": 0.1133, "trained_seqs": 136, "changed": 0.0011164297091070723, "update_rms": 1.0808508782752296e-06, "gen_s": 8.24, "train_s": 9.85, "opt_sync_s": 1.22, "step_s": 19.41, "mem_gb": 29.77, "gen_minus_train_logp": 0.00031, "prob_gap_mean": 0.0028, "logp_gap_max": 2.6662}
+{"step": 117, "reward": 0.6641, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.020425, "grad_norm": 1.0286, "mean_len": 517.6, "truncated": 0.1562, "trained_seqs": 112, "changed": 0.001107099199740921, "update_rms": 1.0816480033172864e-06, "gen_s": 8.13, "train_s": 7.71, "opt_sync_s": 1.22, "step_s": 17.16, "mem_gb": 29.77, "gen_minus_train_logp": 0.00047, "prob_gap_mean": 0.00278, "logp_gap_max": 2.5676}
+{"step": 118, "reward": 0.7812, "solved_any": 0.9375, "zero_var": 0.6562, "loss": -0.010389, "grad_norm": 0.987, "mean_len": 465.7, "truncated": 0.0703, "trained_seqs": 88, "changed": 0.0010587204182460409, "update_rms": 1.0828579403636867e-06, "gen_s": 7.6, "train_s": 6.07, "opt_sync_s": 1.22, "step_s": 14.98, "mem_gb": 29.77, "gen_minus_train_logp": 0.00046, "prob_gap_mean": 0.00281, "logp_gap_max": 1.7756}
+{"step": 119, "reward": 0.7148, "solved_any": 0.9062, "zero_var": 0.4062, "loss": -0.019232, "grad_norm": 1.1315, "mean_len": 518.2, "truncated": 0.1562, "trained_seqs": 152, "changed": 0.001078892645904328, "update_rms": 1.0823051547246886e-06, "gen_s": 8.22, "train_s": 10.16, "opt_sync_s": 1.22, "step_s": 19.69, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.0027, "logp_gap_max": 3.1613}
+{"step": 120, "reward": 0.6484, "solved_any": 0.8125, "zero_var": 0.6562, "loss": -0.008196, "grad_norm": 0.8997, "mean_len": 526.2, "truncated": 0.1562, "trained_seqs": 88, "changed": 0.0010440544571531755, "update_rms": 1.0823128772322941e-06, "gen_s": 8.21, "train_s": 6.71, "opt_sync_s": 1.21, "step_s": 16.23, "mem_gb": 29.77, "gen_minus_train_logp": 0.00048, "prob_gap_mean": 0.00329, "logp_gap_max": 1.8744}
+{"step": 121, "reward": 0.7422, "solved_any": 0.9375, "zero_var": 0.5312, "loss": -0.014114, "grad_norm": 1.2551, "mean_len": 413.3, "truncated": 0.0898, "trained_seqs": 120, "changed": 0.0010780667059195146, "update_rms": 1.0842015685239616e-06, "gen_s": 6.94, "train_s": 7.61, "opt_sync_s": 1.22, "step_s": 15.85, "mem_gb": 29.77, "gen_minus_train_logp": 0.00051, "prob_gap_mean": 0.00329, "logp_gap_max": 1.9244}
+{"step": 122, "reward": 0.6797, "solved_any": 0.9375, "zero_var": 0.4375, "loss": -0.009126, "grad_norm": 1.3366, "mean_len": 385.0, "truncated": 0.0469, "trained_seqs": 144, "changed": 0.0011112309092513252, "update_rms": 1.082172212943335e-06, "gen_s": 6.69, "train_s": 8.66, "opt_sync_s": 1.22, "step_s": 16.64, "mem_gb": 29.77, "gen_minus_train_logp": 0.00041, "prob_gap_mean": 0.0033, "logp_gap_max": 2.4327}
+{"step": 123, "reward": 0.8047, "solved_any": 0.9062, "zero_var": 0.5625, "loss": -0.006239, "grad_norm": 1.3425, "mean_len": 333.0, "truncated": 0.043, "trained_seqs": 112, "changed": 0.0010724036916197484, "update_rms": 1.0839277780710803e-06, "gen_s": 6.11, "train_s": 5.42, "opt_sync_s": 1.22, "step_s": 12.82, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00308, "logp_gap_max": 2.0664}
+{"step": 124, "reward": 0.6211, "solved_any": 0.875, "zero_var": 0.375, "loss": -0.011824, "grad_norm": 1.3599, "mean_len": 430.3, "truncated": 0.125, "trained_seqs": 160, "changed": 0.0011007569452589968, "update_rms": 1.0817101605712957e-06, "gen_s": 7.18, "train_s": 9.11, "opt_sync_s": 1.22, "step_s": 17.59, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00334, "logp_gap_max": 2.8107}
+{"step": 125, "reward": 0.7617, "solved_any": 0.9688, "zero_var": 0.5, "loss": -0.010736, "grad_norm": 1.4022, "mean_len": 381.4, "truncated": 0.0586, "trained_seqs": 128, "changed": 0.001075287448014413, "update_rms": 1.0840519784176243e-06, "gen_s": 6.65, "train_s": 7.55, "opt_sync_s": 1.22, "step_s": 15.49, "mem_gb": 29.77, "gen_minus_train_logp": 0.00029, "prob_gap_mean": 0.00344, "logp_gap_max": 2.3538}
+{"step": 126, "reward": 0.7227, "solved_any": 0.875, "zero_var": 0.625, "loss": -0.007424, "grad_norm": 1.3323, "mean_len": 360.8, "truncated": 0.0781, "trained_seqs": 96, "changed": 0.001078749965274348, "update_rms": 1.0846053783909444e-06, "gen_s": 6.39, "train_s": 5.83, "opt_sync_s": 1.22, "step_s": 13.51, "mem_gb": 29.77, "gen_minus_train_logp": 0.0005, "prob_gap_mean": 0.00343, "logp_gap_max": 1.6998}
+{"step": 127, "reward": 0.7109, "solved_any": 0.9375, "zero_var": 0.4062, "loss": -0.007952, "grad_norm": 1.4174, "mean_len": 450.6, "truncated": 0.1211, "trained_seqs": 152, "changed": 0.0010978852463823588, "update_rms": 1.083771857483747e-06, "gen_s": 7.39, "train_s": 9.95, "opt_sync_s": 1.22, "step_s": 18.65, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00346, "logp_gap_max": 2.6425}
+{"step": 128, "reward": 0.7188, "solved_any": 0.9688, "zero_var": 0.5, "loss": -0.010423, "grad_norm": 1.2742, "mean_len": 404.9, "truncated": 0.082, "trained_seqs": 128, "changed": 0.0011208708949134894, "update_rms": 1.082635158788688e-06, "gen_s": 6.89, "train_s": 8.38, "opt_sync_s": 1.22, "step_s": 16.57, "mem_gb": 29.77, "gen_minus_train_logp": 0.00055, "prob_gap_mean": 0.00336, "logp_gap_max": 2.5942}
+{"step": 129, "reward": 0.7734, "solved_any": 0.9688, "zero_var": 0.5, "loss": -0.021, "grad_norm": 1.3738, "mean_len": 410.2, "truncated": 0.1055, "trained_seqs": 128, "changed": 0.001099746123331111, "update_rms": 1.0838228259683374e-06, "gen_s": 6.98, "train_s": 8.21, "opt_sync_s": 1.22, "step_s": 16.49, "mem_gb": 29.77, "gen_minus_train_logp": 0.00018, "prob_gap_mean": 0.00359, "logp_gap_max": 2.7818}
+{"step": 130, "reward": 0.7148, "solved_any": 0.9062, "zero_var": 0.5, "loss": -0.015796, "grad_norm": 1.3666, "mean_len": 384.4, "truncated": 0.0859, "trained_seqs": 128, "changed": 0.0010956224521660575, "update_rms": 1.0837852918728897e-06, "gen_s": 6.71, "train_s": 7.4, "opt_sync_s": 1.22, "step_s": 15.41, "mem_gb": 29.77, "gen_minus_train_logp": 0.0006, "prob_gap_mean": 0.00359, "logp_gap_max": 2.7482}
+{"step": 131, "reward": 0.7188, "solved_any": 0.8438, "zero_var": 0.7188, "loss": -0.004831, "grad_norm": 0.9565, "mean_len": 423.9, "truncated": 0.1133, "trained_seqs": 72, "changed": 0.00106405988914543, "update_rms": 1.0833800534465768e-06, "gen_s": 7.12, "train_s": 5.04, "opt_sync_s": 1.22, "step_s": 13.46, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00349, "logp_gap_max": 1.5776}
+{"step": 132, "reward": 0.7617, "solved_any": 0.875, "zero_var": 0.7188, "loss": -0.009029, "grad_norm": 1.0764, "mean_len": 418.1, "truncated": 0.1016, "trained_seqs": 72, "changed": 0.001067034076925293, "update_rms": 1.0841773811209747e-06, "gen_s": 7.06, "train_s": 5.52, "opt_sync_s": 1.22, "step_s": 13.88, "mem_gb": 29.77, "gen_minus_train_logp": 0.00046, "prob_gap_mean": 0.00342, "logp_gap_max": 1.7616}
+{"step": 133, "reward": 0.6992, "solved_any": 0.8438, "zero_var": 0.6875, "loss": -0.008584, "grad_norm": 1.0574, "mean_len": 409.5, "truncated": 0.1172, "trained_seqs": 80, "changed": 0.0010529006562119303, "update_rms": 1.0840688344623635e-06, "gen_s": 7.04, "train_s": 5.08, "opt_sync_s": 1.22, "step_s": 13.42, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00339, "logp_gap_max": 1.6089}
+{"step": 134, "reward": 0.7773, "solved_any": 0.9688, "zero_var": 0.5312, "loss": -0.010387, "grad_norm": 1.4053, "mean_len": 386.4, "truncated": 0.0625, "trained_seqs": 120, "changed": 0.001059098220477537, "update_rms": 1.0843979010956108e-06, "gen_s": 6.73, "train_s": 7.46, "opt_sync_s": 1.22, "step_s": 15.5, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.00377, "logp_gap_max": 2.43}
+{"step": 135, "reward": 0.6992, "solved_any": 0.9375, "zero_var": 0.5312, "loss": -0.015419, "grad_norm": 1.4707, "mean_len": 402.0, "truncated": 0.1133, "trained_seqs": 120, "changed": 0.001089440964591153, "update_rms": 1.0837201460896927e-06, "gen_s": 6.9, "train_s": 7.86, "opt_sync_s": 1.22, "step_s": 16.06, "mem_gb": 29.77, "gen_minus_train_logp": 0.00052, "prob_gap_mean": 0.00388, "logp_gap_max": 2.538}
+{"step": 136, "reward": 0.6055, "solved_any": 0.8125, "zero_var": 0.5938, "loss": -0.007103, "grad_norm": 0.9615, "mean_len": 501.9, "truncated": 0.2422, "trained_seqs": 104, "changed": 0.00107161794336169, "update_rms": 1.0834938669446502e-06, "gen_s": 8.01, "train_s": 7.16, "opt_sync_s": 1.22, "step_s": 16.5, "mem_gb": 29.77, "gen_minus_train_logp": 0.00022, "prob_gap_mean": 0.00357, "logp_gap_max": 2.2965}
+{"step": 137, "reward": 0.7773, "solved_any": 0.9062, "zero_var": 0.5938, "loss": -0.01372, "grad_norm": 1.1407, "mean_len": 473.4, "truncated": 0.1211, "trained_seqs": 104, "changed": 0.0010857031340029467, "update_rms": 1.0834027694720966e-06, "gen_s": 7.7, "train_s": 7.41, "opt_sync_s": 1.22, "step_s": 16.41, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00304, "logp_gap_max": 2.2177}
+{"step": 138, "reward": 0.6992, "solved_any": 0.8438, "zero_var": 0.6875, "loss": -0.007709, "grad_norm": 1.0794, "mean_len": 414.5, "truncated": 0.1445, "trained_seqs": 80, "changed": 0.0010555995306635224, "update_rms": 1.0852024630732454e-06, "gen_s": 7.08, "train_s": 4.99, "opt_sync_s": 1.22, "step_s": 13.36, "mem_gb": 29.77, "gen_minus_train_logp": 0.00058, "prob_gap_mean": 0.00352, "logp_gap_max": 2.001}
+{"step": 139, "reward": 0.6797, "solved_any": 0.875, "zero_var": 0.5625, "loss": -0.009933, "grad_norm": 1.1517, "mean_len": 533.8, "truncated": 0.2109, "trained_seqs": 112, "changed": 0.0010786615434754873, "update_rms": 1.0842738818892245e-06, "gen_s": 8.37, "train_s": 8.62, "opt_sync_s": 1.22, "step_s": 18.3, "mem_gb": 29.77, "gen_minus_train_logp": 0.00063, "prob_gap_mean": 0.00337, "logp_gap_max": 3.8544}
+{"step": 140, "reward": 0.6719, "solved_any": 0.875, "zero_var": 0.5938, "loss": -0.015003, "grad_norm": 1.1801, "mean_len": 454.2, "truncated": 0.1289, "trained_seqs": 104, "changed": 0.001082726936636746, "update_rms": 1.0844333197864648e-06, "gen_s": 7.42, "train_s": 7.04, "opt_sync_s": 1.22, "step_s": 15.77, "mem_gb": 29.77, "gen_minus_train_logp": 0.00029, "prob_gap_mean": 0.00358, "logp_gap_max": 2.5051}
+{"step": 141, "reward": 0.7422, "solved_any": 0.875, "zero_var": 0.6875, "loss": -0.004464, "grad_norm": 1.1114, "mean_len": 448.5, "truncated": 0.0977, "trained_seqs": 80, "changed": 0.0010415022825042391, "update_rms": 1.0871039787819433e-06, "gen_s": 7.36, "train_s": 5.46, "opt_sync_s": 1.21, "step_s": 14.12, "mem_gb": 29.77, "gen_minus_train_logp": 0.00061, "prob_gap_mean": 0.00373, "logp_gap_max": 1.8759}
+{"step": 142, "reward": 0.707, "solved_any": 0.875, "zero_var": 0.6875, "loss": -0.009947, "grad_norm": 1.0921, "mean_len": 484.9, "truncated": 0.1445, "trained_seqs": 80, "changed": 0.0010493155541853928, "update_rms": 1.0871922773414053e-06, "gen_s": 7.77, "train_s": 6.25, "opt_sync_s": 1.22, "step_s": 15.33, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00352, "logp_gap_max": 1.7638}
+{"step": 143, "reward": 0.7852, "solved_any": 0.9688, "zero_var": 0.625, "loss": -0.011217, "grad_norm": 1.3517, "mean_len": 382.4, "truncated": 0.082, "trained_seqs": 96, "changed": 0.0010727453212971653, "update_rms": 1.0864453607214416e-06, "gen_s": 6.68, "train_s": 6.74, "opt_sync_s": 1.22, "step_s": 14.7, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00374, "logp_gap_max": 2.1128}
+{"step": 144, "reward": 0.6875, "solved_any": 0.8438, "zero_var": 0.75, "loss": -0.003586, "grad_norm": 1.0775, "mean_len": 391.4, "truncated": 0.0977, "trained_seqs": 64, "changed": 0.001060659669061965, "update_rms": 1.0871947916639904e-06, "gen_s": 6.75, "train_s": 4.63, "opt_sync_s": 1.22, "step_s": 12.67, "mem_gb": 29.77, "gen_minus_train_logp": 0.00048, "prob_gap_mean": 0.00391, "logp_gap_max": 1.4224}
+{"step": 145, "reward": 0.7344, "solved_any": 0.9688, "zero_var": 0.5312, "loss": -0.006293, "grad_norm": 1.3522, "mean_len": 450.9, "truncated": 0.0742, "trained_seqs": 120, "changed": 0.0010821059744583828, "update_rms": 1.0869488679941666e-06, "gen_s": 7.4, "train_s": 8.24, "opt_sync_s": 1.22, "step_s": 16.94, "mem_gb": 29.77, "gen_minus_train_logp": 0.00056, "prob_gap_mean": 0.00369, "logp_gap_max": 2.7797}
+{"step": 146, "reward": 0.5586, "solved_any": 0.8125, "zero_var": 0.5, "loss": -0.003128, "grad_norm": 1.2397, "mean_len": 534.1, "truncated": 0.2383, "trained_seqs": 128, "changed": 0.0010820517156272635, "update_rms": 1.0876801259394343e-06, "gen_s": 8.55, "train_s": 9.91, "opt_sync_s": 1.22, "step_s": 19.77, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00345, "logp_gap_max": 4.4799}
+{"step": 147, "reward": 0.6328, "solved_any": 0.875, "zero_var": 0.5312, "loss": -0.010628, "grad_norm": 1.159, "mean_len": 549.4, "truncated": 0.2344, "trained_seqs": 120, "changed": 0.001066915511331366, "update_rms": 1.0880769923653933e-06, "gen_s": 8.49, "train_s": 8.99, "opt_sync_s": 1.22, "step_s": 18.79, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00326, "logp_gap_max": 3.7485}
+{"step": 148, "reward": 0.6562, "solved_any": 0.9375, "zero_var": 0.4688, "loss": -0.007379, "grad_norm": 1.3228, "mean_len": 551.0, "truncated": 0.2109, "trained_seqs": 136, "changed": 0.001065731864978434, "update_rms": 1.0885681572137581e-06, "gen_s": 8.5, "train_s": 10.71, "opt_sync_s": 1.22, "step_s": 20.53, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00348, "logp_gap_max": 4.0381}
+{"step": 149, "reward": 0.7305, "solved_any": 0.9062, "zero_var": 0.6562, "loss": -0.007293, "grad_norm": 1.0668, "mean_len": 552.6, "truncated": 0.1875, "trained_seqs": 88, "changed": 0.0010668351278778562, "update_rms": 1.0866485050848092e-06, "gen_s": 8.57, "train_s": 7.1, "opt_sync_s": 1.22, "step_s": 17.0, "mem_gb": 29.77, "gen_minus_train_logp": 0.00065, "prob_gap_mean": 0.00378, "logp_gap_max": 2.3902}
+{"step": 150, "reward": 0.7188, "solved_any": 0.9062, "zero_var": 0.5312, "loss": -0.000991, "grad_norm": 1.1591, "mean_len": 524.0, "truncated": 0.125, "trained_seqs": 120, "changed": 0.00105828433801075, "update_rms": 1.0889972336742606e-06, "gen_s": 8.23, "train_s": 8.53, "opt_sync_s": 1.22, "step_s": 18.07, "mem_gb": 29.77, "gen_minus_train_logp": 0.00028, "prob_gap_mean": 0.00328, "logp_gap_max": 3.6603}
+{"step": 151, "reward": 0.6875, "solved_any": 0.8438, "zero_var": 0.6562, "loss": -0.005271, "grad_norm": 1.1177, "mean_len": 501.5, "truncated": 0.1719, "trained_seqs": 88, "changed": 0.001043405360766084, "update_rms": 1.089633010470519e-06, "gen_s": 7.95, "train_s": 6.36, "opt_sync_s": 1.22, "step_s": 15.63, "mem_gb": 29.77, "gen_minus_train_logp": 0.00054, "prob_gap_mean": 0.00334, "logp_gap_max": 2.1598}
+{"step": 152, "reward": 0.6797, "solved_any": 0.8125, "zero_var": 0.6562, "loss": -0.00472, "grad_norm": 1.0332, "mean_len": 549.4, "truncated": 0.2031, "trained_seqs": 88, "changed": 0.001034607391779435, "update_rms": 1.0892369532675553e-06, "gen_s": 8.74, "train_s": 6.74, "opt_sync_s": 1.22, "step_s": 16.81, "mem_gb": 29.77, "gen_minus_train_logp": 0.00037, "prob_gap_mean": 0.00316, "logp_gap_max": 3.1957}
+{"step": 153, "reward": 0.6328, "solved_any": 0.7812, "zero_var": 0.5938, "loss": -0.01077, "grad_norm": 1.1833, "mean_len": 520.2, "truncated": 0.1719, "trained_seqs": 104, "changed": 0.001075602953069439, "update_rms": 1.0891663385070646e-06, "gen_s": 8.24, "train_s": 7.65, "opt_sync_s": 1.22, "step_s": 17.21, "mem_gb": 29.77, "gen_minus_train_logp": 0.00067, "prob_gap_mean": 0.00345, "logp_gap_max": 3.7857}
+{"step": 154, "reward": 0.6484, "solved_any": 0.9062, "zero_var": 0.5625, "loss": -0.012904, "grad_norm": 1.3077, "mean_len": 473.6, "truncated": 0.1484, "trained_seqs": 112, "changed": 0.0010621467629518965, "update_rms": 1.0895581936253828e-06, "gen_s": 7.72, "train_s": 8.02, "opt_sync_s": 1.22, "step_s": 17.06, "mem_gb": 29.77, "gen_minus_train_logp": 0.00032, "prob_gap_mean": 0.0035, "logp_gap_max": 2.5995}
+{"step": 155, "reward": 0.582, "solved_any": 0.7812, "zero_var": 0.5312, "loss": -0.009012, "grad_norm": 1.2499, "mean_len": 501.6, "truncated": 0.1328, "trained_seqs": 120, "changed": 0.0010757154899043526, "update_rms": 1.089346126493461e-06, "gen_s": 7.97, "train_s": 8.4, "opt_sync_s": 1.22, "step_s": 17.69, "mem_gb": 29.77, "gen_minus_train_logp": 0.00047, "prob_gap_mean": 0.00338, "logp_gap_max": 3.3738}
+{"step": 156, "reward": 0.5547, "solved_any": 0.75, "zero_var": 0.5, "loss": -0.002712, "grad_norm": 1.2644, "mean_len": 492.1, "truncated": 0.1641, "trained_seqs": 128, "changed": 0.001076659995483093, "update_rms": 1.0895105758994218e-06, "gen_s": 7.88, "train_s": 7.91, "opt_sync_s": 1.22, "step_s": 17.1, "mem_gb": 29.77, "gen_minus_train_logp": 0.00072, "prob_gap_mean": 0.00351, "logp_gap_max": 2.5905}
+{"step": 157, "reward": 0.6836, "solved_any": 0.7812, "zero_var": 0.7188, "loss": -0.008565, "grad_norm": 1.1512, "mean_len": 409.9, "truncated": 0.0547, "trained_seqs": 72, "changed": 0.0010570424136540234, "update_rms": 1.0891866074373804e-06, "gen_s": 6.87, "train_s": 4.62, "opt_sync_s": 1.22, "step_s": 12.78, "mem_gb": 29.77, "gen_minus_train_logp": 0.00036, "prob_gap_mean": 0.00365, "logp_gap_max": 1.5428}
+{"step": 158, "reward": 0.6523, "solved_any": 0.875, "zero_var": 0.5625, "loss": -0.007543, "grad_norm": 1.436, "mean_len": 433.0, "truncated": 0.0977, "trained_seqs": 112, "changed": 0.0010793046111035659, "update_rms": 1.088149190654576e-06, "gen_s": 7.25, "train_s": 7.31, "opt_sync_s": 1.22, "step_s": 15.86, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.00343, "logp_gap_max": 2.4145}
+{"step": 159, "reward": 0.6953, "solved_any": 0.9062, "zero_var": 0.5, "loss": -0.010849, "grad_norm": 1.5903, "mean_len": 403.9, "truncated": 0.0547, "trained_seqs": 128, "changed": 0.0010734868586557932, "update_rms": 1.0879945749383886e-06, "gen_s": 6.8, "train_s": 7.62, "opt_sync_s": 1.22, "step_s": 15.72, "mem_gb": 29.77, "gen_minus_train_logp": 0.00056, "prob_gap_mean": 0.00364, "logp_gap_max": 2.5423}
+{"step": 160, "reward": 0.6445, "solved_any": 0.875, "zero_var": 0.4688, "loss": -0.009444, "grad_norm": 1.4859, "mean_len": 426.8, "truncated": 0.0547, "trained_seqs": 136, "changed": 0.0010727091487430858, "update_rms": 1.0878184643618718e-06, "gen_s": 7.01, "train_s": 8.27, "opt_sync_s": 1.21, "step_s": 16.57, "mem_gb": 29.77, "gen_minus_train_logp": 0.00046, "prob_gap_mean": 0.00344, "logp_gap_max": 3.0518}
+{"step": 161, "reward": 0.7773, "solved_any": 0.9688, "zero_var": 0.5, "loss": -0.006272, "grad_norm": 1.5041, "mean_len": 400.4, "truncated": 0.0352, "trained_seqs": 128, "changed": 0.0010770799990276816, "update_rms": 1.0888830039825725e-06, "gen_s": 6.92, "train_s": 7.74, "opt_sync_s": 1.22, "step_s": 15.95, "mem_gb": 29.77, "gen_minus_train_logp": 0.00011, "prob_gap_mean": 0.0031, "logp_gap_max": 3.2593}
+{"step": 162, "reward": 0.6758, "solved_any": 0.875, "zero_var": 0.5, "loss": -0.000786, "grad_norm": 1.5009, "mean_len": 391.9, "truncated": 0.0352, "trained_seqs": 128, "changed": 0.00107890872259503, "update_rms": 1.0886758428797395e-06, "gen_s": 6.88, "train_s": 7.53, "opt_sync_s": 1.22, "step_s": 15.69, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00321, "logp_gap_max": 5.0154}
+{"step": 163, "reward": 0.7031, "solved_any": 0.9062, "zero_var": 0.4688, "loss": -0.007698, "grad_norm": 1.8144, "mean_len": 390.5, "truncated": 0.0664, "trained_seqs": 136, "changed": 0.0010758481226026439, "update_rms": 1.0892253501470362e-06, "gen_s": 6.65, "train_s": 8.08, "opt_sync_s": 1.22, "step_s": 16.02, "mem_gb": 29.77, "gen_minus_train_logp": 0.00064, "prob_gap_mean": 0.00375, "logp_gap_max": 3.192}
+{"step": 164, "reward": 0.6797, "solved_any": 0.9062, "zero_var": 0.5312, "loss": -0.004821, "grad_norm": 1.6329, "mean_len": 408.0, "truncated": 0.0586, "trained_seqs": 120, "changed": 0.0010407245725915317, "update_rms": 1.0902664072067e-06, "gen_s": 6.99, "train_s": 7.04, "opt_sync_s": 1.22, "step_s": 15.33, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.0037, "logp_gap_max": 3.881}
+{"step": 165, "reward": 0.668, "solved_any": 0.9375, "zero_var": 0.5625, "loss": -0.003913, "grad_norm": 1.2129, "mean_len": 522.3, "truncated": 0.1953, "trained_seqs": 112, "changed": 0.00111135148443159, "update_rms": 1.0879375126571052e-06, "gen_s": 8.25, "train_s": 8.59, "opt_sync_s": 1.21, "step_s": 18.15, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00372, "logp_gap_max": 3.6146}
+{"step": 166, "reward": 0.7344, "solved_any": 0.9062, "zero_var": 0.5312, "loss": -0.014961, "grad_norm": 1.3492, "mean_len": 493.0, "truncated": 0.1289, "trained_seqs": 120, "changed": 0.001080683187331259, "update_rms": 1.088652783717394e-06, "gen_s": 7.81, "train_s": 8.23, "opt_sync_s": 1.22, "step_s": 17.35, "mem_gb": 29.77, "gen_minus_train_logp": 0.00034, "prob_gap_mean": 0.00317, "logp_gap_max": 3.7541}
+{"step": 167, "reward": 0.6055, "solved_any": 0.7812, "zero_var": 0.5625, "loss": -0.012851, "grad_norm": 1.3912, "mean_len": 444.1, "truncated": 0.0352, "trained_seqs": 112, "changed": 0.0010714752627317102, "update_rms": 1.08855419231352e-06, "gen_s": 7.33, "train_s": 6.87, "opt_sync_s": 1.22, "step_s": 15.5, "mem_gb": 29.77, "gen_minus_train_logp": 0.00041, "prob_gap_mean": 0.00345, "logp_gap_max": 2.5988}
+{"step": 168, "reward": 0.7891, "solved_any": 0.9375, "zero_var": 0.5938, "loss": -0.01126, "grad_norm": 1.4293, "mean_len": 429.9, "truncated": 0.0742, "trained_seqs": 104, "changed": 0.0010660152166520561, "update_rms": 1.0898067635494586e-06, "gen_s": 7.19, "train_s": 6.73, "opt_sync_s": 1.22, "step_s": 15.22, "mem_gb": 29.77, "gen_minus_train_logp": 0.00051, "prob_gap_mean": 0.00324, "logp_gap_max": 2.9198}
+{"step": 169, "reward": 0.6055, "solved_any": 0.7812, "zero_var": 0.5625, "loss": -0.009075, "grad_norm": 1.4403, "mean_len": 442.0, "truncated": 0.1055, "trained_seqs": 112, "changed": 0.0010685714104736682, "update_rms": 1.0892058443272092e-06, "gen_s": 7.29, "train_s": 6.98, "opt_sync_s": 1.21, "step_s": 15.57, "mem_gb": 29.77, "gen_minus_train_logp": 0.00057, "prob_gap_mean": 0.0035, "logp_gap_max": 3.7298}
+{"step": 170, "reward": 0.7305, "solved_any": 0.9375, "zero_var": 0.5625, "loss": -0.008694, "grad_norm": 1.5272, "mean_len": 410.4, "truncated": 0.0508, "trained_seqs": 112, "changed": 0.0010879217173198176, "update_rms": 1.088674219465493e-06, "gen_s": 6.85, "train_s": 7.23, "opt_sync_s": 1.22, "step_s": 15.37, "mem_gb": 29.77, "gen_minus_train_logp": 0.0003, "prob_gap_mean": 0.00366, "logp_gap_max": 2.5053}
+{"step": 171, "reward": 0.6641, "solved_any": 0.8438, "zero_var": 0.5625, "loss": -0.010161, "grad_norm": 1.378, "mean_len": 443.3, "truncated": 0.1016, "trained_seqs": 112, "changed": 0.001082276789297091, "update_rms": 1.0894625014218723e-06, "gen_s": 7.19, "train_s": 7.35, "opt_sync_s": 1.22, "step_s": 15.84, "mem_gb": 29.77, "gen_minus_train_logp": 0.0005, "prob_gap_mean": 0.00331, "logp_gap_max": 3.1978}
+{"step": 172, "reward": 0.6797, "solved_any": 0.875, "zero_var": 0.625, "loss": -0.004993, "grad_norm": 1.3009, "mean_len": 390.9, "truncated": 0.0625, "trained_seqs": 96, "changed": 0.0010793669082800358, "update_rms": 1.0885571698822731e-06, "gen_s": 6.63, "train_s": 5.97, "opt_sync_s": 1.22, "step_s": 13.89, "mem_gb": 29.77, "gen_minus_train_logp": 0.00029, "prob_gap_mean": 0.0036, "logp_gap_max": 2.1049}
+{"step": 173, "reward": 0.8086, "solved_any": 0.9375, "zero_var": 0.7188, "loss": -0.003315, "grad_norm": 1.3901, "mean_len": 382.7, "truncated": 0.043, "trained_seqs": 72, "changed": 0.0010468618492670057, "update_rms": 1.089322830817392e-06, "gen_s": 6.55, "train_s": 4.56, "opt_sync_s": 1.23, "step_s": 12.41, "mem_gb": 29.77, "gen_minus_train_logp": 0.00018, "prob_gap_mean": 0.00398, "logp_gap_max": 1.8678}
+{"step": 174, "reward": 0.6133, "solved_any": 0.8125, "zero_var": 0.625, "loss": -0.005528, "grad_norm": 1.2696, "mean_len": 467.0, "truncated": 0.1094, "trained_seqs": 96, "changed": 0.0010803114138587763, "update_rms": 1.0886144766260023e-06, "gen_s": 7.53, "train_s": 6.32, "opt_sync_s": 1.21, "step_s": 15.15, "mem_gb": 29.77, "gen_minus_train_logp": 0.00049, "prob_gap_mean": 0.00363, "logp_gap_max": 2.3359}
+{"step": 175, "reward": 0.5625, "solved_any": 0.75, "zero_var": 0.5938, "loss": -0.001433, "grad_norm": 1.3145, "mean_len": 434.4, "truncated": 0.1016, "trained_seqs": 104, "changed": 0.0010725383339043773, "update_rms": 1.0891988518913413e-06, "gen_s": 7.34, "train_s": 6.59, "opt_sync_s": 1.22, "step_s": 15.22, "mem_gb": 29.77, "gen_minus_train_logp": 0.00065, "prob_gap_mean": 0.00395, "logp_gap_max": 2.5758}
+{"step": 176, "reward": 0.7422, "solved_any": 0.875, "zero_var": 0.625, "loss": -0.000844, "grad_norm": 1.367, "mean_len": 370.0, "truncated": 0.0586, "trained_seqs": 96, "changed": 0.0010446251796730954, "update_rms": 1.0898082930988424e-06, "gen_s": 6.41, "train_s": 5.08, "opt_sync_s": 1.21, "step_s": 12.77, "mem_gb": 29.77, "gen_minus_train_logp": 0.00045, "prob_gap_mean": 0.00332, "logp_gap_max": 2.4377}
+{"step": 177, "reward": 0.7578, "solved_any": 0.9688, "zero_var": 0.5938, "loss": 0.000286, "grad_norm": 1.3408, "mean_len": 418.8, "truncated": 0.0391, "trained_seqs": 104, "changed": 0.001087375109835951, "update_rms": 1.0887102092122882e-06, "gen_s": 6.93, "train_s": 6.68, "opt_sync_s": 1.22, "step_s": 14.9, "mem_gb": 29.77, "gen_minus_train_logp": 0.00074, "prob_gap_mean": 0.00353, "logp_gap_max": 3.4863}
+{"step": 178, "reward": 0.707, "solved_any": 0.9375, "zero_var": 0.625, "loss": -0.012826, "grad_norm": 1.462, "mean_len": 408.2, "truncated": 0.0664, "trained_seqs": 96, "changed": 0.0010442353199235728, "update_rms": 1.0901140525282257e-06, "gen_s": 7.01, "train_s": 6.1, "opt_sync_s": 1.22, "step_s": 14.4, "mem_gb": 29.77, "gen_minus_train_logp": 0.00085, "prob_gap_mean": 0.00352, "logp_gap_max": 2.3045}
+{"step": 179, "reward": 0.6719, "solved_any": 0.9688, "zero_var": 0.3438, "loss": -0.018126, "grad_norm": 1.7025, "mean_len": 438.0, "truncated": 0.0938, "trained_seqs": 168, "changed": 0.001104046638093886, "update_rms": 1.0879837188840796e-06, "gen_s": 7.35, "train_s": 10.38, "opt_sync_s": 1.22, "step_s": 19.02, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00368, "logp_gap_max": 4.224}
+{"step": 180, "reward": 0.7148, "solved_any": 0.9688, "zero_var": 0.4062, "loss": -0.006965, "grad_norm": 1.845, "mean_len": 415.3, "truncated": 0.0508, "trained_seqs": 152, "changed": 0.001081251900264841, "update_rms": 1.0890104759426133e-06, "gen_s": 7.04, "train_s": 9.04, "opt_sync_s": 1.22, "step_s": 17.38, "mem_gb": 29.77, "gen_minus_train_logp": 0.00053, "prob_gap_mean": 0.00368, "logp_gap_max": 3.9746}
+{"step": 181, "reward": 0.6523, "solved_any": 0.875, "zero_var": 0.5938, "loss": 0.000745, "grad_norm": 1.3646, "mean_len": 406.9, "truncated": 0.1133, "trained_seqs": 104, "changed": 0.0010887195230959025, "update_rms": 1.0884741563081723e-06, "gen_s": 6.99, "train_s": 6.86, "opt_sync_s": 1.22, "step_s": 15.15, "mem_gb": 29.77, "gen_minus_train_logp": 0.00038, "prob_gap_mean": 0.0037, "logp_gap_max": 2.8731}
+{"step": 182, "reward": 0.6211, "solved_any": 0.875, "zero_var": 0.4062, "loss": -0.010832, "grad_norm": 1.6345, "mean_len": 430.0, "truncated": 0.0859, "trained_seqs": 152, "changed": 0.0010994245895170715, "update_rms": 1.0877182680288236e-06, "gen_s": 7.21, "train_s": 9.41, "opt_sync_s": 1.22, "step_s": 17.91, "mem_gb": 29.77, "gen_minus_train_logp": 0.0005, "prob_gap_mean": 0.0037, "logp_gap_max": 3.2498}
+{"step": 183, "reward": 0.7695, "solved_any": 0.9062, "zero_var": 0.5938, "loss": -0.004482, "grad_norm": 1.367, "mean_len": 428.0, "truncated": 0.0703, "trained_seqs": 104, "changed": 0.0010750121346861418, "update_rms": 1.0884583978322997e-06, "gen_s": 7.21, "train_s": 6.74, "opt_sync_s": 1.22, "step_s": 15.24, "mem_gb": 29.77, "gen_minus_train_logp": 0.00055, "prob_gap_mean": 0.00335, "logp_gap_max": 2.6757}
+{"step": 184, "reward": 0.7031, "solved_any": 0.8438, "zero_var": 0.6562, "loss": -0.012493, "grad_norm": 1.3216, "mean_len": 426.4, "truncated": 0.0938, "trained_seqs": 88, "changed": 0.0010750523264128967, "update_rms": 1.0883379231901954e-06, "gen_s": 7.15, "train_s": 5.81, "opt_sync_s": 1.22, "step_s": 14.27, "mem_gb": 29.77, "gen_minus_train_logp": 0.00072, "prob_gap_mean": 0.0037, "logp_gap_max": 2.1395}
+{"step": 185, "reward": 0.7461, "solved_any": 0.875, "zero_var": 0.7188, "loss": -0.006294, "grad_norm": 1.2655, "mean_len": 380.6, "truncated": 0.0508, "trained_seqs": 72, "changed": 0.0010871641032704877, "update_rms": 1.0870815534063158e-06, "gen_s": 6.72, "train_s": 4.53, "opt_sync_s": 1.22, "step_s": 12.55, "mem_gb": 29.77, "gen_minus_train_logp": 0.00016, "prob_gap_mean": 0.00351, "logp_gap_max": 2.2733}
+{"step": 186, "reward": 0.6992, "solved_any": 0.9062, "zero_var": 0.4688, "loss": -0.015545, "grad_norm": 1.9483, "mean_len": 389.5, "truncated": 0.0664, "trained_seqs": 136, "changed": 0.0010532483146483604, "update_rms": 1.0882013037614561e-06, "gen_s": 6.81, "train_s": 8.17, "opt_sync_s": 1.22, "step_s": 16.27, "mem_gb": 29.77, "gen_minus_train_logp": 0.00042, "prob_gap_mean": 0.00358, "logp_gap_max": 3.6646}
+{"step": 187, "reward": 0.7773, "solved_any": 0.9062, "zero_var": 0.5938, "loss": -0.006473, "grad_norm": 1.4945, "mean_len": 381.0, "truncated": 0.0391, "trained_seqs": 104, "changed": 0.001079270448135824, "update_rms": 1.0882572439373206e-06, "gen_s": 6.74, "train_s": 6.03, "opt_sync_s": 1.22, "step_s": 14.06, "mem_gb": 29.77, "gen_minus_train_logp": 0.00039, "prob_gap_mean": 0.00357, "logp_gap_max": 2.2847}
+{"step": 188, "reward": 0.707, "solved_any": 0.8438, "zero_var": 0.5312, "loss": -0.011017, "grad_norm": 1.6021, "mean_len": 379.6, "truncated": 0.0352, "trained_seqs": 120, "changed": 0.001056871598815315, "update_rms": 1.0887356513164074e-06, "gen_s": 6.73, "train_s": 6.67, "opt_sync_s": 1.22, "step_s": 14.69, "mem_gb": 29.77, "gen_minus_train_logp": 7e-05, "prob_gap_mean": 0.00319, "logp_gap_max": 2.8613}
+{"step": 189, "reward": 0.5938, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.013516, "grad_norm": 1.5572, "mean_len": 371.8, "truncated": 0.0352, "trained_seqs": 112, "changed": 0.0010636439047735167, "update_rms": 1.0887147380247873e-06, "gen_s": 6.64, "train_s": 6.58, "opt_sync_s": 1.22, "step_s": 14.51, "mem_gb": 29.77, "gen_minus_train_logp": 0.0003, "prob_gap_mean": 0.00365, "logp_gap_max": 2.4947}
+{"step": 190, "reward": 0.707, "solved_any": 0.875, "zero_var": 0.5625, "loss": -0.016092, "grad_norm": 1.588, "mean_len": 362.7, "truncated": 0.0234, "trained_seqs": 112, "changed": 0.0010766157845836625, "update_rms": 1.0888082722604796e-06, "gen_s": 6.51, "train_s": 6.53, "opt_sync_s": 1.22, "step_s": 14.32, "mem_gb": 29.77, "gen_minus_train_logp": 0.00033, "prob_gap_mean": 0.00313, "logp_gap_max": 2.4601}
+{"step": 191, "reward": 0.6289, "solved_any": 0.8438, "zero_var": 0.5312, "loss": -0.006568, "grad_norm": 1.6418, "mean_len": 370.2, "truncated": 0.0469, "trained_seqs": 120, "changed": 0.0010626772937450612, "update_rms": 1.089233024310806e-06, "gen_s": 6.6, "train_s": 6.64, "opt_sync_s": 1.22, "step_s": 14.53, "mem_gb": 29.77, "gen_minus_train_logp": 0.00027, "prob_gap_mean": 0.00367, "logp_gap_max": 2.8914}
+{"step": 192, "reward": 0.8398, "solved_any": 0.9375, "zero_var": 0.625, "loss": -0.008938, "grad_norm": 1.5939, "mean_len": 361.7, "truncated": 0.0586, "trained_seqs": 96, "changed": 0.0010535618101170487, "update_rms": 1.0877275103297258e-06, "gen_s": 6.34, "train_s": 5.37, "opt_sync_s": 1.22, "step_s": 13.0, "mem_gb": 29.77, "gen_minus_train_logp": 0.00043, "prob_gap_mean": 0.00348, "logp_gap_max": 2.3428}
+{"step": 193, "reward": 0.6602, "solved_any": 0.9375, "zero_var": 0.4688, "loss": -0.010455, "grad_norm": 1.5928, "mean_len": 403.5, "truncated": 0.0273, "trained_seqs": 136, "changed": 0.0010718209115818023, "update_rms": 1.0873292578500097e-06, "gen_s": 6.81, "train_s": 8.18, "opt_sync_s": 1.22, "step_s": 16.3, "mem_gb": 29.77, "gen_minus_train_logp": 0.00054, "prob_gap_mean": 0.0035, "logp_gap_max": 3.2775}
+{"step": 194, "reward": 0.7266, "solved_any": 0.875, "zero_var": 0.6875, "loss": -0.001728, "grad_norm": 1.3225, "mean_len": 362.0, "truncated": 0.0586, "trained_seqs": 80, "changed": 0.0010700986960903546, "update_rms": 1.0879022873971199e-06, "gen_s": 6.35, "train_s": 5.08, "opt_sync_s": 1.22, "step_s": 12.72, "mem_gb": 29.77, "gen_minus_train_logp": 0.0008, "prob_gap_mean": 0.00368, "logp_gap_max": 1.926}
+{"step": 195, "reward": 0.7422, "solved_any": 0.9375, "zero_var": 0.5, "loss": -0.00763, "grad_norm": 1.6733, "mean_len": 364.6, "truncated": 0.0469, "trained_seqs": 128, "changed": 0.0010982308952324508, "update_rms": 1.0867322191797624e-06, "gen_s": 6.32, "train_s": 7.27, "opt_sync_s": 1.22, "step_s": 14.88, "mem_gb": 29.77, "gen_minus_train_logp": 0.0004, "prob_gap_mean": 0.00366, "logp_gap_max": 3.0021}
+{"step": 196, "reward": 0.6914, "solved_any": 0.9375, "zero_var": 0.5625, "loss": -0.008617, "grad_norm": 1.5371, "mean_len": 391.7, "truncated": 0.0508, "trained_seqs": 112, "changed": 0.0010922081649782282, "update_rms": 1.086974711312426e-06, "gen_s": 6.76, "train_s": 6.78, "opt_sync_s": 1.22, "step_s": 14.83, "mem_gb": 29.77, "gen_minus_train_logp": 0.00086, "prob_gap_mean": 0.00366, "logp_gap_max": 2.9424}
+{"step": 197, "reward": 0.6953, "solved_any": 0.875, "zero_var": 0.5938, "loss": -0.010957, "grad_norm": 1.5966, "mean_len": 384.0, "truncated": 0.0469, "trained_seqs": 104, "changed": 0.0010809625198322057, "update_rms": 1.0874560817592333e-06, "gen_s": 6.65, "train_s": 6.57, "opt_sync_s": 1.21, "step_s": 14.51, "mem_gb": 29.77, "gen_minus_train_logp": 0.00053, "prob_gap_mean": 0.00389, "logp_gap_max": 2.861}
+{"step": 198, "reward": 0.5898, "solved_any": 0.8125, "zero_var": 0.5625, "loss": -0.02099, "grad_norm": 1.2962, "mean_len": 486.1, "truncated": 0.1836, "trained_seqs": 112, "changed": 0.001093749517699279, "update_rms": 1.0868214880366936e-06, "gen_s": 7.8, "train_s": 7.74, "opt_sync_s": 1.22, "step_s": 16.86, "mem_gb": 29.77, "gen_minus_train_logp": 0.00062, "prob_gap_mean": 0.00436, "logp_gap_max": 2.2878}
+{"step": 199, "reward": 0.6914, "solved_any": 0.8438, "zero_var": 0.625, "loss": -0.013215, "grad_norm": 1.4017, "mean_len": 412.1, "truncated": 0.0938, "trained_seqs": 96, "changed": 0.0010742042809783682, "update_rms": 1.0870411384869714e-06, "gen_s": 6.85, "train_s": 6.66, "opt_sync_s": 1.21, "step_s": 14.8, "mem_gb": 29.77, "gen_minus_train_logp": 0.0007, "prob_gap_mean": 0.0039, "logp_gap_max": 2.5414}
+{"step": 200, "reward": 0.7148, "solved_any": 0.9062, "zero_var": 0.625, "loss": -0.00688, "grad_norm": 1.572, "mean_len": 390.8, "truncated": 0.043, "trained_seqs": 96, "changed": 0.0010341451869217537, "update_rms": 1.088584144748639e-06, "gen_s": 6.65, "train_s": 6.09, "opt_sync_s": 1.22, "step_s": 14.04, "mem_gb": 29.77, "gen_minus_train_logp": 0.00049, "prob_gap_mean": 0.00333, "logp_gap_max": 3.1085}
+{"step": 200, "acc": 0.68385, "se": 0.0128, "n": 1319, "mean_len": 477.2, "truncated": 0.0432, "eval_s": 60.3, "kind": "eval"}
+done: acc 0.48143 -> 0.68385, 17.15 s/step, 3590.7 s total

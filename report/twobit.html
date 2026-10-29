@@ -1,0 +1,552 @@
+<title>The Ticker at Two Bits</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #a9cbf3; --r2: #5f9fe8; --r3: #2a6fc4; --r4: #143f78;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.note { background: var(--wash); padding: 10px 14px; border-radius: 6px; }
+</style>
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · side study 2B · the ticker at 2 bits · Colab T4</div>
+  <h1>The Ticker at Two Bits</h1>
+  <p class="lede">How low can the ticker go? Here the weights drop from 4 bits to 2 bits, so each weight can take only four values. The ticker still carries the leftover between steps, either in 4 bits as before or in 8 bits (FP8). The yardstick is 2-bit training that keeps a full float copy, with Muon and with AdamW.</p>
+  <p class="meta">26 October 2026 · 15 training runs on two free Colab T4s (fp16), seeds 1–3 · references from earlier rounds · every number comes from <code>runs/twobit</code> and <code>report/data/twobit.json</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>With an 8-bit carry, the 2-bit ticker passes.</strong> 2-bit weights, an FP8 carry and 8-bit momentum ended at 1.748, only 0.022 behind 2-bit training that keeps a full float copy (1.725). That is within the 0.05 line in every seed, at 2.53 bytes per weight against 8.</li>
+    <li><strong>With a 4-bit carry, it fails.</strong> It ended at 1.803, 0.077 behind (0 of 3 seeds within 0.05). It keeps up for the first half, then falls behind as the steps shrink late in training. A carry counted in fourteenths of a gap is too coarse for steps that small. The 8-bit carry beat it by 0.055 in every seed.</li>
+    <li><strong>2 bits costs real quality, even with a float copy.</strong> 2-bit with a float copy is 0.080 behind 4-bit with a float copy. The best 2-bit ticker is 0.10 behind the 4-bit ticker. At this model size, 4 bits is still the better trade.</li>
+    <li><strong>Muon beats AdamW by a lot at 2 bits too:</strong> 0.22 lower loss, both with a float copy.</li>
+    <li><strong>At 2 bits you have to train in 2 bits.</strong> Training in FP8 and rounding to 2 bits afterwards gave 2.149, about 0.4 worse than every 2-bit-trained model. At 4 bits that same shortcut cost only 0.02.</li>
+  </ol>
+</section>
+
+<h2 id="setup"><span class="secnum">1</span>What was tested</h2>
+<p>A 2-bit weight has four possible values: −1.5, −0.5, +0.5 or +1.5 times a scale shared by each block of 16 weights. The scale is 1.25 times the block's average weight size. That puts the four values where bell-shaped weights mostly sit, and gives about 30% less rounding error than fitting the scale to the largest weight. The grid is evenly spaced, so the gap between values equals the scale.</p>
+<p>The ticker works as in side study T. Add the carried leftover to the wanted step, move to the nearest grid value, and carry what is left. Only the carry's storage changes:</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-a)"></span>2-bit ticker, 4-bit carry</h4><ol><li>Muon step (8-bit momentum)</li><li>add the carry</li><li>nearest of the 4 values</li><li class="err">leftover kept as k/14 of the gap, k = −7..7</li></ol><p class="kept">2.03 bytes per weight (1.84 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-c)"></span>2-bit ticker, FP8 carry</h4><ol><li>Muon step (8-bit momentum)</li><li>add the carry</li><li>nearest of the 4 values</li><li class="err">leftover kept as an FP8 number: fine steps near zero</li></ol><p class="kept">2.53 bytes per weight (2.34 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m2)"></span>2-bit + float copy (target)</h4><ol><li>forward pass uses the 2-bit weight</li><li>the gradient updates a hidden 32-bit copy</li><li>with Muon, or with AdamW</li></ol><p class="kept">8 bytes (Muon) or 12 bytes (AdamW) per weight</p></div>
+</div>
+<p>Also run: milestone 7's FP8 weights with 8-bit momentum, re-run to check the code (it repeated milestone 7 to every digit). At every check its weights were also rounded to the 2-bit grid and evaluated. Every model is scored the same way: the loss on the same 256 stretches of held-out Shakespeare, in nats per character, lower is better.</p>
+<figure class="wide">
+  <div class="chart" id="ch-bytes"></div>
+  <figcaption><b>Where the bytes go.</b> Only the four big matrices of each layer (99% of the weights) are counted. Both tickers store about a quarter of what a float copy needs.</figcaption>
+</figure>
+
+<h2 id="results"><span class="secnum">2</span>Results</h2>
+<figure class="wide">
+  <div class="chart" id="ch-final"></div>
+  <figcaption><b>Final loss, mean of 3 seeds.</b> Hollow dots keep a float copy (or, for FP8 → 2-bit, are rounded after training). The 2-bit runs sit in a band 0.08 to 0.16 above the 4-bit ones. The FP8-carry ticker is close to its float-copy twin.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Pass line (written before the runs)</th><th class="n">Seeds that pass</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-diffs"></div>
+  <figcaption><b>Seed by seed.</b> Each comparison uses the same seed, so the same starting weights and the same data order. The FP8 carry sits well inside the line in every seed. The 4-bit carry misses it in every seed, by 0.02 to 0.04.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-curves"></div>
+  <figcaption><b>Validation loss during training.</b> Against 2-bit with a float copy (blue dashed), the 4-bit-carry ticker (purple) is +0.02 behind at step 1000, then +0.035, +0.055, +0.066 and +0.077 as the learning rate falls. The FP8-carry ticker (green) is level until step 1250 and ends +0.022 behind. The FP8 model rounded to 2 bits (magenta dashed) starts close, then drifts far away as training sharpens the weights.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-mem"></div>
+  <figcaption><b>Loss against memory.</b> Down and to the left is better. The 4-bit ticker still sits in the best corner. At 2 bits, the FP8 carry buys back most of the gap for half a byte.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">3</span>What it means</h2>
+<p><b>Why the 4-bit carry runs out.</b> At the end of training a Muon step is tiny: on the 4-bit grid about 1/60 of a gap. For most weights a 2-bit gap is about 3 to 6 times wider than the 4-bit gap at the same weight, so the late steps are a few hundredths of a gap or less. A carry counted in fourteenths can't hold that. Every step it gets rounded, at random, to the nearest fourteenth, and that rounding becomes noise that adds up. An FP8 carry has 3 bits of precision at any size, down to very small numbers, so it holds those steps. This is the "carry needs enough bits" point from the round-4 noise model, now measured directly. With 4-bit weights, a 4-bit carry was just enough. With 2-bit weights it isn't.</p>
+<p><b>Rounding after training doesn't work at 2 bits.</b> Four values per block are too few to land near a weight trained for 256 values. The network has to learn while it can see its own 2-bit weights. That is what both the tickers and the float-copy runs do, and why they are 0.35 to 0.42 better.</p>
+<p><b>Muon still wins at 2 bits.</b> At full precision AdamW was 0.28 behind Muon in this setup; at 2 bits it is 0.22 behind. AdamW itself loses only 0.03 from going to 2 bits, while Muon loses 0.09, so the lead narrows. It stays large, though. AdamW's learning rate was not tuned for 2 bits.</p>
+
+<h2 id="caveats"><span class="secnum">4</span>Not tested</h2>
+<ul>
+  <li>Other 2-bit grids: a largest-weight scale, ternary (−1, 0, +1; that is milestone 8), or a learned scale.</li>
+  <li>An 8-bit carry as a plain 8-bit integer (k/254 of a gap) instead of FP8. A 6-bit carry, which might be enough at 2.28 bytes.</li>
+  <li>Other learning rates. Everything is Muon 0.01 and AdamW 1e-3, untuned. A wider gap may want bigger steps.</li>
+  <li>Longer runs, bigger models, and the GPU preset. The 4-bit carry's late fall-off suggests longer runs would hurt it further.</li>
+  <li>The AdamW full-precision reference (milestone 0) was run on CPU in fp32, not on a T4.</li>
+  <li>The 2-bit and FP8 numbers are stored exactly as the formats allow, but the matrix multiplies run in fp16, so there is no speed measurement. The byte counts cover weights and optimizer state only, not gradients or activations.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">5</span>Reproduce</h2>
+<p><code>python side_2bit.py --arm q2_t8_m8 --seed 1</code>. The arms are <code>q2_t4_m8</code>, <code>q2_t8_m8</code>, <code>q2_ste_muon</code>, <code>q2_ste_adam</code> and <code>fp8_m8</code>; the FP8 run also logs its 2-bit-rounded loss as <code>val_ce_q2</code>. Summary: <code>report/twobit_summary.py</code>. This page: <code>report/build_twobit.py</code>. The pass line was written into <code>PLAN.md</code> before any run.</p>
+</main>
+
+<script>
+const DATA = {"tb":{"runs":{"m0":{"1":{"final":1.9195,"bytes":null,"wall_s":121.2,"curve":[[0,4.2053],[250,2.4563],[500,2.3017],[750,2.1839],[1000,2.0884],[1250,2.0269],[1500,1.9745],[1750,1.9451],[2000,1.9195]]},"2":{"final":1.9171,"bytes":null,"wall_s":119.9,"curve":[[0,4.1888],[250,2.439],[500,2.3085],[750,2.1812],[1000,2.0908],[1250,2.0132],[1500,1.9639],[1750,1.9255],[2000,1.9171]]},"3":{"final":1.9084,"bytes":null,"wall_s":122.6,"curve":[[0,4.2248],[250,2.4368],[500,2.2794],[750,2.1518],[1000,2.0779],[1250,2.0009],[1500,1.9621],[1750,1.926],[2000,1.9084]]}},"m1":{"1":{"final":1.6343,"bytes":8,"wall_s":126.6,"curve":[[0,4.2053],[250,2.241],[500,2.0125],[750,1.9069],[1000,1.8246],[1250,1.7611],[1500,1.6867],[1750,1.6611],[2000,1.6343]]},"2":{"final":1.6291,"bytes":8,"wall_s":118.7,"curve":[[0,4.1888],[250,2.2694],[500,2.0174],[750,1.9177],[1000,1.8247],[1250,1.7672],[1500,1.6975],[1750,1.6418],[2000,1.6291]]},"3":{"final":1.6311,"bytes":8,"wall_s":119.5,"curve":[[0,4.2248],[250,2.2541],[500,2.0029],[750,1.9018],[1000,1.822],[1250,1.748],[1500,1.7056],[1750,1.6611],[2000,1.6311]]}},"m2":{"1":{"final":1.6524,"bytes":8,"wall_s":156.5,"curve":[[0,4.2067],[250,2.2467],[500,2.0365],[750,1.9183],[1000,1.8412],[1250,1.774],[1500,1.698],[1750,1.6728],[2000,1.6524]]},"2":{"final":1.6444,"bytes":8,"wall_s":158.0,"curve":[[0,4.1884],[250,2.269],[500,2.0208],[750,1.9181],[1000,1.8352],[1250,1.7651],[1500,1.7061],[1750,1.6535],[2000,1.6444]]},"3":{"final":1.6406,"bytes":8,"wall_s":153.2,"curve":[[0,4.2242],[250,2.2639],[500,2.0143],[750,1.9117],[1000,1.8339],[1250,1.7597],[1500,1.7161],[1750,1.6718],[2000,1.6406]]}},"m7_fp8":{"1":{"final":1.6464,"bytes":2.2812,"wall_s":173.3,"curve":[[0,4.2063],[250,2.2545],[500,2.0364],[750,1.9128],[1000,1.8356],[1250,1.77],[1500,1.7053],[1750,1.6779],[2000,1.6464]]},"2":{"final":1.6578,"bytes":2.2812,"wall_s":169.5,"curve":[[0,4.1884],[250,2.2809],[500,2.0315],[750,1.9227],[1000,1.8286],[1250,1.7699],[1500,1.7085],[1750,1.6679],[2000,1.6578]]},"3":{"final":1.652,"bytes":2.2812,"wall_s":166.7,"curve":[[0,4.2244],[250,2.2798],[500,2.0155],[750,1.9098],[1000,1.8478],[1250,1.7615],[1500,1.7272],[1750,1.6801],[2000,1.652]]}},"q4_t4_m8":{"1":{"final":1.6423,"bytes":2.2812,"wall_s":283.3,"curve":[[0,4.2067],[250,2.2531],[500,2.0267],[750,1.9213],[1000,1.8359],[1250,1.7704],[1500,1.7021],[1750,1.673],[2000,1.6423]]},"2":{"final":1.6579,"bytes":2.2812,"wall_s":279.7,"curve":[[0,4.1884],[250,2.2929],[500,2.0331],[750,1.9412],[1000,1.8345],[1250,1.7782],[1500,1.7171],[1750,1.665],[2000,1.6579]]},"3":{"final":1.6501,"bytes":2.2812,"wall_s":284.6,"curve":[[0,4.2242],[250,2.2701],[500,2.0041],[750,1.9085],[1000,1.8351],[1250,1.7591],[1500,1.716],[1750,1.6757],[2000,1.6501]]}},"q2_t4_m8":{"1":{"final":1.7958,"bytes":2.0312,"wall_s":179.5,"curve":[[0,4.2118],[250,2.354],[500,2.1082],[750,1.9907],[1000,1.9281],[1250,1.8807],[1500,1.8226],[1750,1.8074],[2000,1.7958]]},"2":{"final":1.8026,"bytes":2.0312,"wall_s":174.6,"curve":[[0,4.2007],[250,2.3512],[500,2.1274],[750,2.0161],[1000,1.9244],[1250,1.8876],[1500,1.8491],[1750,1.7955],[2000,1.8026]]},"3":{"final":1.8096,"bytes":2.0312,"wall_s":173.3,"curve":[[0,4.2176],[250,2.3649],[500,2.1132],[750,2.0129],[1000,1.9486],[1250,1.8818],[1500,1.8484],[1750,1.8321],[2000,1.8096]]}},"q2_t8_m8":{"1":{"final":1.7396,"bytes":2.5312,"wall_s":187.7,"curve":[[0,4.2118],[250,2.3513],[500,2.1054],[750,1.9849],[1000,1.9121],[1250,1.8345],[1500,1.7865],[1750,1.7649],[2000,1.7396]]},"2":{"final":1.7441,"bytes":2.5312,"wall_s":193.7,"curve":[[0,4.2007],[250,2.3433],[500,2.1006],[750,2.0074],[1000,1.8968],[1250,1.8493],[1500,1.7984],[1750,1.7535],[2000,1.7441]]},"3":{"final":1.759,"bytes":2.5312,"wall_s":145.2,"curve":[[0,4.2176],[250,2.3664],[500,2.0967],[750,1.9991],[1000,1.9297],[1250,1.8525],[1500,1.83],[1750,1.7887],[2000,1.759]]}},"q2_ste_muon":{"1":{"final":1.7253,"bytes":8,"wall_s":145.6,"curve":[[0,4.2118],[250,2.3564],[500,2.094],[750,1.9956],[1000,1.9164],[1250,1.8395],[1500,1.7736],[1750,1.7489],[2000,1.7253]]},"2":{"final":1.7278,"bytes":8,"wall_s":136.3,"curve":[[0,4.2007],[250,2.3268],[500,2.1186],[750,1.9945],[1000,1.917],[1250,1.8598],[1500,1.7849],[1750,1.7374],[2000,1.7278]]},"3":{"final":1.7228,"bytes":8,"wall_s":128.7,"curve":[[0,4.2176],[250,2.3409],[500,2.0788],[750,1.9633],[1000,1.9092],[1250,1.8449],[1500,1.7967],[1750,1.7509],[2000,1.7228]]}},"q2_ste_adam":{"1":{"final":1.9599,"bytes":12,"wall_s":69.6,"curve":[[0,4.2118],[250,2.4655],[500,2.3399],[750,2.2286],[1000,2.1272],[1250,2.0647],[1500,2.017],[1750,1.9866],[2000,1.9599]]},"2":{"final":1.9447,"bytes":12,"wall_s":72.1,"curve":[[0,4.2007],[250,2.4369],[500,2.3313],[750,2.2045],[1000,2.1241],[1250,2.0463],[1500,1.9895],[1750,1.9566],[2000,1.9447]]},"3":{"final":1.9362,"bytes":12,"wall_s":67.2,"curve":[[0,4.2176],[250,2.436],[500,2.3038],[750,2.1987],[1000,2.1053],[1250,2.0341],[1500,1.9857],[1750,1.956],[2000,1.9362]]}},"fp8_m8":{"1":{"final":1.6464,"bytes":2.2812,"wall_s":180.9,"curve":[[0,4.2063],[250,2.2545],[500,2.0364],[750,1.9128],[1000,1.8356],[1250,1.77],[1500,1.7053],[1750,1.6779],[2000,1.6464]]},"2":{"final":1.6578,"bytes":2.2812,"wall_s":148.8,"curve":[[0,4.1884],[250,2.2809],[500,2.0315],[750,1.9227],[1000,1.8286],[1250,1.7699],[1500,1.7085],[1750,1.6679],[2000,1.6578]]},"3":{"final":1.652,"bytes":2.2812,"wall_s":83.1,"curve":[[0,4.2244],[250,2.2798],[500,2.0155],[750,1.9098],[1000,1.8478],[1250,1.7615],[1500,1.7272],[1750,1.6801],[2000,1.652]]}},"fp8_q2":{"1":{"final":2.0566,"bytes":2.2812,"wall_s":180.9,"curve":[[0,4.2113],[250,2.3283],[500,2.2335],[750,2.1709],[1000,2.063],[1250,2.0434],[1500,2.0422],[1750,2.0605],[2000,2.0566]]},"2":{"final":2.1936,"bytes":2.2812,"wall_s":148.8,"curve":[[0,4.1985],[250,2.346],[500,2.1763],[750,2.1643],[1000,2.0949],[1250,2.1126],[1500,2.0932],[1750,2.0994],[2000,2.1936]]},"3":{"final":2.1964,"bytes":2.2812,"wall_s":83.1,"curve":[[0,4.2193],[250,2.3555],[500,2.1881],[750,2.1392],[1000,2.1166],[1250,2.0877],[1500,2.0753],[1750,2.1948],[2000,2.1964]]}}},"checks":{"q2_t4_m8":{"diffs":[0.07047,0.07477,0.08687],"passed":false},"q2_t8_m8":{"diffs":[0.0143,0.01628,0.03623],"passed":true}},"extra":{"q2_t8_m8_vs_q2_t4_m8":{"diffs":[-0.05617,-0.05849,-0.05064],"passed":true},"q2_ste_muon_vs_m2":{"diffs":[0.0729,0.08346,0.08217],"passed":false},"q2_ste_adam_vs_m2":{"diffs":[0.3075,0.30033,0.29564],"passed":false},"q2_ste_adam_vs_q2_ste_muon":{"diffs":[0.2346,0.21687,0.21347],"passed":false},"q2_ste_adam_vs_m0":{"diffs":[0.04038,0.02761,0.02782],"passed":false},"fp8_q2_vs_q2_t4_m8":{"diffs":[0.26078,0.39095,0.38678],"passed":false},"fp8_q2_vs_q2_t8_m8":{"diffs":[0.31695,0.44944,0.43742],"passed":false},"fp8_q2_vs_q2_ste_muon":{"diffs":[0.33125,0.46572,0.47365],"passed":false},"q2_t4_m8_vs_q4_t4_m8":{"diffs":[0.15351,0.1447,0.1595],"passed":false},"q2_t8_m8_vs_q4_t4_m8":{"diffs":[0.09734,0.08621,0.10886],"passed":false},"q2_t4_m8_vs_m2":{"diffs":[0.14337,0.15823,0.16904],"passed":false},"q2_t8_m8_vs_m2":{"diffs":[0.0872,0.09974,0.1184],"passed":false},"fp8_m8_vs_m7_fp8":{"diffs":[0.0,0.0,0.0],"passed":true}},"bytes_fp8_scales":{"q2_t4_m8":1.8438,"q2_t8_m8":2.3438,"fp8_m8":2.0938}}};
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1, "stroke-dasharray": s.dash || "none" }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const ARM = {
+  m0: { name: "m0 AdamW, float weights (CPU)", short: "m0 AdamW float", color: "--c-m0" },
+  m1: { name: "m1 Muon, float weights", short: "m1 float", color: "--c-m1" },
+  m2: { name: "m2 4-bit + float copy", short: "m2 4-bit + copy", color: "--c-m2" },
+  q4_t4_m8: { name: "4-bit ticker (side study T)", short: "4-bit ticker", color: "--c-m3" },
+  fp8_m8: { name: "FP8 + 8-bit momentum", short: "FP8", color: "--c-b" },
+  fp8_q2: { name: "FP8, rounded to 2-bit after", short: "FP8 → 2-bit", color: "--c-m5", dash: "6 4" },
+  q2_ste_muon: { name: "2-bit + float copy, Muon", short: "2-bit + copy, Muon", color: "--c-m2", dash: "6 4" },
+  q2_ste_adam: { name: "2-bit + float copy, AdamW", short: "2-bit + copy, AdamW", color: "--c-m0", dash: "6 4" },
+  q2_t4_m8: { name: "2-bit ticker, 4-bit carry", short: "2-bit, 4-bit carry", color: "--c-a" },
+  q2_t8_m8: { name: "2-bit ticker, FP8 carry", short: "2-bit, FP8 carry", color: "--c-c" },
+};
+const NEW = k => k.startsWith("q2") || k.startsWith("fp8");
+const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const sgn = (v, d = 3) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const R = DATA.tb.runs;
+const seedsOf = k => Object.keys(R[k] || {}).sort();
+const has = k => seedsOf(k).length > 0;
+const mean = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
+const se = xs => Math.sqrt(xs.reduce((t, x) => t + (x - mean(xs)) ** 2, 0) / (xs.length - 1) / xs.length);
+const finals = k => seedsOf(k).map(s => R[k][s].final);
+const diffs = (a, b) => [1, 2, 3].filter(s => R[a] && R[a][s] && R[b] && R[b][s]).map(s => R[a][s].final - R[b][s].final);
+function meanCurve(k) {
+  const ss = seedsOf(k).map(s => R[k][s].curve), n = Math.min(...ss.map(c => c.length));
+  return ss[0].slice(0, n).map((p, i) => [p[0], mean(ss.map(c => c[i][1]))]);
+}
+function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
+  const tip = host._tip || (host._tip = tipBox(host));
+  const hit = el("svg:" + (hitAttrs.width ? "rect" : "circle"), Object.assign({ fill: "transparent", tabindex: "0" }, hitAttrs), svg);
+  const on = () => { tipRows(tip, title, rowsFn()); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+  hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+  hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+}
+
+/* ---------- memory: what each byte holds ---------- */
+(function () {
+  const host = document.getElementById("ch-bytes");
+  const PART = [
+    { k: "w", label: "weights", color: "--c-m2" },
+    { k: "s", label: "block scales", color: "--c-m1" },
+    { k: "b", label: "carry", color: "--c-c" },
+    { k: "m", label: "optimizer state", color: "--c-m3" },
+  ];
+  const m8 = 1 + 4 / 128;
+  const rows = [
+    { label: "2-bit + float copy, AdamW", parts: { w: 4, m: 8 } },
+    { label: "m2 / 2-bit + float copy, Muon", parts: { w: 4, m: 4 } },
+    { label: "4-bit ticker (side study T)", parts: { w: 0.5, s: 0.25, b: 0.5, m: m8 } },
+    { label: "FP8 + 8-bit momentum", parts: { w: 1, s: 0.25, m: m8 } },
+    { label: "2-bit ticker, FP8 carry", parts: { w: 0.25, s: 0.25, b: 1, m: m8 }, strong: true },
+    { label: "2-bit ticker, 4-bit carry", parts: { w: 0.25, s: 0.25, b: 0.5, m: m8 }, strong: true },
+  ];
+  const draw = () => {
+    header(host, { title: "Training memory per weight of the four big matrices", sub: "bytes; scales stored in 32 bits (8-bit scales would save 0.19)" });
+    legend(host, PART.map(p => ({ label: p.label, color: tok(p.color) })), true);
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 26, gap = narrow ? 30 : 14, m = { l: narrow ? 10 : 250, r: 46, t: 6, b: 30 };
+    const H = m.t + rows.length * (rh + gap) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "bytes per weight by part" }, host);
+    const X = scale(0, 12, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [0, 2, 4, 6, 8, 10, 12]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v ? "--grid" : "--axis") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + gap) + (narrow ? 18 : 0);
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop - 6 : yTop + rh / 2 + 4, "text-anchor": narrow ? "start" : "end", class: r.strong ? "lab-strong" : "lab" }, g, r.label);
+      let x = 0;
+      for (const p of PART) {
+        const v = r.parts[p.k]; if (!v) continue;
+        const x0 = X(x), x1 = X(x + v);
+        el("svg:rect", { x: x0, y: yTop, width: Math.max(1, x1 - x0 - 2), height: rh, rx: 3, fill: tok(p.color) }, g);
+        hover(host, svg, W, H, { x: x0, y: yTop, width: Math.max(4, x1 - x0), height: rh }, () => [{ value: v.toFixed(3) + " bytes", label: p.label, color: tok(p.color) }], r.label, (x0 + x1) / 2, yTop);
+        x += v;
+      }
+      el("svg:text", { x: X(x) + 6, y: yTop + rh / 2 + 4, class: "lab-strong" }, g, x.toFixed(2));
+    });
+    numbers(host, ["setup", ...PART.map(p => p.label), "total"], rows.map(r => [r.label, ...PART.map(p => r.parts[p.k] ? r.parts[p.k].toFixed(3) : "–"), Object.values(r.parts).reduce((a, b) => a + b, 0).toFixed(2)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- final loss ---------- */
+(function () {
+  const host = document.getElementById("ch-final");
+  const keys = ["m1", "m2", "q4_t4_m8", "fp8_m8", "q2_ste_muon", "q2_t8_m8", "q2_t4_m8", "m0", "q2_ste_adam", "fp8_q2"].filter(has);
+  const draw = () => {
+    header(host, { title: "Final validation loss", sub: "mean of seeds 1–3 (big dot) with ± one standard error; small dots are single seeds; lower is better" });
+    const vals = keys.flatMap(finals), lo = Math.min(...vals) - 0.02, hi = Math.max(...vals) + 0.02;
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 34, m = { l: narrow ? 10 : 260, r: 70, t: 6, b: 34 };
+    const H = m.t + keys.length * (rh + (narrow ? 16 : 0)) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "final loss by arm" }, host);
+    const X = scale(lo, hi, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of niceTicks(lo, hi, narrow ? 4 : 6)) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok("--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v.toFixed(2)); }
+    keys.forEach((k, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2, f = finals(k), mu = mean(f), e = se(f), col = tok(ARM[k].color);
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: NEW(k) ? "lab-strong" : "lab" }, g, ARM[k].name);
+      el("svg:line", { x1: X(mu - e), x2: X(mu + e), y1: y, y2: y, stroke: col, "stroke-width": 3, "stroke-linecap": "round" }, g);
+      for (const v of f) el("svg:circle", { cx: X(v), cy: y + 9, r: 2.5, fill: col, opacity: 0.6 }, g);
+      el("svg:circle", { cx: X(mu), cy: y, r: 6, fill: ARM[k].dash ? tok("--surface") : col, stroke: col, "stroke-width": 2.5 }, g);
+      el("svg:text", { x: X(hi) + 6, y: y + 4, class: "lab" }, g, mu.toFixed(3));
+      hover(host, svg, W, H, { cx: X(mu), cy: y, r: 14 }, () => [{ value: fmt(mu, 4) + " ± " + fmt(e, 4), label: "mean ± SE", color: col }, ...f.map((v, s) => ({ value: fmt(v, 4), label: "seed " + (s + 1) }))], ARM[k].name, X(mu), y);
+    });
+    numbers(host, ["arm", "mean", "SE", "seed 1", "seed 2", "seed 3"], keys.map(k => [ARM[k].name, fmt(mean(finals(k)), 4), fmt(se(finals(k)), 4), ...finals(k).map(v => fmt(v, 4))]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- training curves ---------- */
+lineChart(document.getElementById("ch-curves"), {
+  title: "Validation loss during training", sub: "mean of seeds 1–3; dashed lines keep a float copy (or, for FP8 → 2-bit, are rounded at each check)",
+  series: () => ["m1", "m2", "q4_t4_m8", "fp8_m8", "q2_ste_muon", "q2_ste_adam", "q2_t4_m8", "q2_t8_m8", "fp8_q2"].filter(has).map(k => ({ label: ARM[k].short, color: ARM[k].color, dash: ARM[k].dash, strong: NEW(k), width: NEW(k) ? 2.5 : 1.5, points: meanCurve(k).filter(p => p[0] > 0) })),
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { tip: v => v.toFixed(4), tipAscending: true },
+});
+
+/* ---------- seed-by-seed differences ---------- */
+function diffChart(id, title, sub, rowsAll) {
+  const host = document.getElementById(id);
+  const rows = rowsAll.filter(r => r.v.length);
+  const draw = () => {
+    header(host, { title, sub });
+    const vals = rows.flatMap(r => r.v.concat(r.line == null ? [] : [r.line])), lo = Math.min(-0.05, ...vals) - 0.02, hi = Math.max(0.08, ...vals) + 0.02;
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 40, m = { l: narrow ? 10 : 250, r: 16, t: 8, b: 34 };
+    const H = m.t + rows.length * (rh + (narrow ? 16 : 0)) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "per-seed differences" }, host);
+    const X = scale(lo, hi, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of niceTicks(lo, hi, narrow ? 4 : 6)) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(Math.abs(v) < 1e-9 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, Math.abs(v) < 1e-9 ? "0" : sgn(v, 2)); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2;
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: r.line == null ? "lab" : "lab-strong" }, g, r.label);
+      if (r.line != null) { el("svg:line", { x1: X(r.line), x2: X(r.line), y1: y - 13, y2: y + 13, stroke: tok("--ink"), "stroke-width": 1.5 }, g); el("svg:text", { x: X(r.line) + 4, y: y - 15 }, g, r.lineLabel || "pass line"); }
+      const col = tok(ARM[r.k].color);
+      el("svg:line", { x1: X(Math.min(...r.v)), x2: X(Math.max(...r.v)), y1: y, y2: y, stroke: col, "stroke-width": 2, opacity: 0.5 }, g);
+      r.v.forEach((v, s) => {
+        el("svg:circle", { cx: X(v), cy: y, r: 5, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+        hover(host, svg, W, H, { cx: X(v), cy: y, r: 12 }, () => [{ value: sgn(v, 4), label: "seed " + (s + 1), color: col }], r.label, X(v), y);
+      });
+    });
+    numbers(host, ["comparison", "seed 1", "seed 2", "seed 3", "mean ± SE", "line"], rows.map(r => [r.label, ...r.v.map(v => sgn(v, 4)), sgn(mean(r.v), 4) + " ± " + fmt(se(r.v), 4), r.line == null ? "measure only" : "≤ " + sgn(r.line, 2)]));
+  };
+  register(host, draw);
+}
+diffChart("ch-diffs", "Seed-by-seed differences in final loss", "each dot is one seed (same starting weights, same data order); the top two rows are the pass line: all three dots must sit left of the black tick", [
+  { label: "2-bit, 4-bit carry − 2-bit + copy", k: "q2_t4_m8", v: diffs("q2_t4_m8", "q2_ste_muon"), line: 0.05 },
+  { label: "2-bit, FP8 carry − 2-bit + copy", k: "q2_t8_m8", v: diffs("q2_t8_m8", "q2_ste_muon"), line: 0.05 },
+  { label: "FP8 carry − 4-bit carry", k: "q2_t8_m8", v: diffs("q2_t8_m8", "q2_t4_m8"), line: null },
+  { label: "FP8 → 2-bit − 2-bit, 4-bit carry", k: "fp8_q2", v: diffs("fp8_q2", "q2_t4_m8"), line: null },
+  { label: "FP8 → 2-bit − 2-bit, FP8 carry", k: "fp8_q2", v: diffs("fp8_q2", "q2_t8_m8"), line: null },
+  { label: "2-bit + copy, Muon − m2 (4-bit)", k: "q2_ste_muon", v: diffs("q2_ste_muon", "m2"), line: null },
+  { label: "2-bit + copy: AdamW − Muon", k: "q2_ste_adam", v: diffs("q2_ste_adam", "q2_ste_muon"), line: null },
+  { label: "2-bit, FP8 carry − 4-bit ticker", k: "q2_t8_m8", v: diffs("q2_t8_m8", "q4_t4_m8"), line: null },
+]);
+
+/* ---------- pass table ---------- */
+(function () {
+  const tb = document.querySelector("#tbl-pass tbody"), C = DATA.tb.checks;
+  const rows = [["2-bit ticker, 4-bit carry ≤ 2-bit + float copy (Muon) + 0.05, each seed", C.q2_t4_m8], ["2-bit ticker, FP8 carry ≤ 2-bit + float copy (Muon) + 0.05, each seed", C.q2_t8_m8]];
+  for (const [lab, c] of rows) {
+    if (!c) continue;
+    const tr = el("tr", {}, tb), n = c.diffs.filter(d => d <= 0.05).length;
+    el("td", {}, tr, lab); el("td", { class: "n" }, tr, n + " of 3");
+    el("span", { class: "pill " + (c.passed ? "pass" : "fail") }, el("td", {}, tr), c.passed ? "PASS" : "FAIL");
+  }
+})();
+
+/* ---------- loss against memory ---------- */
+(function () {
+  const host = document.getElementById("ch-mem");
+  const keys = ["m1", "m2", "q4_t4_m8", "fp8_m8", "q2_ste_muon", "q2_ste_adam", "q2_t4_m8", "q2_t8_m8"].filter(has);
+  const draw = () => {
+    header(host, { title: "Final loss against training memory", sub: "bytes per weight of the four big matrices (weights + optimizer state, 32-bit scales); mean of 3 seeds, small dots are single seeds" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, H = narrow ? 300 : 340, m = { l: 50, r: 16, t: 14, b: 40 };
+    const ys = keys.flatMap(finals), y0 = Math.min(...ys) - 0.03, y1 = Math.max(...ys) + 0.03;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "loss against memory" }, host);
+    const X = scale(0, 13, m.l, W - m.r), Y = scale(y0, y1, H - m.b, m.t), g = el("svg:g", {}, svg);
+    for (const v of niceTicks(y0, y1, 5)) { el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid") }, g); el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, v.toFixed(2)); }
+    for (const v of [0, 2, 4, 6, 8, 10, 12]) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v);
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis") }, g);
+    el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, "bytes per weight");
+    const bytes = k => seedsOf(k).map(s => R[k][s].bytes)[0];
+    const placed = [];
+    for (const k of keys) {
+      const col = tok(ARM[k].color), f = finals(k), cx = X(bytes(k)), cy = Y(mean(f));
+      for (const v of f) el("svg:circle", { cx, cy: Y(v), r: 2.5, fill: col, opacity: 0.55 }, g);
+      el("svg:circle", { cx, cy, r: 6, fill: ARM[k].dash ? tok("--surface") : col, stroke: col, "stroke-width": 2.5 }, g);
+      let ly = cy + 4; while (placed.some(p => Math.abs(p.x - cx) < 80 && Math.abs(p.y - ly) < 13)) ly += 13; placed.push({ x: cx, y: ly });
+      const right = cx < W * 0.6;
+      if (!narrow) el("svg:text", { x: cx + (right ? 10 : -10), y: ly, "text-anchor": right ? "start" : "end", class: "lab-strong" }, g, ARM[k].short);
+      hover(host, svg, W, H, { cx, cy, r: 14 }, () => [{ value: fmt(mean(f), 4) + " ± " + fmt(se(f), 4), label: "loss, mean ± SE", color: col }, { value: (+bytes(k)).toFixed(2), label: "bytes per weight" }], ARM[k].name, cx, cy);
+    }
+    if (narrow) legend(host, keys.map(k => ({ label: ARM[k].name, color: tok(ARM[k].color) })), true);
+    numbers(host, ["arm", "bytes per weight", "mean loss", "SE", "seed 1", "seed 2", "seed 3"], keys.map(k => [ARM[k].name, (+bytes(k)).toFixed(2), fmt(mean(finals(k)), 4), fmt(se(finals(k)), 4), ...finals(k).map(v => fmt(v, 4))]));
+  };
+  register(host, draw);
+})();
+
+})();
+</script>

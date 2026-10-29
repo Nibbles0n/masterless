@@ -1,0 +1,70 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · side study 2B · the ticker at 2 bits · Colab T4</div>
+  <h1>The Ticker at Two Bits</h1>
+  <p class="lede">How low can the ticker go? Here the weights drop from 4 bits to 2 bits, so each weight can take only four values. The ticker still carries the leftover between steps, either in 4 bits as before or in 8 bits (FP8). The yardstick is 2-bit training that keeps a full float copy, with Muon and with AdamW.</p>
+  <p class="meta">26 October 2026 · 15 training runs on two free Colab T4s (fp16), seeds 1–3 · references from earlier rounds · every number comes from <code>runs/twobit</code> and <code>report/data/twobit.json</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>With an 8-bit carry, the 2-bit ticker passes.</strong> 2-bit weights, an FP8 carry and 8-bit momentum ended at 1.748, only 0.022 behind 2-bit training that keeps a full float copy (1.725). That is within the 0.05 line in every seed, at 2.53 bytes per weight against 8.</li>
+    <li><strong>With a 4-bit carry, it fails.</strong> It ended at 1.803, 0.077 behind (0 of 3 seeds within 0.05). It keeps up for the first half, then falls behind as the steps shrink late in training. A carry counted in fourteenths of a gap is too coarse for steps that small. The 8-bit carry beat it by 0.055 in every seed.</li>
+    <li><strong>2 bits costs real quality, even with a float copy.</strong> 2-bit with a float copy is 0.080 behind 4-bit with a float copy. The best 2-bit ticker is 0.10 behind the 4-bit ticker. At this model size, 4 bits is still the better trade.</li>
+    <li><strong>Muon beats AdamW by a lot at 2 bits too:</strong> 0.22 lower loss, both with a float copy.</li>
+    <li><strong>At 2 bits you have to train in 2 bits.</strong> Training in FP8 and rounding to 2 bits afterwards gave 2.149, about 0.4 worse than every 2-bit-trained model. At 4 bits that same shortcut cost only 0.02.</li>
+  </ol>
+</section>
+
+<h2 id="setup"><span class="secnum">1</span>What was tested</h2>
+<p>A 2-bit weight has four possible values: −1.5, −0.5, +0.5 or +1.5 times a scale shared by each block of 16 weights. The scale is 1.25 times the block's average weight size. That puts the four values where bell-shaped weights mostly sit, and gives about 30% less rounding error than fitting the scale to the largest weight. The grid is evenly spaced, so the gap between values equals the scale.</p>
+<p>The ticker works as in side study T. Add the carried leftover to the wanted step, move to the nearest grid value, and carry what is left. Only the carry's storage changes:</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-a)"></span>2-bit ticker, 4-bit carry</h4><ol><li>Muon step (8-bit momentum)</li><li>add the carry</li><li>nearest of the 4 values</li><li class="err">leftover kept as k/14 of the gap, k = −7..7</li></ol><p class="kept">2.03 bytes per weight (1.84 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-c)"></span>2-bit ticker, FP8 carry</h4><ol><li>Muon step (8-bit momentum)</li><li>add the carry</li><li>nearest of the 4 values</li><li class="err">leftover kept as an FP8 number: fine steps near zero</li></ol><p class="kept">2.53 bytes per weight (2.34 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m2)"></span>2-bit + float copy (target)</h4><ol><li>forward pass uses the 2-bit weight</li><li>the gradient updates a hidden 32-bit copy</li><li>with Muon, or with AdamW</li></ol><p class="kept">8 bytes (Muon) or 12 bytes (AdamW) per weight</p></div>
+</div>
+<p>Also run: milestone 7's FP8 weights with 8-bit momentum, re-run to check the code (it repeated milestone 7 to every digit). At every check its weights were also rounded to the 2-bit grid and evaluated. Every model is scored the same way: the loss on the same 256 stretches of held-out Shakespeare, in nats per character, lower is better.</p>
+<figure class="wide">
+  <div class="chart" id="ch-bytes"></div>
+  <figcaption><b>Where the bytes go.</b> Only the four big matrices of each layer (99% of the weights) are counted. Both tickers store about a quarter of what a float copy needs.</figcaption>
+</figure>
+
+<h2 id="results"><span class="secnum">2</span>Results</h2>
+<figure class="wide">
+  <div class="chart" id="ch-final"></div>
+  <figcaption><b>Final loss, mean of 3 seeds.</b> Hollow dots keep a float copy (or, for FP8 → 2-bit, are rounded after training). The 2-bit runs sit in a band 0.08 to 0.16 above the 4-bit ones. The FP8-carry ticker is close to its float-copy twin.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Pass line (written before the runs)</th><th class="n">Seeds that pass</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-diffs"></div>
+  <figcaption><b>Seed by seed.</b> Each comparison uses the same seed, so the same starting weights and the same data order. The FP8 carry sits well inside the line in every seed. The 4-bit carry misses it in every seed, by 0.02 to 0.04.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-curves"></div>
+  <figcaption><b>Validation loss during training.</b> Against 2-bit with a float copy (blue dashed), the 4-bit-carry ticker (purple) is +0.02 behind at step 1000, then +0.035, +0.055, +0.066 and +0.077 as the learning rate falls. The FP8-carry ticker (green) is level until step 1250 and ends +0.022 behind. The FP8 model rounded to 2 bits (magenta dashed) starts close, then drifts far away as training sharpens the weights.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-mem"></div>
+  <figcaption><b>Loss against memory.</b> Down and to the left is better. The 4-bit ticker still sits in the best corner. At 2 bits, the FP8 carry buys back most of the gap for half a byte.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">3</span>What it means</h2>
+<p><b>Why the 4-bit carry runs out.</b> At the end of training a Muon step is tiny: on the 4-bit grid about 1/60 of a gap. For most weights a 2-bit gap is about 3 to 6 times wider than the 4-bit gap at the same weight, so the late steps are a few hundredths of a gap or less. A carry counted in fourteenths can't hold that. Every step it gets rounded, at random, to the nearest fourteenth, and that rounding becomes noise that adds up. An FP8 carry has 3 bits of precision at any size, down to very small numbers, so it holds those steps. This is the "carry needs enough bits" point from the round-4 noise model, now measured directly. With 4-bit weights, a 4-bit carry was just enough. With 2-bit weights it isn't.</p>
+<p><b>Rounding after training doesn't work at 2 bits.</b> Four values per block are too few to land near a weight trained for 256 values. The network has to learn while it can see its own 2-bit weights. That is what both the tickers and the float-copy runs do, and why they are 0.35 to 0.42 better.</p>
+<p><b>Muon still wins at 2 bits.</b> At full precision AdamW was 0.28 behind Muon in this setup; at 2 bits it is 0.22 behind. AdamW itself loses only 0.03 from going to 2 bits, while Muon loses 0.09, so the lead narrows. It stays large, though. AdamW's learning rate was not tuned for 2 bits.</p>
+
+<h2 id="caveats"><span class="secnum">4</span>Not tested</h2>
+<ul>
+  <li>Other 2-bit grids: a largest-weight scale, ternary (−1, 0, +1; that is milestone 8), or a learned scale.</li>
+  <li>An 8-bit carry as a plain 8-bit integer (k/254 of a gap) instead of FP8. A 6-bit carry, which might be enough at 2.28 bytes.</li>
+  <li>Other learning rates. Everything is Muon 0.01 and AdamW 1e-3, untuned. A wider gap may want bigger steps.</li>
+  <li>Longer runs, bigger models, and the GPU preset. The 4-bit carry's late fall-off suggests longer runs would hurt it further.</li>
+  <li>The AdamW full-precision reference (milestone 0) was run on CPU in fp32, not on a T4.</li>
+  <li>The 2-bit and FP8 numbers are stored exactly as the formats allow, but the matrix multiplies run in fp16, so there is no speed measurement. The byte counts cover weights and optimizer state only, not gradients or activations.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">5</span>Reproduce</h2>
+<p><code>python side_2bit.py --arm q2_t8_m8 --seed 1</code>. The arms are <code>q2_t4_m8</code>, <code>q2_t8_m8</code>, <code>q2_ste_muon</code>, <code>q2_ste_adam</code> and <code>fp8_m8</code>; the FP8 run also logs its 2-bit-rounded loss as <code>val_ce_q2</code>. Summary: <code>report/twobit_summary.py</code>. This page: <code>report/build_twobit.py</code>. The pass line was written into <code>PLAN.md</code> before any run.</p>
+</main>

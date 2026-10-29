@@ -1,0 +1,122 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · round 4 · milestone 7 and side study T (the ticker) · Colab T4</div>
+  <h1>Two Bytes per Weight</h1>
+  <p class="lede">Two ways to spend about 2 bytes per weight on training, with no full-precision copy of the weights. One keeps a 4-bit weight with a 4-bit leftover buffer. The other keeps an 8-bit (FP8) weight. Both store the momentum in 8 bits. Then the FP8 model is rounded down to 4 bits after training, to see whether that beats training in 4 bits from the start. Last, the owner's <em>ticker</em>: a 4-bit weight that moves one step only when its carried leftover crosses half the gap.</p>
+  <p class="meta">26 October 2026 · 9 training runs, 4 evaluations, on free Colab T4s (fp16) · baselines from round 3's runs on the same kind of T4 · every number comes from <code>runs/m7</code>, <code>runs/ticker</code>, <code>runs/m6</code> and <code>report/data</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>The ticker works: 4-bit weights trained with no float copy, level with keeping one.</strong> 4-bit weights, a 4-bit carry measured in units of each weight's own gap, and 8-bit momentum ended at 1.650, against 1.646 for milestone 2, which keeps a full 32-bit copy. That is 2.28 bytes per weight against 8, within 0.03 of milestone 2 in every seed, and the best no-copy 4-bit result in the project. It was a measure-only study, so it still needs a formal pass line on fresh runs.</li>
+    <li><strong>FP8 weights with no float copy work too.</strong> FP8 weights plus 8-bit momentum ended at 1.652, only 0.021 behind normal float training (pass line met in all 3 seeds) and level with milestone 2, which keeps a full float copy. That is 2.28 bytes per weight against 8.</li>
+    <li><strong>The 4-bit + 4-bit buffer version failed its line.</strong> It ended at 1.712, 0.066 behind milestone 2 (the line was 0.03). It is still 0.043 better than plain 4-bit with no buffer (m3), so the small buffer does help, but it lost 0.029 against milestone 4c's 16-bit buffer.</li>
+    <li><strong>Training in FP8 and then rounding to 4 bits beat that buffer version</strong> by 0.040 (1.672), but the ticker beats the rounded FP8 model by 0.022, in every seed. So how the 4-bit leftover is kept matters more than how many bits it has.</li>
+    <li><strong>The math, in one line:</strong> random rounding's error grows like the square root of the total distance a weight travels, back and forth. Real Muon weights travel about 183 gaps to move 24, so the noise is half the signal. The ticker cancels that noise instead of paying for it with more bits.</li>
+  </ol>
+</section>
+
+<h2 id="setup"><span class="secnum">1</span>What was tested</h2>
+<p>Training normally keeps each weight as a 32-bit number, plus a 32-bit momentum: 8 bytes per weight before gradients and activations. Without a float copy, the stored weight <em>is</em> the low-bit number, and every step has to round the new weight onto the grid. Steps smaller than the gap between grid values get lost unless something remembers them. Milestone 4c showed that a separate <em>leftover buffer</em> works: it holds what the rounding threw away and adds it back on the next step. But it cost 2 bytes on its own.</p>
+<p>A 4-bit weight with a 4-bit leftover is really an 8-bit number split in two. So this round asks which way of spending the same 8 bits is better:</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-a)"></span>Run 1 · 4-bit + 4-bit buffer + 8-bit momentum</h4><ol><li>Muon step (average, then squash)</li><li>add the stored leftover</li><li>round at random to the 4-bit grid</li><li class="err">new leftover → 4-bit buffer</li></ol><p class="kept">2.53 bytes per weight (2.16 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-b)"></span>Run 2 · FP8 + 8-bit momentum</h4><ol><li>Muon step (average, then squash)</li><li>round at random to the FP8 grid</li><li>leftover thrown away</li></ol><p class="kept">2.28 bytes per weight (2.09 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m5)"></span>Eval 3 · FP8 model, rounded to 4 bits after</h4><ol><li>take run 2's finished weights</li><li>round each to the nearest 4-bit value, once</li><li>evaluate; no more training</li></ol><p class="kept">the usual way models are shrunk today</p></div>
+</div>
+<p>All three end up evaluated the same way: the loss on the same 256 stretches of held-out text, in nats per character (lower is better). The two 4-bit models (run 1 and eval 3) use exactly the same 4-bit format, so they can be compared directly. The references come from round 3, run on the same kind of T4: m1 (normal Muon, float weights), m2 (4-bit weights with a float copy kept), m3 (4-bit, no copy, no buffer) and m4c (4-bit with a 16-bit leftover buffer).</p>
+<figure class="wide">
+  <div class="chart" id="ch-bytes"></div>
+  <figcaption><b>Where the bytes go.</b> Both new runs cut training memory to about a third of milestone 1's, and below milestone 3's plain 4-bit run, mostly by storing the momentum in 8 bits (round 3 found that costs nothing measurable). The <em>block scales</em> are the rulers the low-bit codes are measured with: one 32-bit number per 16 weights. Storing them in 8 bits, which study F found harmless, would take both runs to about 2.1 bytes.</figcaption>
+</figure>
+<h3>Details that matter</h3>
+<ul>
+  <li><b>4-bit grid:</b> the E2M1 format (values 0, ±0.5, ±1, ±1.5, ±2, ±3, ±4, ±6) times one scale per 16 weights, as in milestones 2–6.</li>
+  <li><b>FP8 grid:</b> the E4M3 format, which has 3 bits of precision at every size (neighbouring values 6–12% apart), times one scale per 16 weights, so each block's largest weight sits on 448, the format's largest value.</li>
+  <li><b>4-bit buffer:</b> whole numbers from −7 to 7 times one scale per 16 leftovers. <b>8-bit momentum:</b> −127 to 127 times one scale per 128 values. Both are rounded at random, so small values survive on average instead of always rounding to zero.</li>
+  <li>Only Muon's four big matrices per layer are made low-bit (99% of the weights). The embeddings, norms and output layer stay in 32 bits with AdamW, as in every milestone.</li>
+  <li>Same model, data, 2000 steps and learning rate (0.01) as milestones 1–4. Nothing was tuned for the new runs.</li>
+</ul>
+
+<h2 id="results"><span class="secnum">2</span>Results</h2>
+<p><strong>One pass, one fail, and a clear winner for making a 4-bit model.</strong> The FP8 run passed its line in all three seeds. The 4-bit run with the small buffer missed its line in all three. And the FP8 model, rounded to 4 bits after training, beat the 4-bit-trained model in all three.</p>
+<figure class="wide">
+  <div class="chart" id="ch-three"></div>
+  <figcaption><b>The three evaluations next to the references.</b> FP8 (red) sits with m1 and m2, the two runs that keep 32-bit weights. Rounded to 4 bits (magenta), it loses 0.020 and still slightly beats every no-copy 4-bit training method so far, including milestone 4c with its 2-byte buffer (1.683, a difference within the noise). The 4-bit + 4-bit buffer run (purple) lands between m4c and plain 4-bit (m3). The ticker (amber, section 4) sits level with m2 and FP8. The bars are ± one standard error over the three seeds.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Pass line (written before the runs)</th><th class="n">Seeds that pass</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-diffs"></div>
+  <figcaption><b>Seed by seed.</b> Each comparison uses the same seed, so the same starting weights and the same data order. The 4-bit run misses its line by about twice the margin in every seed. FP8 passes in every seed (seed 2 only just, +0.029). The third row is the head-to-head the owner asked for: the rounded FP8 model is better than the 4-bit-trained one by 0.033 to 0.053.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-curves"></div>
+  <figcaption><b>Validation loss during training.</b> For the first half, the 4-bit run (purple) stays about 0.02 behind m2. It falls behind in the second half, as the learning rate shrinks towards the end of the schedule. FP8 (red) runs just above m1 and m2 the whole way. The dashed line is the FP8 model rounded to 4 bits at each check, starting almost on top of it and drifting slowly away. The ticker (amber) tracks m2 the whole way, with no fall-off at the end.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-ptq"></div>
+  <figcaption><b>The cost of each 4-bit route, measured against the FP8 model at the same step.</b> Rounding after training (dashed) costs 0.003 at step 250 and grows to 0.020 by the end: a better-trained model is more sensitive to rounding. The 4-bit buffer run's gap grows faster, from 0.016 to 0.060, and most of the growth comes after step 1000. The ticker (amber) stays on the zero line: it trains as well as FP8 while its weights are 4-bit all along.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-mem"></div>
+  <figcaption><b>Quality against memory.</b> The shaded box is the goal: about 2 bytes per weight and within 0.03 of milestone 2. FP8 (red) and the ticker (amber) are the two no-copy runs inside the box, at the same 2.28 bytes. The 4-bit + 4-bit buffer run (purple) has about the same memory but sits above the box. All the other runs need 4.75 to 8 bytes.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">3</span>What milestone 7 alone suggested</h2>
+<p class="note"><b>Overturned by section 4.</b> This section is as written after milestone 7. The ticker later showed that a 4-bit weight plus a 4-bit leftover <em>can</em> match FP8, when the leftover is kept the ticker's way.</p>
+<p><b>Why did one FP8 number beat this 4-bit number plus a 4-bit leftover?</b> Both use 8 bits. Here is a likely reason; it was not measured. The FP8 grid has fine steps everywhere: neighbouring values are 6–12% apart, at every size. So most of Muon's small steps survive random rounding with little noise. The 4-bit grid's steps are coarse (up to a third of a block's largest weight), so it leans on the buffer to remember small moves. A 4-bit buffer is itself coarse: its steps are 1/7 of the block's largest leftover. Re-rounding it every step adds noise that doesn't shrink as the learning rate does. That fits the curves: the 4-bit run keeps pace while steps are big, then falls behind as they shrink.</p>
+<p><b>Why does rounding after training work so well here?</b> One-off rounding to nearest makes errors that don't pile up. Training in 4 bits makes a rounding decision on every weight at every step, and the noise adds up over 2000 steps. This matches what the field already does: train at higher precision, then shrink the finished model.</p>
+<p><b>What this means for training cheaply.</b> FP8 weights with no float copy and 8-bit momentum cost about 2.1–2.3 bytes per weight for the weights and optimizer, against 8 for float Muon and 16 for normal AdamW training. On this small model they came within 0.021 of float Muon and level with 4-bit training that keeps a float copy. That is about a 3.5× cut in that part of memory, for a small loss in quality. If the end goal is a 4-bit model, rounding after training is the safe route, though the ticker (next section) did better.</p>
+<div class="options">
+  <div class="opt"><h4>Next · FP8 at a bigger scale <span class="pill meas">the main open question</span></h4><p>Run FP8 + 8-bit momentum against m1 on the longer 10,000-step setup and on a bigger model. In study L, plain 4-bit (m3) fell further behind as training got longer, so the question is whether FP8 holds.</p><div class="tags"><span>T4</span><span>3 seeds</span></div></div>
+  <div class="opt"><h4>Cheap follow-ups</h4><p>Split the 4-bit run's loss between the 4-bit buffer and the 8-bit momentum (one run each). Try an 8-bit buffer with nearest rounding. Try a short 4-bit fine-tune after rounding the FP8 model, or smarter rounding (GPTQ, which picks roundings that cancel each other out).</p><div class="tags"><span>T4</span><span>one change each</span></div></div>
+</div>
+
+<h2 id="ticker"><span class="secnum">4</span>The ticker</h2>
+<p>The owner's idea: give each 4-bit weight a counter. Add every step's push to it, and tick the weight one level up or down only when the counter passes half the gap to the next value, carrying the remainder. On a 4-bit grid the gaps differ in size (0.5 near zero, 2 between 4 and 6), so each weight gets its own thresholds, which rounding to the nearest value gives for free.</p>
+<div class="eq">target      = stored 4-bit weight + carry − lr · Muon update
+new weight  = the nearest 4-bit value to the target       (ticks once the carry passes half a gap)
+new carry   = target − new weight                           (always within ±½ of its side's gap)
+stored as   = a whole number from −7 to 7, meaning k/14 of that gap (rounded at random)</div>
+<p>Two things differ from milestone 7's 4-bit buffer run. The weight is rounded to nearest, not at random, so the weight itself adds no noise. And the carry is measured in units of <em>its own weight's gap</em>, so a small weight's carry is as finely stored as a big one's. The buffer run used one ruler per 16 leftovers, set by the largest. The carry needs no ruler of its own, so the memory is the same 2.28 bytes as FP8.</p>
+<figure class="wide">
+  <div class="chart" id="ch-tick"></div>
+  <figcaption><b>The ticker against every no-copy route, seed by seed</b> (same seed, same data order). It beats milestone 7's 4-bit buffer by 0.052 to 0.074, the FP8 model rounded to 4 bits by 0.019 to 0.024, and milestone 4c's 16-bit buffer by 0.018 to 0.048. Against milestone 2, with its full 32-bit copy, the three seeds sit at −0.010, +0.014 and +0.010, all inside the 0.03 line.</figcaption>
+</figure>
+<p><b>Is it "just 8-bit weights, then rounded"?</b> No, and the numbers show it. The 4-bit weight plus a carry in sixteenths of a gap holds about as many bits as FP8, but the forward pass sees the 4-bit weight on every step. So the model learns to work with the exact 4-bit values it will ship with, and no rounding is left for the end. That is a likely reason it beat the FP8-then-round route by 0.022 (not measured). Another likely one: the carry's resolution is even inside each 4-bit gap, exactly where the decision to tick is made, while FP8's spacing follows the weight's size.</p>
+<p><b>Caveats.</b> This was a measure-only study, with its questions written down before the run. Meeting the milestone 4 line here doesn't count as the paper test, which needs that line set as a pass line in advance and run on fresh seeds. The two differences from milestone 7 were changed together, so which one does the work isn't known. And everything is still the small model at 2000 steps; the longer run in study L is where plain 4-bit fell apart.</p>
+
+<h2 id="why"><span class="secnum">5</span>Why low bits are hard, for any optimizer</h2>
+<p>This is the math behind every result so far, in one idea. Each step, the optimizer wants to move a weight by a small amount: the <em>push</em>. Measured on a real Muon run (<code>report/path_probe.py</code>), a typical push is <b>0.17 of a 4-bit gap</b> at the peak learning rate and <b>0.017</b> at the end. So nearly every step asks for less than one gap.</p>
+<p><b>Random rounding</b> gets the average right. A push of 0.17 gaps moves the weight a whole gap 17% of the time and not at all otherwise. But each step adds a little randomness. Its variance (the square of its typical size) is about push × gap. Variances add up over steps, so after a whole run:</p>
+<div class="eq">typical error  ≈  √( gap × total distance travelled )</div>
+<p>The key words are <em>distance travelled</em>: the sum of every step's size, back and forth, not the net movement. Real training zig-zags. In the measured Muon run, a weight travelled <b>183 gaps</b> in all to end up <b>24 gaps</b> from where it started. That predicts an error of about √183 ≈ <b>13.5 gaps</b>, against a useful movement of 24. Half the signal is noise. That is why milestone 3 (random rounding, no memory) lost 0.12.</p>
+<figure class="wide">
+  <div class="chart" id="ch-noise"></div>
+  <figcaption><b>The same thing, simulated</b> (<code>report/noise_sim.py</code>, with pushes sized to match the real Muon run). Random rounding with no memory (grey) drifts 12 gaps from where the optimizer wanted the weight, as the formula predicts. An 8× finer grid, roughly what FP8 gives over 4-bit, cuts that to 2.2 gaps. The ticker with an exact carry (blue) never strays more than half a gap: it <em>is</em> a float copy. With a 4-bit carry (amber), it drifts to 1.3 gaps, because re-rounding the carry adds a little noise every step, and that noise doesn't shrink when the steps do.</figcaption>
+</figure>
+<p>So there are only three ways to shrink the error:</p>
+<ol>
+  <li><b>A smaller gap: more bits.</b> FP8 does this. It worked (milestone 7), but it is what you called "just increasing precision".</li>
+  <li><b>Remember the leftover: a carry.</b> The ticker and milestone 4c do this. With a perfect carry the error stays under half a gap for good, but the carry needs enough bits to hold steps of 1/60 of a gap at the end of training (the 0.017 above). That is about 6 bits beyond the 4-bit grid. With fewer bits, the carry's own rounding becomes the noise.</li>
+  <li><b>Travel less for the same net movement: less zig-zag.</b> Nothing so far has tried this. Muon (like Adam) takes full-size steps every time, even when the gradient is mostly noise, so its path is long: 7.6 gaps travelled for every 1 gained. If a weight's steps were shrunk when their direction keeps flipping, and kept full when it is steady, the path would get shorter while the net movement stayed about the same. The noise would fall with the square root of the path.</li>
+</ol>
+<p>The third way is the one that changes Muon itself rather than the number format, which is what you asked for. It is also what Bop does in spirit for 1-bit weights: it only flips a weight when the momentum agrees for long enough. A concrete test: scale each weight's step by how consistent its recent sign has been, and measure distance travelled, net movement and final loss with random-rounding 4-bit weights.</p>
+
+<h2 id="caveats"><span class="secnum">6</span>Not tested</h2>
+<ul>
+  <li>The ticker changed two things at once against milestone 7's buffer run (nearest rounding, and a carry in units of its own gap), so which one matters isn't known. An 8-bit carry wasn't tried. The ticker took about 280 s per run against 190 s, because its gap lookup isn't optimised.</li>
+  <li>The zig-zag numbers (183 gaps travelled, 24 net) come from one float Muon run, in units of each weight's 4-bit gap at the start of training.</li>
+  <li>The 4-bit arm changed two things at once against milestone 4c (a 4-bit buffer and 8-bit momentum), so its 0.029 loss can't be split between them. Milestone 6 found 8-bit momentum free in its own setting.</li>
+  <li>The buffer was rounded at random; nearest rounding, an 8-bit buffer, and FP8 with a buffer were not tried.</li>
+  <li>Rounding after training used plain nearest rounding only, with no fine-tune and no smarter rounding.</li>
+  <li>Learning rate 0.01 for both arms, untuned; scales stored in 32 bits during training (8-bit scales were counted in the bytes but not run).</li>
+  <li>The baselines come from round 3's T4 session, not this one. A T4 session in study B2 reproduced them to every digit, so this should not matter.</li>
+  <li>Everything is the small CPU-preset model (about 0.8 million parameters) on Shakespeare characters, 2000 steps, fp16 on a T4. FP8 and 4-bit are simulated: the numbers are stored exactly as the formats allow, but the matrix multiplies run in fp16, so there is no speed measurement.</li>
+  <li>The memory counts cover the weights and optimizer only. Gradients and activations also need memory.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">7</span>Reproduce</h2>
+<p><code>python side_ticker.py --seed 1</code> (the ticker). <code>python m7_small_state.py --arm q4_b4_m8 --seed 1</code> (arms <code>q4_b4_m8</code> and <code>fp8_m8</code>; the FP8 run also logs its 4-bit-rounded loss as <code>val_ce_fp4</code>). Summary: <code>report/m7_summary.py</code>; simulation and measurement: <code>report/noise_sim.py</code>, <code>report/path_probe.py</code>; this page: <code>report/build_round4.py</code>. The pass lines were written into <code>PLAN.md</code> before any run.</p>
+</main>

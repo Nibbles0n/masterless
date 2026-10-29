@@ -1,0 +1,11 @@
+{"milestone": "twobit", "arm": "fp8_m8", "preset": "cpu", "muon_lr": 0.01, "seed": 1, "device": "cuda", "dtype": "fp16-autocast", "params": 797056, "state_bytes_per_weight": 2.28125, "torch": "2.11.0+cu130", "config": {"n_layer": 4, "n_head": 4, "n_embd": 128, "block_size": 64, "batch_size": 12, "max_iters": 2000, "dropout": 0.0, "lr": 0.001, "min_lr": 0.0001, "warmup_iters": 100, "weight_decay": 0.1, "beta1": 0.9, "beta2": 0.99, "grad_clip": 1.0, "eval_interval": 250, "eval_windows": 256, "vocab_size": 65}}
+{"step": 0, "val_ce": 4.20628, "val_se": 0.00227, "wall_s": 1.4, "val_ce_q2": 4.21126, "val_se_q2": 0.00216}
+{"step": 250, "val_ce": 2.25454, "val_se": 0.01256, "wall_s": 25.5, "val_ce_q2": 2.32835, "val_se_q2": 0.01183}
+{"step": 500, "val_ce": 2.03638, "val_se": 0.01453, "wall_s": 49.1, "val_ce_q2": 2.23347, "val_se_q2": 0.01349}
+{"step": 750, "val_ce": 1.9128, "val_se": 0.01617, "wall_s": 71.5, "val_ce_q2": 2.17088, "val_se_q2": 0.0151}
+{"step": 1000, "val_ce": 1.83557, "val_se": 0.01648, "wall_s": 92.5, "val_ce_q2": 2.06296, "val_se_q2": 0.01523}
+{"step": 1250, "val_ce": 1.77004, "val_se": 0.01662, "wall_s": 115.6, "val_ce_q2": 2.04337, "val_se_q2": 0.01541}
+{"step": 1500, "val_ce": 1.70535, "val_se": 0.01772, "wall_s": 137.7, "val_ce_q2": 2.04217, "val_se_q2": 0.01458}
+{"step": 1750, "val_ce": 1.67785, "val_se": 0.01789, "wall_s": 159.2, "val_ce_q2": 2.06049, "val_se_q2": 0.01489}
+{"step": 2000, "val_ce": 1.64638, "val_se": 0.01792, "wall_s": 180.8, "val_ce_q2": 2.05657, "val_se_q2": 0.01516}
+final val CE 1.6464 +- 0.0179 nats/char after 2000 steps, 180.9 s

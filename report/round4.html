@@ -1,0 +1,630 @@
+<title>Two Bytes per Weight</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #a9cbf3; --r2: #5f9fe8; --r3: #2a6fc4; --r4: #143f78;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #1d4f8f; --r2: #3277cc; --r3: #6ea6ea; --r4: #b5d3f7; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.note { background: var(--wash); padding: 10px 14px; border-radius: 6px; }
+</style>
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · round 4 · milestone 7 and side study T (the ticker) · Colab T4</div>
+  <h1>Two Bytes per Weight</h1>
+  <p class="lede">Two ways to spend about 2 bytes per weight on training, with no full-precision copy of the weights. One keeps a 4-bit weight with a 4-bit leftover buffer. The other keeps an 8-bit (FP8) weight. Both store the momentum in 8 bits. Then the FP8 model is rounded down to 4 bits after training, to see whether that beats training in 4 bits from the start. Last, the owner's <em>ticker</em>: a 4-bit weight that moves one step only when its carried leftover crosses half the gap.</p>
+  <p class="meta">26 October 2026 · 9 training runs, 4 evaluations, on free Colab T4s (fp16) · baselines from round 3's runs on the same kind of T4 · every number comes from <code>runs/m7</code>, <code>runs/ticker</code>, <code>runs/m6</code> and <code>report/data</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>The ticker works: 4-bit weights trained with no float copy, level with keeping one.</strong> 4-bit weights, a 4-bit carry measured in units of each weight's own gap, and 8-bit momentum ended at 1.650, against 1.646 for milestone 2, which keeps a full 32-bit copy. That is 2.28 bytes per weight against 8, within 0.03 of milestone 2 in every seed, and the best no-copy 4-bit result in the project. It was a measure-only study, so it still needs a formal pass line on fresh runs.</li>
+    <li><strong>FP8 weights with no float copy work too.</strong> FP8 weights plus 8-bit momentum ended at 1.652, only 0.021 behind normal float training (pass line met in all 3 seeds) and level with milestone 2, which keeps a full float copy. That is 2.28 bytes per weight against 8.</li>
+    <li><strong>The 4-bit + 4-bit buffer version failed its line.</strong> It ended at 1.712, 0.066 behind milestone 2 (the line was 0.03). It is still 0.043 better than plain 4-bit with no buffer (m3), so the small buffer does help, but it lost 0.029 against milestone 4c's 16-bit buffer.</li>
+    <li><strong>Training in FP8 and then rounding to 4 bits beat that buffer version</strong> by 0.040 (1.672), but the ticker beats the rounded FP8 model by 0.022, in every seed. So how the 4-bit leftover is kept matters more than how many bits it has.</li>
+    <li><strong>The math, in one line:</strong> random rounding's error grows like the square root of the total distance a weight travels, back and forth. Real Muon weights travel about 183 gaps to move 24, so the noise is half the signal. The ticker cancels that noise instead of paying for it with more bits.</li>
+  </ol>
+</section>
+
+<h2 id="setup"><span class="secnum">1</span>What was tested</h2>
+<p>Training normally keeps each weight as a 32-bit number, plus a 32-bit momentum: 8 bytes per weight before gradients and activations. Without a float copy, the stored weight <em>is</em> the low-bit number, and every step has to round the new weight onto the grid. Steps smaller than the gap between grid values get lost unless something remembers them. Milestone 4c showed that a separate <em>leftover buffer</em> works: it holds what the rounding threw away and adds it back on the next step. But it cost 2 bytes on its own.</p>
+<p>A 4-bit weight with a 4-bit leftover is really an 8-bit number split in two. So this round asks which way of spending the same 8 bits is better:</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-a)"></span>Run 1 · 4-bit + 4-bit buffer + 8-bit momentum</h4><ol><li>Muon step (average, then squash)</li><li>add the stored leftover</li><li>round at random to the 4-bit grid</li><li class="err">new leftover → 4-bit buffer</li></ol><p class="kept">2.53 bytes per weight (2.16 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-b)"></span>Run 2 · FP8 + 8-bit momentum</h4><ol><li>Muon step (average, then squash)</li><li>round at random to the FP8 grid</li><li>leftover thrown away</li></ol><p class="kept">2.28 bytes per weight (2.09 with 8-bit scales)</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m5)"></span>Eval 3 · FP8 model, rounded to 4 bits after</h4><ol><li>take run 2's finished weights</li><li>round each to the nearest 4-bit value, once</li><li>evaluate; no more training</li></ol><p class="kept">the usual way models are shrunk today</p></div>
+</div>
+<p>All three end up evaluated the same way: the loss on the same 256 stretches of held-out text, in nats per character (lower is better). The two 4-bit models (run 1 and eval 3) use exactly the same 4-bit format, so they can be compared directly. The references come from round 3, run on the same kind of T4: m1 (normal Muon, float weights), m2 (4-bit weights with a float copy kept), m3 (4-bit, no copy, no buffer) and m4c (4-bit with a 16-bit leftover buffer).</p>
+<figure class="wide">
+  <div class="chart" id="ch-bytes"></div>
+  <figcaption><b>Where the bytes go.</b> Both new runs cut training memory to about a third of milestone 1's, and below milestone 3's plain 4-bit run, mostly by storing the momentum in 8 bits (round 3 found that costs nothing measurable). The <em>block scales</em> are the rulers the low-bit codes are measured with: one 32-bit number per 16 weights. Storing them in 8 bits, which study F found harmless, would take both runs to about 2.1 bytes.</figcaption>
+</figure>
+<h3>Details that matter</h3>
+<ul>
+  <li><b>4-bit grid:</b> the E2M1 format (values 0, ±0.5, ±1, ±1.5, ±2, ±3, ±4, ±6) times one scale per 16 weights, as in milestones 2–6.</li>
+  <li><b>FP8 grid:</b> the E4M3 format, which has 3 bits of precision at every size (neighbouring values 6–12% apart), times one scale per 16 weights, so each block's largest weight sits on 448, the format's largest value.</li>
+  <li><b>4-bit buffer:</b> whole numbers from −7 to 7 times one scale per 16 leftovers. <b>8-bit momentum:</b> −127 to 127 times one scale per 128 values. Both are rounded at random, so small values survive on average instead of always rounding to zero.</li>
+  <li>Only Muon's four big matrices per layer are made low-bit (99% of the weights). The embeddings, norms and output layer stay in 32 bits with AdamW, as in every milestone.</li>
+  <li>Same model, data, 2000 steps and learning rate (0.01) as milestones 1–4. Nothing was tuned for the new runs.</li>
+</ul>
+
+<h2 id="results"><span class="secnum">2</span>Results</h2>
+<p><strong>One pass, one fail, and a clear winner for making a 4-bit model.</strong> The FP8 run passed its line in all three seeds. The 4-bit run with the small buffer missed its line in all three. And the FP8 model, rounded to 4 bits after training, beat the 4-bit-trained model in all three.</p>
+<figure class="wide">
+  <div class="chart" id="ch-three"></div>
+  <figcaption><b>The three evaluations next to the references.</b> FP8 (red) sits with m1 and m2, the two runs that keep 32-bit weights. Rounded to 4 bits (magenta), it loses 0.020 and still slightly beats every no-copy 4-bit training method so far, including milestone 4c with its 2-byte buffer (1.683, a difference within the noise). The 4-bit + 4-bit buffer run (purple) lands between m4c and plain 4-bit (m3). The ticker (amber, section 4) sits level with m2 and FP8. The bars are ± one standard error over the three seeds.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Pass line (written before the runs)</th><th class="n">Seeds that pass</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-diffs"></div>
+  <figcaption><b>Seed by seed.</b> Each comparison uses the same seed, so the same starting weights and the same data order. The 4-bit run misses its line by about twice the margin in every seed. FP8 passes in every seed (seed 2 only just, +0.029). The third row is the head-to-head the owner asked for: the rounded FP8 model is better than the 4-bit-trained one by 0.033 to 0.053.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-curves"></div>
+  <figcaption><b>Validation loss during training.</b> For the first half, the 4-bit run (purple) stays about 0.02 behind m2. It falls behind in the second half, as the learning rate shrinks towards the end of the schedule. FP8 (red) runs just above m1 and m2 the whole way. The dashed line is the FP8 model rounded to 4 bits at each check, starting almost on top of it and drifting slowly away. The ticker (amber) tracks m2 the whole way, with no fall-off at the end.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-ptq"></div>
+  <figcaption><b>The cost of each 4-bit route, measured against the FP8 model at the same step.</b> Rounding after training (dashed) costs 0.003 at step 250 and grows to 0.020 by the end: a better-trained model is more sensitive to rounding. The 4-bit buffer run's gap grows faster, from 0.016 to 0.060, and most of the growth comes after step 1000. The ticker (amber) stays on the zero line: it trains as well as FP8 while its weights are 4-bit all along.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-mem"></div>
+  <figcaption><b>Quality against memory.</b> The shaded box is the goal: about 2 bytes per weight and within 0.03 of milestone 2. FP8 (red) and the ticker (amber) are the two no-copy runs inside the box, at the same 2.28 bytes. The 4-bit + 4-bit buffer run (purple) has about the same memory but sits above the box. All the other runs need 4.75 to 8 bytes.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">3</span>What milestone 7 alone suggested</h2>
+<p class="note"><b>Overturned by section 4.</b> This section is as written after milestone 7. The ticker later showed that a 4-bit weight plus a 4-bit leftover <em>can</em> match FP8, when the leftover is kept the ticker's way.</p>
+<p><b>Why did one FP8 number beat this 4-bit number plus a 4-bit leftover?</b> Both use 8 bits. Here is a likely reason; it was not measured. The FP8 grid has fine steps everywhere: neighbouring values are 6–12% apart, at every size. So most of Muon's small steps survive random rounding with little noise. The 4-bit grid's steps are coarse (up to a third of a block's largest weight), so it leans on the buffer to remember small moves. A 4-bit buffer is itself coarse: its steps are 1/7 of the block's largest leftover. Re-rounding it every step adds noise that doesn't shrink as the learning rate does. That fits the curves: the 4-bit run keeps pace while steps are big, then falls behind as they shrink.</p>
+<p><b>Why does rounding after training work so well here?</b> One-off rounding to nearest makes errors that don't pile up. Training in 4 bits makes a rounding decision on every weight at every step, and the noise adds up over 2000 steps. This matches what the field already does: train at higher precision, then shrink the finished model.</p>
+<p><b>What this means for training cheaply.</b> FP8 weights with no float copy and 8-bit momentum cost about 2.1–2.3 bytes per weight for the weights and optimizer, against 8 for float Muon and 16 for normal AdamW training. On this small model they came within 0.021 of float Muon and level with 4-bit training that keeps a float copy. That is about a 3.5× cut in that part of memory, for a small loss in quality. If the end goal is a 4-bit model, rounding after training is the safe route, though the ticker (next section) did better.</p>
+<div class="options">
+  <div class="opt"><h4>Next · FP8 at a bigger scale <span class="pill meas">the main open question</span></h4><p>Run FP8 + 8-bit momentum against m1 on the longer 10,000-step setup and on a bigger model. In study L, plain 4-bit (m3) fell further behind as training got longer, so the question is whether FP8 holds.</p><div class="tags"><span>T4</span><span>3 seeds</span></div></div>
+  <div class="opt"><h4>Cheap follow-ups</h4><p>Split the 4-bit run's loss between the 4-bit buffer and the 8-bit momentum (one run each). Try an 8-bit buffer with nearest rounding. Try a short 4-bit fine-tune after rounding the FP8 model, or smarter rounding (GPTQ, which picks roundings that cancel each other out).</p><div class="tags"><span>T4</span><span>one change each</span></div></div>
+</div>
+
+<h2 id="ticker"><span class="secnum">4</span>The ticker</h2>
+<p>The owner's idea: give each 4-bit weight a counter. Add every step's push to it, and tick the weight one level up or down only when the counter passes half the gap to the next value, carrying the remainder. On a 4-bit grid the gaps differ in size (0.5 near zero, 2 between 4 and 6), so each weight gets its own thresholds, which rounding to the nearest value gives for free.</p>
+<div class="eq">target      = stored 4-bit weight + carry − lr · Muon update
+new weight  = the nearest 4-bit value to the target       (ticks once the carry passes half a gap)
+new carry   = target − new weight                           (always within ±½ of its side's gap)
+stored as   = a whole number from −7 to 7, meaning k/14 of that gap (rounded at random)</div>
+<p>Two things differ from milestone 7's 4-bit buffer run. The weight is rounded to nearest, not at random, so the weight itself adds no noise. And the carry is measured in units of <em>its own weight's gap</em>, so a small weight's carry is as finely stored as a big one's. The buffer run used one ruler per 16 leftovers, set by the largest. The carry needs no ruler of its own, so the memory is the same 2.28 bytes as FP8.</p>
+<figure class="wide">
+  <div class="chart" id="ch-tick"></div>
+  <figcaption><b>The ticker against every no-copy route, seed by seed</b> (same seed, same data order). It beats milestone 7's 4-bit buffer by 0.052 to 0.074, the FP8 model rounded to 4 bits by 0.019 to 0.024, and milestone 4c's 16-bit buffer by 0.018 to 0.048. Against milestone 2, with its full 32-bit copy, the three seeds sit at −0.010, +0.014 and +0.010, all inside the 0.03 line.</figcaption>
+</figure>
+<p><b>Is it "just 8-bit weights, then rounded"?</b> No, and the numbers show it. The 4-bit weight plus a carry in sixteenths of a gap holds about as many bits as FP8, but the forward pass sees the 4-bit weight on every step. So the model learns to work with the exact 4-bit values it will ship with, and no rounding is left for the end. That is a likely reason it beat the FP8-then-round route by 0.022 (not measured). Another likely one: the carry's resolution is even inside each 4-bit gap, exactly where the decision to tick is made, while FP8's spacing follows the weight's size.</p>
+<p><b>Caveats.</b> This was a measure-only study, with its questions written down before the run. Meeting the milestone 4 line here doesn't count as the paper test, which needs that line set as a pass line in advance and run on fresh seeds. The two differences from milestone 7 were changed together, so which one does the work isn't known. And everything is still the small model at 2000 steps; the longer run in study L is where plain 4-bit fell apart.</p>
+
+<h2 id="why"><span class="secnum">5</span>Why low bits are hard, for any optimizer</h2>
+<p>This is the math behind every result so far, in one idea. Each step, the optimizer wants to move a weight by a small amount: the <em>push</em>. Measured on a real Muon run (<code>report/path_probe.py</code>), a typical push is <b>0.17 of a 4-bit gap</b> at the peak learning rate and <b>0.017</b> at the end. So nearly every step asks for less than one gap.</p>
+<p><b>Random rounding</b> gets the average right. A push of 0.17 gaps moves the weight a whole gap 17% of the time and not at all otherwise. But each step adds a little randomness. Its variance (the square of its typical size) is about push × gap. Variances add up over steps, so after a whole run:</p>
+<div class="eq">typical error  ≈  √( gap × total distance travelled )</div>
+<p>The key words are <em>distance travelled</em>: the sum of every step's size, back and forth, not the net movement. Real training zig-zags. In the measured Muon run, a weight travelled <b>183 gaps</b> in all to end up <b>24 gaps</b> from where it started. That predicts an error of about √183 ≈ <b>13.5 gaps</b>, against a useful movement of 24. Half the signal is noise. That is why milestone 3 (random rounding, no memory) lost 0.12.</p>
+<figure class="wide">
+  <div class="chart" id="ch-noise"></div>
+  <figcaption><b>The same thing, simulated</b> (<code>report/noise_sim.py</code>, with pushes sized to match the real Muon run). Random rounding with no memory (grey) drifts 12 gaps from where the optimizer wanted the weight, as the formula predicts. An 8× finer grid, roughly what FP8 gives over 4-bit, cuts that to 2.2 gaps. The ticker with an exact carry (blue) never strays more than half a gap: it <em>is</em> a float copy. With a 4-bit carry (amber), it drifts to 1.3 gaps, because re-rounding the carry adds a little noise every step, and that noise doesn't shrink when the steps do.</figcaption>
+</figure>
+<p>So there are only three ways to shrink the error:</p>
+<ol>
+  <li><b>A smaller gap: more bits.</b> FP8 does this. It worked (milestone 7), but it is what you called "just increasing precision".</li>
+  <li><b>Remember the leftover: a carry.</b> The ticker and milestone 4c do this. With a perfect carry the error stays under half a gap for good, but the carry needs enough bits to hold steps of 1/60 of a gap at the end of training (the 0.017 above). That is about 6 bits beyond the 4-bit grid. With fewer bits, the carry's own rounding becomes the noise.</li>
+  <li><b>Travel less for the same net movement: less zig-zag.</b> Nothing so far has tried this. Muon (like Adam) takes full-size steps every time, even when the gradient is mostly noise, so its path is long: 7.6 gaps travelled for every 1 gained. If a weight's steps were shrunk when their direction keeps flipping, and kept full when it is steady, the path would get shorter while the net movement stayed about the same. The noise would fall with the square root of the path.</li>
+</ol>
+<p>The third way is the one that changes Muon itself rather than the number format, which is what you asked for. It is also what Bop does in spirit for 1-bit weights: it only flips a weight when the momentum agrees for long enough. A concrete test: scale each weight's step by how consistent its recent sign has been, and measure distance travelled, net movement and final loss with random-rounding 4-bit weights.</p>
+
+<h2 id="caveats"><span class="secnum">6</span>Not tested</h2>
+<ul>
+  <li>The ticker changed two things at once against milestone 7's buffer run (nearest rounding, and a carry in units of its own gap), so which one matters isn't known. An 8-bit carry wasn't tried. The ticker took about 280 s per run against 190 s, because its gap lookup isn't optimised.</li>
+  <li>The zig-zag numbers (183 gaps travelled, 24 net) come from one float Muon run, in units of each weight's 4-bit gap at the start of training.</li>
+  <li>The 4-bit arm changed two things at once against milestone 4c (a 4-bit buffer and 8-bit momentum), so its 0.029 loss can't be split between them. Milestone 6 found 8-bit momentum free in its own setting.</li>
+  <li>The buffer was rounded at random; nearest rounding, an 8-bit buffer, and FP8 with a buffer were not tried.</li>
+  <li>Rounding after training used plain nearest rounding only, with no fine-tune and no smarter rounding.</li>
+  <li>Learning rate 0.01 for both arms, untuned; scales stored in 32 bits during training (8-bit scales were counted in the bytes but not run).</li>
+  <li>The baselines come from round 3's T4 session, not this one. A T4 session in study B2 reproduced them to every digit, so this should not matter.</li>
+  <li>Everything is the small CPU-preset model (about 0.8 million parameters) on Shakespeare characters, 2000 steps, fp16 on a T4. FP8 and 4-bit are simulated: the numbers are stored exactly as the formats allow, but the matrix multiplies run in fp16, so there is no speed measurement.</li>
+  <li>The memory counts cover the weights and optimizer only. Gradients and activations also need memory.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">7</span>Reproduce</h2>
+<p><code>python side_ticker.py --seed 1</code> (the ticker). <code>python m7_small_state.py --arm q4_b4_m8 --seed 1</code> (arms <code>q4_b4_m8</code> and <code>fp8_m8</code>; the FP8 run also logs its 4-bit-rounded loss as <code>val_ce_fp4</code>). Summary: <code>report/m7_summary.py</code>; simulation and measurement: <code>report/noise_sim.py</code>, <code>report/path_probe.py</code>; this page: <code>report/build_round4.py</code>. The pass lines were written into <code>PLAN.md</code> before any run.</p>
+</main>
+
+<script>
+const DATA = {"m7":{"runs":{"m1":{"1":{"final":1.6343,"bytes":8,"wall_s":126.6,"curve":[[0,4.2053],[250,2.241],[500,2.0125],[750,1.9069],[1000,1.8246],[1250,1.7611],[1500,1.6867],[1750,1.6611],[2000,1.6343]]},"2":{"final":1.6291,"bytes":8,"wall_s":118.7,"curve":[[0,4.1888],[250,2.2694],[500,2.0174],[750,1.9177],[1000,1.8247],[1250,1.7672],[1500,1.6975],[1750,1.6418],[2000,1.6291]]},"3":{"final":1.6311,"bytes":8,"wall_s":119.5,"curve":[[0,4.2248],[250,2.2541],[500,2.0029],[750,1.9018],[1000,1.822],[1250,1.748],[1500,1.7056],[1750,1.6611],[2000,1.6311]]}},"m2":{"1":{"final":1.6524,"bytes":8,"wall_s":156.5,"curve":[[0,4.2067],[250,2.2467],[500,2.0365],[750,1.9183],[1000,1.8412],[1250,1.774],[1500,1.698],[1750,1.6728],[2000,1.6524]]},"2":{"final":1.6444,"bytes":8,"wall_s":158.0,"curve":[[0,4.1884],[250,2.269],[500,2.0208],[750,1.9181],[1000,1.8352],[1250,1.7651],[1500,1.7061],[1750,1.6535],[2000,1.6444]]},"3":{"final":1.6406,"bytes":8,"wall_s":153.2,"curve":[[0,4.2242],[250,2.2639],[500,2.0143],[750,1.9117],[1000,1.8339],[1250,1.7597],[1500,1.7161],[1750,1.6718],[2000,1.6406]]}},"m3":{"1":{"final":1.7626,"bytes":4.75,"wall_s":162.7,"curve":[[0,4.2067],[250,2.2763],[500,2.0675],[750,1.9557],[1000,1.8955],[1250,1.852],[1500,1.7929],[1750,1.7797],[2000,1.7626]]},"2":{"final":1.7528,"bytes":4.75,"wall_s":161.8,"curve":[[0,4.1884],[250,2.2923],[500,2.0875],[750,1.992],[1000,1.9057],[1250,1.8464],[1500,1.8022],[1750,1.7653],[2000,1.7528]]},"3":{"final":1.7494,"bytes":4.75,"wall_s":167.1,"curve":[[0,4.2242],[250,2.295],[500,2.0577],[750,1.9564],[1000,1.9013],[1250,1.8515],[1500,1.8051],[1750,1.7768],[2000,1.7494]]}},"m4post":{"1":{"final":1.6754,"bytes":6.75,"wall_s":166.3,"curve":[[0,4.2067],[250,2.2601],[500,2.0368],[750,1.9341],[1000,1.8552],[1250,1.7926],[1500,1.729],[1750,1.6971],[2000,1.6754]]},"2":{"final":1.6754,"bytes":6.75,"wall_s":169.7,"curve":[[0,4.1884],[250,2.2849],[500,2.0481],[750,1.956],[1000,1.8627],[1250,1.7961],[1500,1.7351],[1750,1.6926],[2000,1.6754]]},"3":{"final":1.698,"bytes":6.75,"wall_s":167.3,"curve":[[0,4.2242],[250,2.2874],[500,2.0264],[750,1.9329],[1000,1.8466],[1250,1.7858],[1500,1.7627],[1750,1.7085],[2000,1.698]]}},"q4_b4_m8":{"1":{"final":1.7158,"bytes":2.5312,"wall_s":201.8,"curve":[[0,4.2067],[250,2.2737],[500,2.0524],[750,1.9421],[1000,1.8759],[1250,1.8196],[1500,1.7541],[1750,1.7361],[2000,1.7158]]},"2":{"final":1.7099,"bytes":2.5312,"wall_s":204.2,"curve":[[0,4.1884],[250,2.3001],[500,2.0638],[750,1.9659],[1000,1.857],[1250,1.8058],[1500,1.7556],[1750,1.7232],[2000,1.7099]]},"3":{"final":1.7102,"bytes":2.5312,"wall_s":175.3,"curve":[[0,4.2242],[250,2.2898],[500,2.0247],[750,1.9249],[1000,1.845],[1250,1.7983],[1500,1.7699],[1750,1.7361],[2000,1.7102]]}},"fp8_m8":{"1":{"final":1.6464,"bytes":2.2812,"wall_s":173.3,"curve":[[0,4.2063],[250,2.2545],[500,2.0364],[750,1.9128],[1000,1.8356],[1250,1.77],[1500,1.7053],[1750,1.6779],[2000,1.6464]]},"2":{"final":1.6578,"bytes":2.2812,"wall_s":169.5,"curve":[[0,4.1884],[250,2.2809],[500,2.0315],[750,1.9227],[1000,1.8286],[1250,1.7699],[1500,1.7085],[1750,1.6679],[2000,1.6578]]},"3":{"final":1.652,"bytes":2.2812,"wall_s":166.7,"curve":[[0,4.2244],[250,2.2798],[500,2.0155],[750,1.9098],[1000,1.8478],[1250,1.7615],[1500,1.7272],[1750,1.6801],[2000,1.652]]}},"fp8_fp4":{"1":{"final":1.6632,"bytes":2.2812,"wall_s":173.3,"curve":[[0,4.2051],[250,2.2553],[500,2.045],[750,1.9177],[1000,1.8437],[1250,1.7796],[1500,1.7212],[1750,1.6911],[2000,1.6632]]},"2":{"final":1.6773,"bytes":2.2812,"wall_s":169.5,"curve":[[0,4.1917],[250,2.2854],[500,2.0338],[750,1.9326],[1000,1.8397],[1250,1.7813],[1500,1.7225],[1750,1.6817],[2000,1.6773]]},"3":{"final":1.6745,"bytes":2.2812,"wall_s":166.7,"curve":[[0,4.2242],[250,2.2832],[500,2.0198],[750,1.9172],[1000,1.8572],[1250,1.7718],[1500,1.7458],[1750,1.6943],[2000,1.6745]]}},"q4_t4_m8":{"1":{"final":1.6423,"bytes":2.2812,"wall_s":283.3,"curve":[[0,4.2067],[250,2.2531],[500,2.0267],[750,1.9213],[1000,1.8359],[1250,1.7704],[1500,1.7021],[1750,1.673],[2000,1.6423]]},"2":{"final":1.6579,"bytes":2.2812,"wall_s":279.7,"curve":[[0,4.1884],[250,2.2929],[500,2.0331],[750,1.9412],[1000,1.8345],[1250,1.7782],[1500,1.7171],[1750,1.665],[2000,1.6579]]},"3":{"final":1.6501,"bytes":2.2812,"wall_s":284.6,"curve":[[0,4.2242],[250,2.2701],[500,2.0041],[750,1.9085],[1000,1.8351],[1250,1.7591],[1500,1.716],[1750,1.6757],[2000,1.6501]]}}},"checks":{"q4_b4_m8":{"diffs":[0.06335,0.06553,0.06962],"passed":false},"fp8_m8":{"diffs":[0.01205,0.02864,0.02094],"passed":true}},"extra":{"fp8_fp4_vs_q4_b4_m8":{"diffs":[-0.05258,-0.03264,-0.03566],"passed":true},"fp8_fp4_vs_fp8_m8":{"diffs":[0.01681,0.0195,0.02254],"passed":false},"q4_b4_m8_vs_m4post":{"diffs":[0.04034,0.03449,0.01223],"passed":false},"q4_b4_m8_vs_m3":{"diffs":[-0.04682,-0.04291,-0.03921],"passed":true},"fp8_fp4_vs_m2":{"diffs":[0.01077,0.03289,0.03396],"passed":false},"fp8_m8_vs_m2":{"diffs":[-0.00604,0.01339,0.01142],"passed":false},"q4_t4_m8_vs_q4_b4_m8":{"diffs":[-0.07349,-0.052,-0.06008],"passed":true},"q4_t4_m8_vs_fp8_fp4":{"diffs":[-0.02091,-0.01936,-0.02442],"passed":true},"q4_t4_m8_vs_m2":{"diffs":[-0.01014,0.01353,0.00954],"passed":false},"q4_t4_m8_vs_m4post":{"diffs":[-0.03315,-0.01751,-0.04785],"passed":true}},"bytes_fp8_scales":{"q4_b4_m8":2.1562,"fp8_m8":2.0938,"q4_t4_m8":2.0938}},"noise":{"dist":{"random":[[25,0.73035],[50,1.3927],[75,2.0185],[100,2.6206],[125,3.153],[150,3.6094],[175,4.0331],[200,4.403],[225,4.7333],[250,5.0747],[275,5.3705],[300,5.6669],[325,5.9508],[350,6.2126],[375,6.4596],[400,6.6928],[425,6.9174],[450,7.1313],[475,7.3122],[500,7.5081],[525,7.7009],[550,7.886],[575,8.0524],[600,8.2489],[625,8.4195],[650,8.564],[675,8.7328],[700,8.8879],[725,9.0067],[750,9.1404],[775,9.2704],[800,9.4082],[825,9.5309],[850,9.6602],[875,9.7745],[900,9.8997],[925,10.022],[950,10.121],[975,10.216],[1000,10.31],[1025,10.407],[1050,10.509],[1075,10.615],[1100,10.699],[1125,10.78],[1150,10.861],[1175,10.947],[1200,11.024],[1225,11.112],[1250,11.175],[1275,11.247],[1300,11.322],[1325,11.386],[1350,11.468],[1375,11.528],[1400,11.582],[1425,11.617],[1450,11.661],[1475,11.712],[1500,11.759],[1525,11.801],[1550,11.836],[1575,11.871],[1600,11.899],[1625,11.925],[1650,11.954],[1675,11.977],[1700,12.006],[1725,12.032],[1750,12.047],[1775,12.064],[1800,12.094],[1825,12.117],[1850,12.134],[1875,12.154],[1900,12.175],[1925,12.193],[1950,12.202],[1975,12.224],[2000,12.234]],"fine8":[[25,0.21051],[50,0.32994],[75,0.42],[100,0.49425],[125,0.55613],[150,0.61372],[175,0.66461],[200,0.71365],[225,0.75801],[250,0.79955],[275,0.84224],[300,0.87755],[325,0.91507],[350,0.94972],[375,0.98482],[400,1.0158],[425,1.0475],[450,1.0797],[475,1.1091],[500,1.1352],[525,1.1642],[550,1.192],[575,1.2183],[600,1.245],[625,1.2718],[650,1.3011],[675,1.3269],[700,1.3485],[725,1.3764],[750,1.3998],[775,1.424],[800,1.4464],[825,1.4681],[850,1.4904],[875,1.5107],[900,1.5295],[925,1.5502],[950,1.571],[975,1.5912],[1000,1.6105],[1025,1.6318],[1050,1.6511],[1075,1.6709],[1100,1.6913],[1125,1.71],[1150,1.7266],[1175,1.7484],[1200,1.7683],[1225,1.7858],[1250,1.8085],[1275,1.8247],[1300,1.8445],[1325,1.8636],[1350,1.8808],[1375,1.8968],[1400,1.916],[1425,1.9345],[1450,1.9515],[1475,1.9685],[1500,1.9887],[1525,2.0042],[1550,2.0206],[1575,2.0375],[1600,2.0547],[1625,2.0685],[1650,2.0865],[1675,2.0989],[1700,2.1144],[1725,2.1288],[1750,2.1412],[1775,2.1504],[1800,2.1605],[1825,2.1734],[1850,2.1832],[1875,2.1892],[1900,2.2021],[1925,2.2119],[1950,2.2188],[1975,2.2249],[2000,2.2325]],"tick4":[[25,0.18911],[50,0.34924],[75,0.37749],[100,0.4047],[125,0.42724],[150,0.4548],[175,0.47731],[200,0.501],[225,0.52101],[250,0.54279],[275,0.56402],[300,0.58123],[325,0.59917],[350,0.61508],[375,0.62924],[400,0.65084],[425,0.66549],[450,0.67785],[475,0.69273],[500,0.70714],[525,0.72213],[550,0.73555],[575,0.74757],[600,0.76278],[625,0.77669],[650,0.79129],[675,0.80378],[700,0.81984],[725,0.83473],[750,0.84867],[775,0.8573],[800,0.87421],[825,0.88346],[850,0.89164],[875,0.90641],[900,0.91796],[925,0.92911],[950,0.94369],[975,0.95367],[1000,0.96016],[1025,0.97555],[1050,0.9865],[1075,1.0023],[1100,1.0047],[1125,1.0162],[1150,1.03],[1175,1.0374],[1200,1.0492],[1225,1.0548],[1250,1.0658],[1275,1.0787],[1300,1.0867],[1325,1.0956],[1350,1.1065],[1375,1.1149],[1400,1.125],[1425,1.136],[1450,1.1434],[1475,1.1512],[1500,1.1614],[1525,1.1733],[1550,1.1816],[1575,1.1933],[1600,1.2028],[1625,1.2107],[1650,1.2226],[1675,1.2288],[1700,1.2366],[1725,1.2456],[1750,1.2565],[1775,1.2668],[1800,1.2746],[1825,1.2835],[1850,1.2926],[1875,1.3007],[1900,1.3056],[1925,1.3121],[1950,1.323],[1975,1.33],[2000,1.3347]],"tick":[[25,0.17186],[50,0.28989],[75,0.28842],[100,0.28898],[125,0.28829],[150,0.28952],[175,0.28891],[200,0.28826],[225,0.28913],[250,0.28711],[275,0.28899],[300,0.28684],[325,0.28913],[350,0.28856],[375,0.28884],[400,0.28851],[425,0.28835],[450,0.2896],[475,0.28829],[500,0.29069],[525,0.28934],[550,0.2876],[575,0.28839],[600,0.28873],[625,0.28968],[650,0.28719],[675,0.2891],[700,0.28887],[725,0.28772],[750,0.29028],[775,0.28709],[800,0.28918],[825,0.28857],[850,0.28934],[875,0.28878],[900,0.28856],[925,0.28965],[950,0.28897],[975,0.28866],[1000,0.28947],[1025,0.28967],[1050,0.28912],[1075,0.28772],[1100,0.28814],[1125,0.28959],[1150,0.28955],[1175,0.28852],[1200,0.28893],[1225,0.29013],[1250,0.28918],[1275,0.28989],[1300,0.28859],[1325,0.28828],[1350,0.28764],[1375,0.2879],[1400,0.28839],[1425,0.28898],[1450,0.28873],[1475,0.28921],[1500,0.28889],[1525,0.28944],[1550,0.28839],[1575,0.28827],[1600,0.2889],[1625,0.2893],[1650,0.28939],[1675,0.2906],[1700,0.28873],[1725,0.28744],[1750,0.28812],[1775,0.28759],[1800,0.28769],[1825,0.28899],[1850,0.28863],[1875,0.28965],[1900,0.28877],[1925,0.28869],[1950,0.28798],[1975,0.28737],[2000,0.28781]]},"push":[[1,0.0021043],[26,0.054572],[51,0.10772],[76,0.16],[101,0.20952],[126,0.21106],[151,0.21156],[176,0.20789],[201,0.2103],[226,0.21042],[251,0.20875],[276,0.20721],[301,0.20565],[326,0.20345],[351,0.20306],[376,0.19972],[401,0.199],[426,0.19722],[451,0.19424],[476,0.19247],[501,0.19121],[526,0.18878],[551,0.18599],[576,0.18437],[601,0.18173],[626,0.17645],[651,0.17483],[676,0.17253],[701,0.1677],[726,0.16419],[751,0.16227],[776,0.15762],[801,0.15383],[826,0.15077],[851,0.14779],[876,0.14204],[901,0.13961],[926,0.1366],[951,0.13088],[976,0.12798],[1001,0.124],[1026,0.12034],[1051,0.11546],[1076,0.11168],[1101,0.10857],[1126,0.10406],[1151,0.10129],[1176,0.096543],[1201,0.092959],[1226,0.089313],[1251,0.085804],[1276,0.081342],[1301,0.077464],[1326,0.074389],[1351,0.070897],[1376,0.067696],[1401,0.064105],[1426,0.061454],[1451,0.058061],[1476,0.054379],[1501,0.05197],[1526,0.048775],[1551,0.046274],[1576,0.043488],[1601,0.0411],[1626,0.038749],[1651,0.036533],[1676,0.034352],[1701,0.032523],[1726,0.031001],[1751,0.029155],[1776,0.027714],[1801,0.026343],[1826,0.025048],[1851,0.024014],[1876,0.023175],[1901,0.022364],[1926,0.021953],[1951,0.021527],[1976,0.021044]]}};
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1, "stroke-dasharray": s.dash || "none" }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const ARM = {
+  m1: { name: "m1 Muon, float weights", short: "m1 float", color: "--c-m1" },
+  m2: { name: "m2 4-bit + float copy", short: "m2 4-bit + copy", color: "--c-m2" },
+  m3: { name: "m3 4-bit, no copy", short: "m3 4-bit", color: "--c-m0" },
+  m4post: { name: "m4c 4-bit + 16-bit buffer", short: "m4c", color: "--c-c" },
+  q4_b4_m8: { name: "m7 4-bit + 4-bit buffer + 8-bit momentum", short: "m7 4+4+8", color: "--c-a" },
+  fp8_m8: { name: "m7 FP8 + 8-bit momentum", short: "m7 FP8", color: "--c-b" },
+  fp8_fp4: { name: "m7 FP8, rounded to 4-bit after", short: "FP8 → 4-bit", color: "--c-m5", dash: "6 4" },
+  q4_t4_m8: { name: "ticker: 4-bit + 4-bit carry + 8-bit momentum", short: "ticker", color: "--c-m3" },
+};
+const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const sgn = (v, d = 3) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const R = DATA.m7.runs;
+const seedsOf = k => Object.keys(R[k] || {}).sort();
+const has = k => seedsOf(k).length > 0;
+const mean = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
+const se = xs => Math.sqrt(xs.reduce((t, x) => t + (x - mean(xs)) ** 2, 0) / (xs.length - 1) / xs.length);
+const finals = k => seedsOf(k).map(s => R[k][s].final);
+const diffs = (a, b) => [1, 2, 3].filter(s => R[a] && R[a][s] && R[b] && R[b][s]).map(s => R[a][s].final - R[b][s].final);
+function meanCurve(k) {
+  const ss = seedsOf(k).map(s => R[k][s].curve), n = Math.min(...ss.map(c => c.length));
+  return ss[0].slice(0, n).map((p, i) => [p[0], mean(ss.map(c => c[i][1]))]);
+}
+function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
+  const tip = host._tip || (host._tip = tipBox(host));
+  const hit = el("svg:" + (hitAttrs.width ? "rect" : "circle"), Object.assign({ fill: "transparent", tabindex: "0" }, hitAttrs), svg);
+  const on = () => { tipRows(tip, title, rowsFn()); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+  hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+  hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+}
+
+/* ---------- memory: what each byte holds ---------- */
+(function () {
+  const host = document.getElementById("ch-bytes");
+  const PART = [
+    { k: "w", label: "weights", color: "--c-m2" },
+    { k: "s", label: "block scales", color: "--c-m1" },
+    { k: "b", label: "leftover buffer", color: "--c-c" },
+    { k: "m", label: "momentum", color: "--c-m3" },
+  ];
+  const rows = [
+    { label: "m1 / m2 (float weights, 32-bit momentum)", parts: { w: 4, m: 4 } },
+    { label: "m4c (4-bit, 16-bit buffer, 32-bit momentum)", parts: { w: 0.5, s: 0.25, b: 2, m: 4 } },
+    { label: "m3 (4-bit, 32-bit momentum)", parts: { w: 0.5, s: 0.25, m: 4 } },
+    { label: "m7 4-bit + 4-bit buffer + 8-bit momentum", parts: { w: 0.5, s: 0.25, b: 0.5 + 0.25, m: 1 + 4 / 128 }, strong: true },
+    { label: "m7 FP8 + 8-bit momentum", parts: { w: 1, s: 0.25, m: 1 + 4 / 128 }, strong: true },
+    { label: "ticker: 4-bit + 4-bit carry + 8-bit momentum", parts: { w: 0.5, s: 0.25, b: 0.5, m: 1 + 4 / 128 }, strong: true },
+  ];
+  const draw = () => {
+    header(host, { title: "Training memory per weight of the four big matrices", sub: "bytes; scales stored in 32 bits (8-bit scales would save another 0.19 bytes per scale set)" });
+    legend(host, PART.map(p => ({ label: p.label, color: tok(p.color) })), true);
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 26, gap = narrow ? 30 : 14, m = { l: narrow ? 10 : 300, r: 46, t: 6, b: 30 };
+    const H = m.t + rows.length * (rh + gap) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "bytes per weight by part" }, host);
+    const X = scale(0, 8, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [0, 2, 4, 6, 8]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v ? "--grid" : "--axis") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + gap) + (narrow ? 18 : 0);
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop - 6 : yTop + rh / 2 + 4, "text-anchor": narrow ? "start" : "end", class: r.strong ? "lab-strong" : "lab" }, g, r.label);
+      let x = 0;
+      for (const p of PART) {
+        const v = r.parts[p.k]; if (!v) continue;
+        const x0 = X(x), x1 = X(x + v);
+        el("svg:rect", { x: x0, y: yTop, width: Math.max(1, x1 - x0 - 2), height: rh, rx: 3, fill: tok(p.color) }, g);
+        hover(host, svg, W, H, { x: x0, y: yTop, width: Math.max(4, x1 - x0), height: rh }, () => [{ value: v.toFixed(3) + " bytes", label: p.label, color: tok(p.color) }], r.label, (x0 + x1) / 2, yTop);
+        x += v;
+      }
+      el("svg:text", { x: X(x) + 6, y: yTop + rh / 2 + 4, class: "lab-strong" }, g, x.toFixed(2));
+    });
+    numbers(host, ["setup", ...PART.map(p => p.label), "total"], rows.map(r => [r.label, ...PART.map(p => r.parts[p.k] ? r.parts[p.k].toFixed(3) : "–"), Object.values(r.parts).reduce((a, b) => a + b, 0).toFixed(2)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- the three evaluations and the references ---------- */
+(function () {
+  const host = document.getElementById("ch-three");
+  const keys = ["m1", "m2", "fp8_m8", "fp8_fp4", "m4post", "q4_t4_m8", "q4_b4_m8", "m3"].filter(has);
+  const draw = () => {
+    header(host, { title: "Final validation loss", sub: "mean of seeds 1–3 (big dot) with ± one standard error; small dots are single seeds; lower is better" });
+    const vals = keys.flatMap(finals), lo = Math.min(...vals) - 0.02, hi = Math.max(...vals) + 0.02;
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 34, m = { l: narrow ? 10 : 300, r: 70, t: 6, b: 34 };
+    const H = m.t + keys.length * (rh + (narrow ? 16 : 0)) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "final loss by arm" }, host);
+    const X = scale(lo, hi, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of niceTicks(lo, hi, narrow ? 4 : 6)) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok("--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v.toFixed(2)); }
+    keys.forEach((k, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2, f = finals(k), mu = mean(f), e = se(f), col = tok(ARM[k].color);
+      const strong = !k.startsWith("m");
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: strong ? "lab-strong" : "lab" }, g, ARM[k].name);
+      el("svg:line", { x1: X(mu - e), x2: X(mu + e), y1: y, y2: y, stroke: col, "stroke-width": 3, "stroke-linecap": "round" }, g);
+      for (const v of f) el("svg:circle", { cx: X(v), cy: y + 9, r: 2.5, fill: col, opacity: 0.6 }, g);
+      el("svg:circle", { cx: X(mu), cy: y, r: 6, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      el("svg:text", { x: X(hi) + 6, y: y + 4, class: "lab" }, g, mu.toFixed(3));
+      hover(host, svg, W, H, { cx: X(mu), cy: y, r: 14 }, () => [{ value: fmt(mu, 4) + " ± " + fmt(e, 4), label: "mean ± SE", color: col }, ...f.map((v, s) => ({ value: fmt(v, 4), label: "seed " + (s + 1) }))], ARM[k].name, X(mu), y);
+    });
+    numbers(host, ["arm", "mean", "SE", "seed 1", "seed 2", "seed 3"], keys.map(k => [ARM[k].name, fmt(mean(finals(k)), 4), fmt(se(finals(k)), 4), ...finals(k).map(v => fmt(v, 4))]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- training curves ---------- */
+lineChart(document.getElementById("ch-curves"), {
+  title: "Validation loss during training", sub: "mean of seeds 1–3; the dashed line is the FP8 model rounded to 4 bits at each check",
+  series: () => ["m1", "m2", "m4post", "m3", "fp8_m8", "q4_b4_m8", "q4_t4_m8", "fp8_fp4"].filter(has).map(k => ({ label: ARM[k].short, color: ARM[k].color, dash: ARM[k].dash, strong: k.startsWith("q4") || k.startsWith("fp8"), width: k.startsWith("m") ? 1.5 : 2.5, points: meanCurve(k).filter(p => p[0] > 0) })),
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { domain: [1.58, 2.1], tip: v => v.toFixed(4), tipAscending: true },
+});
+
+/* ---------- seed-by-seed differences ---------- */
+function diffChart(id, title, sub, rowsAll) {
+  const host = document.getElementById(id);
+  const rows = rowsAll.filter(r => r.v.length);
+  const draw = () => {
+    header(host, { title, sub });
+    const vals = rows.flatMap(r => r.v), lo = Math.min(-0.05, ...vals) - 0.02, hi = Math.max(0.08, ...vals) + 0.02;
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 40, m = { l: narrow ? 10 : 210, r: 16, t: 8, b: 34 };
+    const H = m.t + rows.length * (rh + (narrow ? 16 : 0)) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "per-seed differences" }, host);
+    const X = scale(lo, hi, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of niceTicks(lo, hi, narrow ? 4 : 6)) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(Math.abs(v) < 1e-9 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, Math.abs(v) < 1e-9 ? "0" : sgn(v, 2)); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2;
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: r.line == null ? "lab" : "lab-strong" }, g, r.label);
+      if (r.line != null) { el("svg:line", { x1: X(r.line), x2: X(r.line), y1: y - 13, y2: y + 13, stroke: tok("--ink"), "stroke-width": 1.5 }, g); el("svg:text", { x: X(r.line) + 4, y: y - 15 }, g, r.lineLabel || "pass line"); }
+      const col = tok(ARM[r.k].color);
+      el("svg:line", { x1: X(Math.min(...r.v)), x2: X(Math.max(...r.v)), y1: y, y2: y, stroke: col, "stroke-width": 2, opacity: 0.5 }, g);
+      r.v.forEach((v, s) => {
+        el("svg:circle", { cx: X(v), cy: y, r: 5, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+        hover(host, svg, W, H, { cx: X(v), cy: y, r: 12 }, () => [{ value: sgn(v, 4), label: "seed " + (s + 1), color: col }], r.label, X(v), y);
+      });
+    });
+    numbers(host, ["comparison", "seed 1", "seed 2", "seed 3", "mean ± SE", "line"], rows.map(r => [r.label, ...r.v.map(v => sgn(v, 4)), sgn(mean(r.v), 4) + " ± " + fmt(se(r.v), 4), r.line == null ? "measure only" : "≤ " + sgn(r.line, 2)]));
+  };
+  register(host, draw);
+}
+diffChart("ch-diffs", "Seed-by-seed differences in final loss", "each dot is one seed (same seed, same data order); the top two rows are pass lines: all three dots must sit left of the black tick", [
+    { label: "m7 4+4+8 − m2", k: "q4_b4_m8", v: diffs("q4_b4_m8", "m2"), line: 0.03 },
+    { label: "m7 FP8 − m1", k: "fp8_m8", v: diffs("fp8_m8", "m1"), line: 0.03 },
+    { label: "FP8 → 4-bit − m7 4+4+8", k: "fp8_fp4", v: diffs("fp8_fp4", "q4_b4_m8"), line: null },
+    { label: "FP8 → 4-bit − m7 FP8", k: "fp8_fp4", v: diffs("fp8_fp4", "fp8_m8"), line: null },
+    { label: "m7 4+4+8 − m4c", k: "q4_b4_m8", v: diffs("q4_b4_m8", "m4post"), line: null },
+    { label: "m7 4+4+8 − m3", k: "q4_b4_m8", v: diffs("q4_b4_m8", "m3"), line: null },
+]);
+diffChart("ch-tick", "The ticker, seed by seed", "ticker minus each other run, same seed; left of zero means the ticker is better", [
+  { label: "ticker − m7 4+4+8", k: "q4_t4_m8", v: diffs("q4_t4_m8", "q4_b4_m8"), line: null },
+  { label: "ticker − FP8 → 4-bit", k: "q4_t4_m8", v: diffs("q4_t4_m8", "fp8_fp4"), line: null },
+  { label: "ticker − m4c", k: "q4_t4_m8", v: diffs("q4_t4_m8", "m4post"), line: null },
+  { label: "ticker − m7 FP8", k: "q4_t4_m8", v: diffs("q4_t4_m8", "fp8_m8"), line: null },
+  { label: "ticker − m2 (float copy)", k: "q4_t4_m8", v: diffs("q4_t4_m8", "m2"), line: 0.03, lineLabel: "m4 line (reference)" },
+]);
+
+/* ---------- pass table ---------- */
+(function () {
+  const tb = document.querySelector("#tbl-pass tbody"), C = DATA.m7.checks;
+  const rows = [["m7 4-bit + 4-bit buffer + 8-bit momentum ≤ m2 + 0.03, each seed", C.q4_b4_m8], ["m7 FP8 + 8-bit momentum ≤ m1 + 0.03, each seed", C.fp8_m8]];
+  for (const [lab, c] of rows) {
+    if (!c) continue;
+    const tr = el("tr", {}, tb), n = c.diffs.filter(d => d <= 0.03).length;
+    el("td", {}, tr, lab); el("td", { class: "n" }, tr, n + " of 3");
+    el("span", { class: "pill " + (c.passed ? "pass" : "fail") }, el("td", {}, tr), c.passed ? "PASS" : "FAIL");
+  }
+})();
+
+/* ---------- loss against memory ---------- */
+(function () {
+  const host = document.getElementById("ch-mem");
+  const keys = ["m1", "m2", "m3", "m4post", "q4_b4_m8", "fp8_m8", "q4_t4_m8"].filter(has);
+  const draw = () => {
+    header(host, { title: "Final loss against training memory", sub: "bytes per weight of the four big matrices (weights + optimizer state, 32-bit scales); mean of 3 seeds, small dots are single seeds" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, H = narrow ? 300 : 340, m = { l: 50, r: 16, t: 14, b: 40 };
+    const ys = keys.flatMap(finals), y0 = Math.min(...ys) - 0.03, y1 = Math.max(...ys) + 0.03;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "loss against memory" }, host);
+    const X = scale(0, 9, m.l, W - m.r), Y = scale(y0, y1, H - m.b, m.t), g = el("svg:g", {}, svg);
+    if (has("m2")) { const t = mean(finals("m2")) + 0.03; el("svg:rect", { x: X(0), y: Y(Math.min(t, y1)), width: X(2.6) - X(0), height: Math.max(0, Y(y0) - Y(Math.min(t, y1))), fill: tok("--wash") }, g); el("svg:text", { x: X(0.15), y: Y(y0) - 8, class: "lab" }, g, narrow ? "goal" : "goal: about 2 bytes, ≤ m2 + 0.03"); }
+    for (const v of niceTicks(y0, y1, 5)) { el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid") }, g); el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, v.toFixed(2)); }
+    for (const v of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v);
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis") }, g);
+    el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, "bytes per weight");
+    const bytes = k => seedsOf(k).map(s => R[k][s].bytes)[0];
+    const placed = [];
+    for (const k of keys) {
+      const col = tok(ARM[k].color), f = finals(k), cx = X(bytes(k)), cy = Y(mean(f));
+      for (const v of f) el("svg:circle", { cx, cy: Y(v), r: 2.5, fill: col, opacity: 0.55 }, g);
+      el("svg:circle", { cx, cy, r: 6, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      let ly = cy + 4; while (placed.some(p => Math.abs(p.x - cx) < 80 && Math.abs(p.y - ly) < 13)) ly += 13; placed.push({ x: cx, y: ly });
+      const right = cx < W * 0.6;
+      if (!narrow) el("svg:text", { x: cx + (right ? 10 : -10), y: ly, "text-anchor": right ? "start" : "end", class: "lab-strong" }, g, ARM[k].short);
+      hover(host, svg, W, H, { cx, cy, r: 14 }, () => [{ value: fmt(mean(f), 4) + " ± " + fmt(se(f), 4), label: "loss, mean ± SE", color: col }, { value: (+bytes(k)).toFixed(2), label: "bytes per weight" }], ARM[k].name, cx, cy);
+    }
+    if (narrow) legend(host, keys.map(k => ({ label: ARM[k].name, color: tok(ARM[k].color) })), true);
+    numbers(host, ["arm", "bytes per weight", "mean loss", "SE", "seed 1", "seed 2", "seed 3"], keys.map(k => [ARM[k].name, (+bytes(k)).toFixed(2), fmt(mean(finals(k)), 4), fmt(se(finals(k)), 4), ...finals(k).map(v => fmt(v, 4))]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- the cost of rounding after training, over training ---------- */
+lineChart(document.getElementById("ch-ptq"), {
+  title: "How much worse than the FP8 model, step by step", sub: "mean of seeds 1–3; zero is the FP8 model itself",
+  series: () => {
+    if (!has("fp8_m8")) return [];
+    const base = meanCurve("fp8_m8"), at = new Map(base.map(p => [p[0], p[1]]));
+    return [{ label: "m7 FP8 (zero)", color: ARM.fp8_m8.color, width: 1.5, points: base.filter(p => p[0] > 0).map(p => [p[0], 0]) },
+      ...["fp8_fp4", "q4_b4_m8", "q4_t4_m8"].filter(has).map(k => ({ label: ARM[k].short, color: ARM[k].color, dash: ARM[k].dash, strong: true, points: meanCurve(k).filter(p => p[0] > 0 && at.has(p[0])).map(p => [p[0], p[1] - at.get(p[0])]) }))];
+  },
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { tip: v => sgn(v, 4), tipAscending: true },
+});
+
+/* ---------- simulation: distance from the float weight ---------- */
+(function () {
+  const N = DATA.noise, NAME = { random: "random rounding, no memory", fine8: "random rounding, 8× finer grid", tick4: "ticker, 4-bit carry", tick: "ticker, exact carry (= float copy)" };
+  const COL = { random: "--c-m0", fine8: "--c-b", tick4: "--c-m3", tick: "--c-m2" };
+  lineChart(document.getElementById("ch-noise"), {
+    title: "How far a stored weight drifts from where the optimizer wanted it", sub: "simulation of 20,000 weights, typical distance in gaps of the 4-bit grid (log scale); the push follows the real learning-rate schedule",
+    series: () => Object.keys(NAME).map(k => ({ label: NAME[k], color: COL[k], strong: k.startsWith("tick"), points: N.dist[k] })),
+    x: { domain: [0, 2000], ticks: [0, 500, 1000, 1500, 2000], label: "training step" }, y: { log: true, domain: [0.2, 10], ticks: [0.25, 0.5, 1, 2, 4, 8], fmt: v => String(v), tip: v => v.toFixed(2) + " gaps", tipAscending: true },
+  });
+})();
+
+})();
+</script>

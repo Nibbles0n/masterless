@@ -1,0 +1,86 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless Muon · paper steps P2 and P5 · final round · third seeds and LoRA rounded to 4 bits</div>
+  <h1>RL in 4 Bits: Short of the Line, Far Ahead as a 4-bit Model</h1>
+  <p class="lede">The third seeds settled P5a: ours ends 3.7 points behind normal 16-bit training, and the line was −4, so it fails. LoRA, served the usual way with its 16-bit add-on, ends 2.6 points above ours. The test we wrote down in advance shows where LoRA's gain lives: merged into the weights and rounded to 4 bits, not one weight changes, and the model scores its starting 48%. Ours is the only one of the three whose learning is stored in the 4-bit weights themselves.</p>
+  <p class="meta">29 October 2026 · P5: Qwen3.5-0.8B, GSM8K, 200 RL steps, 3 seeds per setup · P2: GPT-2 6 × 512 (45M), FineWeb, 0.9B tokens · source: <code>p5_rl.py</code>, <code>runs/paper/P5_RESULT.md</code>, <code>runs/paper/P2_RESULT.md</code></p>
+</header>
+
+<section class="verdict" aria-label="pass lines">
+  <div><b>P5a · FAIL</b><span>ours − normal: −3.7, interval −5.2 to −2.2 (line: lower end above −4)</span></div>
+  <div><b>P5b · PASS</b><span>ours gains +20.4 ± 2.4 exam points over its 4-bit start (line: +5)</span></div>
+  <div><b>Ours vs LoRA as served · behind</b><span>−2.6 ± 1.6 points (measured only); LoRA keeps a 16-bit add-on</span></div>
+  <div><b>Ours vs LoRA in 4 bits · far ahead</b><span>+20.9 ± 2.2 points; LoRA rounded to 4 bits changes no weight (prediction held)</span></div>
+  <div><b>P2a, P2c · PASS</b><span>from scratch, ours within 0.013 of the float copy; bf16 rounded afterwards 1.13 worse</span></div>
+</section>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><b>P5a fails, as the rule says.</b> With three seeds each, ours ends 3.7 points behind normal training, interval −5.2 to −2.2. The third seed did not help: seed 3 of ours ended 4.5 behind seed 3 of normal training.</li>
+    <li><b>The gap is mostly the 4-bit start.</b> Rounding the model to 4 bits costs 6.5 points before training. Ours then learns more than normal training (+20.4 against +17.6), so it wins back about two fifths of that in 200 steps.</li>
+    <li><b>LoRA ends 2.6 points above ours, but only with its add-on.</b> Its add-on is tiny: on average 1/200 of the gap between neighbouring 4-bit values. Merged and rounded to 4 bits, every weight lands back on its start and the model scores 47.7%.</li>
+    <li><b>So the paper's claim about RL is narrower but clean.</b> Ours is the only setup here that produces a better pure 4-bit model. Today's method produces a 4-bit model plus a 16-bit one, which must be served together.</li>
+    <li><b>All experiments are done.</b> The paper draft now has every number; only author names and the date are missing. This round used 23.6 units, about 144 in all, under the 150 cap.</li>
+  </ol>
+</section>
+
+<h2 id="p5"><span class="secnum">1</span>P5: RL in 4 bits</h2>
+<p>Each setup trains Qwen3.5-0.8B for 200 steps, three seeds each. At each step it tries 8 answers to each of 32 practice questions and learns from which ones were right. Then it sits the 1,319-question exam. <b>(a)</b> is normal training in 16 bits with a full-precision copy. <b>(b)</b> is today's 4-bit method: a frozen 4-bit model with a small 16-bit LoRA add-on. <b>(c)</b> is ours: every weight in 4 bits, with an 8-bit carry and no copy.</p>
+<figure class="wide">
+  <div class="chart" id="ch-p5runs"></div>
+  <figcaption><b>LoRA's black crosses sit on its starting score.</b> Each row is one run. LoRA (b) ends highest of the 4-bit setups when scored with its 16-bit add-on. Merged into its weights and rounded to 4 bits (seeds 2 and 3, the crosses), it is back at 47.6% and 47.8%.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-p5lines"></div>
+  <figcaption><b>P5a's bar crosses the −4 line; against rounded LoRA, ours is 21 points ahead.</b> The third seeds narrowed P5a's interval but moved its middle further left. Against LoRA as served, the 30-step lead (+12) turns into −2.6 by step 200.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-p5reward"></div>
+  <figcaption><b>LoRA learns slowly but steadily.</b> Ours (green) and normal training (blue) rise fast and level off near step 80. LoRA (amber) climbs in a straight line and is still rising at step 200. The grey line is the 1e-4 run that tripped the safety rule written in advance; every other run uses 4e-5.</figcaption>
+</figure>
+
+<h2 id="lora"><span class="secnum">2</span>Why rounded LoRA scores its start</h2>
+<div class="two">
+  <div>
+    <h3>What was measured</h3>
+    <ul>
+      <li>At the end of LoRA seeds 2 and 3, the add-on was merged into the weights and rounded to the same 4-bit grid ours uses, then the exam was taken again.</li>
+      <li>Share of 4-bit values that changed: <b>0</b>, on both seeds.</li>
+      <li>Add-on size: on average 0.5% of the gap between neighbouring 4-bit values (root mean square 1.8e-5).</li>
+      <li>Score: 47.6% and 47.8%, against a 48.1% start (−0.4 ± 2.0: no change).</li>
+    </ul>
+  </div>
+  <div>
+    <h3>What it means</h3>
+    <ul>
+      <li>LoRA's 23-point gain is real, but it is stored entirely in a 16-bit add-on, not in the 4-bit weights.</li>
+      <li>Ours moves the 4-bit values themselves: 0.11% of them change on each step. What it learns is in the model you serve.</li>
+      <li>The prediction we wrote before the runs said "most weights round back to their start". In fact all of them did.</li>
+      <li>Not tested: other ways to bring LoRA's gain into 4 bits, such as training the block scales (Scale-QLoRA).</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="p2"><span class="secnum">3</span>P2: GPT-2 from scratch in 4 bits</h2>
+<p>A 45-million-weight GPT-2 model is trained from random weights on 0.9 billion tokens of web text: 27,466 steps, about 20 tokens per weight. Ours is compared with the same 4-bit model trained with a full-precision copy (8 bytes per weight), over three seeds. The score is the validation loss: lower is better.</p>
+<figure class="wide">
+  <div class="chart" id="ch-p2gap"></div>
+  <figcaption><b>Every seed is well inside the line.</b> The gap is small but real: about 0.009, several times the evaluation noise. In P1, which continued an already trained model, it was 0.0013.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-p2curve"></div>
+  <figcaption><b>Ours and the float copy run together for the whole training.</b> bf16-SR, trained in 16 bits with random rounding, ends lower at 3.889. Rounded to 4 bits at the end, though, it scores 5.05.</figcaption>
+</figure>
+<p>The learning rate was picked from three, with short runs of the float copy: 0.04, the top of the grid (loss 4.268 against 4.301 and 4.306). A larger rate might be better still. The same rate is used for every arm.</p>
+
+<h2 id="caveats"><span class="secnum">4</span>What this does not show</h2>
+<ul>
+  <li>P5: one model (0.8B), one task, 200 steps. Whether ours keeps closing the gap with longer training, or with a short healing run before RL, is untested.</li>
+  <li>P5's peak GPU memory is set by vLLM's reserved share and the activations (27–30 GB for normal and ours, 24 GB for LoRA). LoRA does use less memory than ours, since its frozen weights need no gradients or carry. The weight and optimizer saving against full training is measured in P6.</li>
+  <li>LoRA's learning rate (1e-5) was not tuned; neither was ours beyond the safety rule.</li>
+  <li>The rounded-LoRA test covers seeds 2 and 3 only (seed 1 ran before it was added).</li>
+  <li>P2: one model size, learning rate at the top of its grid, the batch size not tuned, one seed of bf16-SR.</li>
+  <li>The answer writer (vLLM) holds a 16-bit copy of the 4-bit values; a true 4-bit answer writer is not measured.</li>
+</ul>
+</main>

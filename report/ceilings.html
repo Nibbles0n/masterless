@@ -1,0 +1,444 @@
+<title>Aiming the Rounding Noise</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #86b6ef; --r2: #3987e5; --r3: #184f95;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #184f95; --r2: #3987e5; --r3: #9ec5f4; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #184f95; --r2: #3987e5; --r3: #9ec5f4; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.note { background: var(--wash); padding: 10px 14px; border-radius: 6px; }
+</style>
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · GPT-2 small · measured on saved weights, no training</div>
+  <h1>Aiming the Rounding Noise</h1>
+  <p class="lede">Two ways to make rounding hurt less without storing more. The first stores each weight matrix rotated, so the 4-bit gaps get smaller. The second steers the rounding error into input directions the layer barely uses. Before building either, this page measures how much each could give at most, on GPT-2 small's real weights and real inputs.</p>
+  <p class="meta">27 October 2026 · pretrained GPT-2 small and the float-Muon stage-2 weights · inputs from 24 × 1024 FineWeb validation tokens · every number comes from <code>report/data/gpt2_ceilings.json</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>Rotating the stored weights gives nothing.</strong> The average 4-bit gap stays at 0.309 of a typical weight with a Hadamard rotation, and goes up slightly with the others. GPT-2's blocks of 16 weights are already as evenly spread as a rotation would make them. Muon really doesn't see the rotation (checked: the steps agree to 2 parts in a million), but there's nothing for it to buy.</li>
+    <li><strong>The inputs are very lopsided, so aiming the noise has real room.</strong> In a typical layer, the strongest 10% of input directions carry 60–90% of the input energy. If rounding error could be steered perfectly into the weak directions, it would disturb the layer outputs 3.4 times less (whole model, weighted by size). That is the ceiling.</li>
+    <li><strong>A cheap version gets most of it.</strong> Keeping the error out of just the strongest 10% of input directions gives 3.0 of that 3.4. Keeping it out of the strongest 1% (7 directions in most layers) still gives 1.9.</li>
+    <li><strong>In noise ÷ signal terms</strong>, a 3× cut in damage is like dividing the noise by about 1.75. That would bring FP8 storage from 1.8 to about 1.0, and the 8-bit-carry ticker from 0.25 to about 0.14. That's an upper estimate, measured at the layer outputs, not the loss.</li>
+  </ol>
+</section>
+
+<h2 id="rotation"><span class="secnum">1</span>Rotated storage: no gain</h2>
+<p>Muon has a property Adam lacks. Store a matrix W as W·Q for any rotation Q, and Muon's step comes out rotated by the same Q. Training is unchanged; only the rounding changes. Rotations such as the Hadamard transform mix each weight with many others. That makes the values look like a bell curve and tames outliers. Since the 4-bit scale of each block of 16 is set by its largest weight, fewer outliers should mean smaller gaps.</p>
+<figure class="wide">
+  <div class="chart" id="ch-rot"></div>
+  <figcaption><b>Average 4-bit gap after each rotation</b>, as a fraction of the typical (root-mean-square) weight; pretrained GPT-2 weights, all 48 big matrices weighted by size. Random rounding adds noise variance in proportion to the gap, so smaller is better. The trained stage-2 weights give the same numbers to three digits.</figcaption>
+</figure>
+<p><b>Why it fails.</b> Rotation only helps when blocks hold outliers. In GPT-2 small the largest weight in a block of 16 is already about 2 times the typical weight. That's what 16 draws from a bell curve give, so the blocks have no outliers to tame. Rotation shrinks the block maximum by just 2%. The gaps don't shrink at all, because the 4-bit float grid's gaps also depend on where in the grid each weight lands. Rotation tricks help in published work because they use whole rows or blocks of 128 per scale, where outliers do dominate. Our blocks of 16 already got that benefit.</p>
+
+<h2 id="inputs"><span class="secnum">2</span>Aimed rounding error: real room</h2>
+<p>A layer multiplies its weight matrix by an input vector x. A weight error E changes the output by E·x. On average that costs the sum, over input directions, of (error in that direction)² × (input energy in that direction). With error spread evenly, the cost is set by the <em>average</em> input energy. With error pushed into the weak directions, the best possible cost is set by the <em>geometric mean</em> of the energies, which is much lower when a few directions dominate. The ratio of the two is the ceiling. Three practical versions were also measured:</p>
+<ul>
+  <li><b>Keep-out, top 1% or top 10%:</b> make the rounding error have no part along the strongest 1% (or 10%) of input directions. The rest of the error spreads over the remaining directions. Needs only those directions stored per layer: 7 to 30 vectors for 1%.</li>
+  <li><b>Sequential feedback:</b> GPTQ's rule. When one weight in a row rounds, the later weights in that row absorb its error in the best way the inputs allow. Here it's in the plain column order, without GPTQ's reordering.</li>
+</ul>
+<figure class="wide">
+  <div class="chart" id="ch-ways"></div>
+  <figcaption><b>How many times less the rounding error disturbs the layer outputs</b>, for the same amount of rounding error. Geometric mean over the 48 matrices, weighted by size.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-layers"></div>
+  <figcaption><b>The ceiling, layer by layer.</b> Attention's input (c_attn) and output projection (attn_c_proj) are the most lopsided, up to 27× in layer 1. The MLP layers sit at 2 to 6×. Early layers are more lopsided than late ones. The FineWeb inputs gave no near-zero directions, so the ceiling doesn't come from numerical noise. Flooring every energy at 1/10,000 of the average changes nothing.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-share"></div>
+  <figcaption><b>Share of input energy in the strongest 10% of input directions.</b> If energy were spread evenly it would be 10%.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">3</span>What it means for the noise budget</h2>
+<p>The GPT-2 noise ÷ signal numbers below come from the rounding law in <code>zigzag_theory.md</code>, section 10. A k-times cut in damage is like dividing the noise by √k. With the top-10% keep-out (k = 3.05, so ÷ 1.75):</p>
+<div class="tablewrap"><table id="tbl-budget"><thead><tr><th>storage</th><th class="n">noise ÷ signal now</th><th class="n">with keep-out (upper estimate)</th></tr></thead><tbody></tbody></table></div>
+<p class="note">This stacks with the other two insertion points. The carry sets how much noise is made, and step filters set how much movement each unit of progress needs. Aiming the noise sets how much the noise that is made actually costs. The three multiply.</p>
+
+<h2 id="caveats"><span class="secnum">4</span>Not tested, and why the real gain could be smaller</h2>
+<ul>
+  <li><b>Layer outputs, not the loss.</b> Some disturbances to a layer's output matter little further on. The loss could be more or less sensitive than this measure.</li>
+  <li><b>Training already corrects part of it.</b> The gradient pushes back hardest on errors the loss feels. With plain rounding, errors in strong directions may already be fixed faster than errors in weak ones. The gain over what training already does could therefore be smaller than the ceiling.</li>
+  <li><b>Whether flips can do it.</b> Each step only about 1 in 1000 stored weights changes value. Steering the error means choosing which ones flip, through the carries. Shaped error is larger in weight space (it piles up in the weak directions), so the carries need range for it. Nothing here shows that can be done with a low-bit carry.</li>
+  <li><b>The input directions move.</b> They were measured once, on the pretrained model. During training they would need refreshing, and from scratch they change fast early on.</li>
+  <li><b>One model, one data sample.</b> GPT-2 small, 24,576 tokens of FineWeb validation text. Larger models are known to have stronger outlier input directions (more lopsided), which would raise the ceiling, but that wasn't measured.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">5</span>Reproduce</h2>
+<p><code>python report/gpt2_ceilings.py</code> (about 10 minutes on 2 CPU threads), then <code>python report/build_ceilings.py</code>. Needs <code>data/gpt2_s3/muon_float_lr0.001_s1.pt</code> from side study G, stage 2.</p>
+</main>
+
+<script>
+const DATA = {"c":{"muon_rotation_check":1.8959e-06,"rotation":{"pretrained":{"all":{"none":{"gap":0.3091,"scale":2.0518,"rtn":0.093444},"hadamard16 (in)":{"gap":0.30906,"scale":2.0027,"rtn":0.094282},"hadamard256 (in)":{"gap":0.31036,"scale":2.0178,"rtn":0.094204},"hadamard256 (in and out)":{"gap":0.31652,"scale":2.059,"rtn":0.094147},"random full (in)":{"gap":0.31067,"scale":2.0211,"rtn":0.094142}},"by_kind":{"c_attn":{"none":{"gap":0.30672,"scale":2.0237,"rtn":0.093791},"hadamard16 (in)":{"gap":0.30664,"scale":1.9887,"rtn":0.094284},"hadamard256 (in)":{"gap":0.30723,"scale":1.999,"rtn":0.094143},"hadamard256 (in and out)":{"gap":0.31185,"scale":2.0291,"rtn":0.094126},"random full (in)":{"gap":0.30736,"scale":2.0002,"rtn":0.094138}},"attn_c_proj":{"none":{"gap":0.29116,"scale":1.9019,"rtn":0.094303},"hadamard16 (in)":{"gap":0.29122,"scale":1.8935,"rtn":0.094227},"hadamard256 (in)":{"gap":0.29538,"scale":1.9215,"rtn":0.09407},"hadamard256 (in and out)":{"gap":0.3169,"scale":2.0621,"rtn":0.094162},"random full (in)":{"gap":0.29688,"scale":1.9324,"rtn":0.094166}},"c_fc":{"none":{"gap":0.31451,"scale":2.0671,"rtn":0.093934},"hadamard16 (in)":{"gap":0.31456,"scale":2.0428,"rtn":0.094238},"hadamard256 (in)":{"gap":0.31497,"scale":2.0487,"rtn":0.094133},"hadamard256 (in and out)":{"gap":0.3176,"scale":2.0662,"rtn":0.094143},"random full (in)":{"gap":0.31497,"scale":2.0488,"rtn":0.094121}},"mlp_c_proj":{"none":{"gap":0.30997,"scale":2.0952,"rtn":0.092478},"hadamard16 (in)":{"gap":0.30985,"scale":2.0004,"rtn":0.094338},"hadamard256 (in)":{"gap":0.31184,"scale":2.0249,"rtn":0.094353},"hadamard256 (in and out)":{"gap":0.31887,"scale":2.0736,"rtn":0.094164},"random full (in)":{"gap":0.31229,"scale":2.0314,"rtn":0.094161}}}},"float_muon_s2":{"all":{"none":{"gap":0.30917,"scale":2.0521,"rtn":0.093452},"hadamard16 (in)":{"gap":0.30914,"scale":2.0032,"rtn":0.094279},"hadamard256 (in)":{"gap":0.31041,"scale":2.0181,"rtn":0.094203},"hadamard256 (in and out)":{"gap":0.31655,"scale":2.0592,"rtn":0.094145},"random full (in)":{"gap":0.31072,"scale":2.0215,"rtn":0.094138}},"by_kind":{"c_attn":{"none":{"gap":0.3068,"scale":2.0241,"rtn":0.093805},"hadamard16 (in)":{"gap":0.30673,"scale":1.9894,"rtn":0.094271},"hadamard256 (in)":{"gap":0.30731,"scale":1.9996,"rtn":0.09414},"hadamard256 (in and out)":{"gap":0.31193,"scale":2.0295,"rtn":0.094123},"random full (in)":{"gap":0.30742,"scale":1.9999,"rtn":0.09415}},"attn_c_proj":{"none":{"gap":0.29132,"scale":1.9026,"rtn":0.094298},"hadamard16 (in)":{"gap":0.29134,"scale":1.8944,"rtn":0.094225},"hadamard256 (in)":{"gap":0.29545,"scale":1.9221,"rtn":0.094114},"hadamard256 (in and out)":{"gap":0.31688,"scale":2.062,"rtn":0.094149},"random full (in)":{"gap":0.29696,"scale":1.9319,"rtn":0.094095}},"c_fc":{"none":{"gap":0.31459,"scale":2.0674,"rtn":0.09394},"hadamard16 (in)":{"gap":0.31465,"scale":2.0432,"rtn":0.094231},"hadamard256 (in)":{"gap":0.31503,"scale":2.0491,"rtn":0.09412},"hadamard256 (in and out)":{"gap":0.31761,"scale":2.0663,"rtn":0.094149},"random full (in)":{"gap":0.31505,"scale":2.0499,"rtn":0.094128}},"mlp_c_proj":{"none":{"gap":0.31,"scale":2.095,"rtn":0.092488},"hadamard16 (in)":{"gap":0.30988,"scale":2.0007,"rtn":0.094346},"hadamard256 (in)":{"gap":0.31186,"scale":2.0251,"rtn":0.094356},"hadamard256 (in and out)":{"gap":0.31888,"scale":2.0736,"rtn":0.094156},"random full (in)":{"gap":0.31231,"scale":2.0316,"rtn":0.09415}}}}},"inputs":{"tokens":24576,"rows":[{"name":"h.0.c_attn","kind":"c_attn","layer":0,"dim":768,"top1pct_share":0.30116,"top10pct_share":0.55903,"top1_share":0.091895,"eff_rank_frac":0.067853,"am_over_gm":2.4954,"am_over_gm_floor1e4":2.4954,"am_over_seq":1.9674},{"name":"h.0.attn_c_proj","kind":"attn_c_proj","layer":0,"dim":768,"top1pct_share":0.70642,"top10pct_share":0.86484,"top1_share":0.38571,"eff_rank_frac":0.0073794,"am_over_gm":13.833,"am_over_gm_floor1e4":13.833,"am_over_seq":7.1965},{"name":"h.0.c_fc","kind":"c_fc","layer":0,"dim":768,"top1pct_share":0.48569,"top10pct_share":0.6996,"top1_share":0.25655,"eff_rank_frac":0.016686,"am_over_gm":4.1911,"am_over_gm_floor1e4":4.1911,"am_over_seq":3.3234},{"name":"h.0.mlp_c_proj","kind":"mlp_c_proj","layer":0,"dim":3072,"top1pct_share":0.48173,"top10pct_share":0.77869,"top1_share":0.24519,"eff_rank_frac":0.005117,"am_over_gm":6.2632,"am_over_gm_floor1e4":6.2604,"am_over_seq":4.3078},{"name":"h.1.c_attn","kind":"c_attn","layer":1,"dim":768,"top1pct_share":0.67125,"top10pct_share":0.8208,"top1_share":0.21348,"eff_rank_frac":0.011866,"am_over_gm":7.0132,"am_over_gm_floor1e4":7.0132,"am_over_seq":4.0492},{"name":"h.1.attn_c_proj","kind":"attn_c_proj","layer":1,"dim":768,"top1pct_share":0.78048,"top10pct_share":0.92674,"top1_share":0.45661,"eff_rank_frac":0.0054926,"am_over_gm":27.325,"am_over_gm_floor1e4":27.325,"am_over_seq":10.146},{"name":"h.1.c_fc","kind":"c_fc","layer":1,"dim":768,"top1pct_share":0.56265,"top10pct_share":0.75473,"top1_share":0.26001,"eff_rank_frac":0.014698,"am_over_gm":4.5316,"am_over_gm_floor1e4":4.5263,"am_over_seq":3.5216},{"name":"h.1.mlp_c_proj","kind":"mlp_c_proj","layer":1,"dim":3072,"top1pct_share":0.35012,"top10pct_share":0.72494,"top1_share":0.13373,"eff_rank_frac":0.015443,"am_over_gm":5.0359,"am_over_gm_floor1e4":5.0359,"am_over_seq":3.4306},{"name":"h.2.c_attn","kind":"c_attn","layer":2,"dim":768,"top1pct_share":0.86343,"top10pct_share":0.92758,"top1_share":0.25944,"eff_rank_frac":0.0071009,"am_over_gm":16.427,"am_over_gm_floor1e4":16.418,"am_over_seq":7.2159},{"name":"h.2.attn_c_proj","kind":"attn_c_proj","layer":2,"dim":768,"top1pct_share":0.72173,"top10pct_share":0.86856,"top1_share":0.57833,"eff_rank_frac":0.0038281,"am_over_gm":10.509,"am_over_gm_floor1e4":10.509,"am_over_seq":6.5455},{"name":"h.2.c_fc","kind":"c_fc","layer":2,"dim":768,"top1pct_share":0.43118,"top10pct_share":0.66693,"top1_share":0.26637,"eff_rank_frac":0.016461,"am_over_gm":3.2966,"am_over_gm_floor1e4":3.2927,"am_over_seq":2.7833},{"name":"h.2.mlp_c_proj","kind":"mlp_c_proj","layer":2,"dim":3072,"top1pct_share":0.44067,"top10pct_share":0.7196,"top1_share":0.18263,"eff_rank_frac":0.0073104,"am_over_gm":3.8331,"am_over_gm_floor1e4":3.8331,"am_over_seq":3.0612},{"name":"h.3.c_attn","kind":"c_attn","layer":3,"dim":768,"top1pct_share":0.82369,"top10pct_share":0.89606,"top1_share":0.24028,"eff_rank_frac":0.0078559,"am_over_gm":10.574,"am_over_gm_floor1e4":10.526,"am_over_seq":5.2346},{"name":"h.3.attn_c_proj","kind":"attn_c_proj","layer":3,"dim":768,"top1pct_share":0.54753,"top10pct_share":0.74517,"top1_share":0.48113,"eff_rank_frac":0.0055841,"am_over_gm":4.0674,"am_over_gm_floor1e4":4.0674,"am_over_seq":3.0619},{"name":"h.3.c_fc","kind":"c_fc","layer":3,"dim":768,"top1pct_share":0.39663,"top10pct_share":0.62928,"top1_share":0.28201,"eff_rank_frac":0.015449,"am_over_gm":2.8479,"am_over_gm_floor1e4":2.8204,"am_over_seq":2.5037},{"name":"h.3.mlp_c_proj","kind":"mlp_c_proj","layer":3,"dim":3072,"top1pct_share":0.38557,"top10pct_share":0.65742,"top1_share":0.2204,"eff_rank_frac":0.0064875,"am_over_gm":2.8307,"am_over_gm_floor1e4":2.8307,"am_over_seq":2.5056},{"name":"h.4.c_attn","kind":"c_attn","layer":4,"dim":768,"top1pct_share":0.72094,"top10pct_share":0.82991,"top1_share":0.23905,"eff_rank_frac":0.010143,"am_over_gm":5.915,"am_over_gm_floor1e4":5.9136,"am_over_seq":3.5144},{"name":"h.4.attn_c_proj","kind":"attn_c_proj","layer":4,"dim":768,"top1pct_share":0.33853,"top10pct_share":0.70084,"top1_share":0.21592,"eff_rank_frac":0.025001,"am_over_gm":3.7222,"am_over_gm_floor1e4":3.7222,"am_over_seq":1.9485},{"name":"h.4.c_fc","kind":"c_fc","layer":4,"dim":768,"top1pct_share":0.40117,"top10pct_share":0.62767,"top1_share":0.27094,"eff_rank_frac":0.016568,"am_over_gm":2.6732,"am_over_gm_floor1e4":2.6255,"am_over_seq":2.403},{"name":"h.4.mlp_c_proj","kind":"mlp_c_proj","layer":4,"dim":3072,"top1pct_share":0.37505,"top10pct_share":0.65339,"top1_share":0.21024,"eff_rank_frac":0.0071063,"am_over_gm":2.7544,"am_over_gm_floor1e4":2.7544,"am_over_seq":2.4565},{"name":"h.5.c_attn","kind":"c_attn","layer":5,"dim":768,"top1pct_share":0.67374,"top10pct_share":0.79958,"top1_share":0.26377,"eff_rank_frac":0.010684,"am_over_gm":4.8486,"am_over_gm_floor1e4":4.8486,"am_over_seq":3.0901},{"name":"h.5.attn_c_proj","kind":"attn_c_proj","layer":5,"dim":768,"top1pct_share":0.51587,"top10pct_share":0.72962,"top1_share":0.4053,"eff_rank_frac":0.0077615,"am_over_gm":3.5742,"am_over_gm_floor1e4":3.5742,"am_over_seq":3.2996},{"name":"h.5.c_fc","kind":"c_fc","layer":5,"dim":768,"top1pct_share":0.37186,"top10pct_share":0.60198,"top1_share":0.25613,"eff_rank_frac":0.018622,"am_over_gm":2.385,"am_over_gm_floor1e4":2.385,"am_over_seq":2.1919},{"name":"h.5.mlp_c_proj","kind":"mlp_c_proj","layer":5,"dim":3072,"top1pct_share":0.35833,"top10pct_share":0.64056,"top1_share":0.17919,"eff_rank_frac":0.0095671,"am_over_gm":2.6189,"am_over_gm_floor1e4":2.6189,"am_over_seq":2.3425},{"name":"h.6.c_attn","kind":"c_attn","layer":6,"dim":768,"top1pct_share":0.64957,"top10pct_share":0.78055,"top1_share":0.23511,"eff_rank_frac":0.012016,"am_over_gm":4.2794,"am_over_gm_floor1e4":4.2794,"am_over_seq":2.6117},{"name":"h.6.attn_c_proj","kind":"attn_c_proj","layer":6,"dim":768,"top1pct_share":0.2673,"top10pct_share":0.6045,"top1_share":0.16113,"eff_rank_frac":0.042781,"am_over_gm":2.7207,"am_over_gm_floor1e4":2.7207,"am_over_seq":2.0908},{"name":"h.6.c_fc","kind":"c_fc","layer":6,"dim":768,"top1pct_share":0.35059,"top10pct_share":0.58602,"top1_share":0.23084,"eff_rank_frac":0.022568,"am_over_gm":2.2502,"am_over_gm_floor1e4":2.2472,"am_over_seq":2.0807},{"name":"h.6.mlp_c_proj","kind":"mlp_c_proj","layer":6,"dim":3072,"top1pct_share":0.35869,"top10pct_share":0.65075,"top1_share":0.15416,"eff_rank_frac":0.012393,"am_over_gm":2.6739,"am_over_gm_floor1e4":2.6739,"am_over_seq":2.3912},{"name":"h.7.c_attn","kind":"c_attn","layer":7,"dim":768,"top1pct_share":0.6058,"top10pct_share":0.7527,"top1_share":0.21588,"eff_rank_frac":0.014021,"am_over_gm":3.7164,"am_over_gm_floor1e4":3.7164,"am_over_seq":2.279},{"name":"h.7.attn_c_proj","kind":"attn_c_proj","layer":7,"dim":768,"top1pct_share":0.29014,"top10pct_share":0.58012,"top1_share":0.19315,"eff_rank_frac":0.03182,"am_over_gm":2.3033,"am_over_gm_floor1e4":2.3033,"am_over_seq":2.0501},{"name":"h.7.c_fc","kind":"c_fc","layer":7,"dim":768,"top1pct_share":0.29912,"top10pct_share":0.55433,"top1_share":0.19251,"eff_rank_frac":0.031753,"am_over_gm":2.0704,"am_over_gm_floor1e4":2.0704,"am_over_seq":1.9303},{"name":"h.7.mlp_c_proj","kind":"mlp_c_proj","layer":7,"dim":3072,"top1pct_share":0.36001,"top10pct_share":0.64739,"top1_share":0.16704,"eff_rank_frac":0.010797,"am_over_gm":2.6177,"am_over_gm_floor1e4":2.6177,"am_over_seq":2.3714},{"name":"h.8.c_attn","kind":"c_attn","layer":8,"dim":768,"top1pct_share":0.58833,"top10pct_share":0.74304,"top1_share":0.2334,"eff_rank_frac":0.013812,"am_over_gm":3.5129,"am_over_gm_floor1e4":3.5129,"am_over_seq":2.2423},{"name":"h.8.attn_c_proj","kind":"attn_c_proj","layer":8,"dim":768,"top1pct_share":0.29168,"top10pct_share":0.62757,"top1_share":0.18027,"eff_rank_frac":0.035058,"am_over_gm":2.7571,"am_over_gm_floor1e4":2.7571,"am_over_seq":2.2654},{"name":"h.8.c_fc","kind":"c_fc","layer":8,"dim":768,"top1pct_share":0.28683,"top10pct_share":0.5515,"top1_share":0.17766,"eff_rank_frac":0.036568,"am_over_gm":2.0361,"am_over_gm_floor1e4":2.0361,"am_over_seq":1.9123},{"name":"h.8.mlp_c_proj","kind":"mlp_c_proj","layer":8,"dim":3072,"top1pct_share":0.37054,"top10pct_share":0.65126,"top1_share":0.16497,"eff_rank_frac":0.010919,"am_over_gm":2.6487,"am_over_gm_floor1e4":2.6487,"am_over_seq":2.389},{"name":"h.9.c_attn","kind":"c_attn","layer":9,"dim":768,"top1pct_share":0.49575,"top10pct_share":0.6921,"top1_share":0.20967,"eff_rank_frac":0.01902,"am_over_gm":2.9233,"am_over_gm_floor1e4":2.9233,"am_over_seq":2.0686},{"name":"h.9.attn_c_proj","kind":"attn_c_proj","layer":9,"dim":768,"top1pct_share":0.31474,"top10pct_share":0.64088,"top1_share":0.19521,"eff_rank_frac":0.030228,"am_over_gm":2.837,"am_over_gm_floor1e4":2.837,"am_over_seq":2.4174},{"name":"h.9.c_fc","kind":"c_fc","layer":9,"dim":768,"top1pct_share":0.27718,"top10pct_share":0.55372,"top1_share":0.16795,"eff_rank_frac":0.040317,"am_over_gm":2.0312,"am_over_gm_floor1e4":2.0312,"am_over_seq":1.9092},{"name":"h.9.mlp_c_proj","kind":"mlp_c_proj","layer":9,"dim":3072,"top1pct_share":0.39214,"top10pct_share":0.66936,"top1_share":0.16597,"eff_rank_frac":0.010665,"am_over_gm":2.8097,"am_over_gm_floor1e4":2.8097,"am_over_seq":2.4386},{"name":"h.10.c_attn","kind":"c_attn","layer":10,"dim":768,"top1pct_share":0.40463,"top10pct_share":0.64691,"top1_share":0.1684,"eff_rank_frac":0.029695,"am_over_gm":2.5315,"am_over_gm_floor1e4":2.5315,"am_over_seq":1.971},{"name":"h.10.attn_c_proj","kind":"attn_c_proj","layer":10,"dim":768,"top1pct_share":0.46354,"top10pct_share":0.7151,"top1_share":0.35838,"eff_rank_frac":0.0098482,"am_over_gm":3.6031,"am_over_gm_floor1e4":3.6031,"am_over_seq":3.0108},{"name":"h.10.c_fc","kind":"c_fc","layer":10,"dim":768,"top1pct_share":0.26968,"top10pct_share":0.559,"top1_share":0.15566,"eff_rank_frac":0.045585,"am_over_gm":2.0405,"am_over_gm_floor1e4":2.0405,"am_over_seq":1.9073},{"name":"h.10.mlp_c_proj","kind":"mlp_c_proj","layer":10,"dim":3072,"top1pct_share":0.42615,"top10pct_share":0.70804,"top1_share":0.16295,"eff_rank_frac":0.010657,"am_over_gm":3.236,"am_over_gm_floor1e4":3.236,"am_over_seq":2.6809},{"name":"h.11.c_attn","kind":"c_attn","layer":11,"dim":768,"top1pct_share":0.30187,"top10pct_share":0.60063,"top1_share":0.15148,"eff_rank_frac":0.043519,"am_over_gm":2.2368,"am_over_gm_floor1e4":2.2368,"am_over_seq":1.9794},{"name":"h.11.attn_c_proj","kind":"attn_c_proj","layer":11,"dim":768,"top1pct_share":0.67214,"top10pct_share":0.88314,"top1_share":0.46491,"eff_rank_frac":0.0056778,"am_over_gm":9.1029,"am_over_gm_floor1e4":9.1029,"am_over_seq":6.1751},{"name":"h.11.c_fc","kind":"c_fc","layer":11,"dim":768,"top1pct_share":0.28855,"top10pct_share":0.58671,"top1_share":0.15829,"eff_rank_frac":0.043161,"am_over_gm":2.1943,"am_over_gm_floor1e4":2.1943,"am_over_seq":2.0049},{"name":"h.11.mlp_c_proj","kind":"mlp_c_proj","layer":11,"dim":3072,"top1pct_share":0.52653,"top10pct_share":0.78118,"top1_share":0.2282,"eff_rank_frac":0.0056506,"am_over_gm":4.4503,"am_over_gm_floor1e4":4.4503,"am_over_seq":3.365}],"by_kind":{"c_attn":{"am_over_gm":4.559,"am_over_gm_floor1e4":4.557,"am_over_seq":2.8987,"top10pct_share":0.75407},"attn_c_proj":{"am_over_gm":5.1469,"am_over_gm_floor1e4":5.1469,"am_over_seq":3.5573,"top10pct_share":0.74059},"c_fc":{"am_over_gm":2.6059,"am_over_gm_floor1e4":2.5991,"am_over_seq":2.3182,"top10pct_share":0.61429},"mlp_c_proj":{"am_over_gm":3.3289,"am_over_gm_floor1e4":3.3288,"am_over_seq":2.7588,"top10pct_share":0.69021}}}},"gains":{"ceiling":3.4417,"seq":2.6922,"keep1":1.8834,"keep10":3.0498}};
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1 }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const fmt = (v, d = 2) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const KIND = {
+  c_attn: { name: "attention input (c_attn)", color: "--c-m2" },
+  attn_c_proj: { name: "attention output (attn_c_proj)", color: "--c-a" },
+  c_fc: { name: "MLP input (c_fc)", color: "--c-m3" },
+  mlp_c_proj: { name: "MLP output (mlp_c_proj)", color: "--c-c" },
+};
+const ROWS = DATA.c.inputs.rows;
+
+function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
+  const tip = host._tip || (host._tip = tipBox(host));
+  const hit = el("svg:rect", Object.assign({ fill: "transparent", tabindex: "0" }, hitAttrs), svg);
+  const on = () => { tipRows(tip, title, rowsFn()); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+  hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+  hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+}
+
+/* one horizontal bar per row: {label, v, color, tip} */
+function barChart(host, o) {
+  const draw = () => {
+    header(host, { title: o.title, sub: o.sub });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, bh = 16, gap = narrow ? 30 : 12, m = { l: narrow ? 10 : 230, r: 50, t: 6, b: 30 };
+    const H = m.t + o.rows.length * (bh + gap) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": o.title }, host);
+    const X = scale(o.domain[0], o.domain[1], m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of o.ticks) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v === o.domain[0] ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, o.tickFmt ? o.tickFmt(v) : v); }
+    o.rows.forEach((r, i) => {
+      const y0 = m.t + i * (bh + gap) + (narrow ? 16 : 0), x0 = X(o.domain[0]);
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? y0 - 5 : y0 + bh - 4, "text-anchor": narrow ? "start" : "end", class: "lab" }, g, r.label);
+      el("svg:rect", { x: x0, y: y0, width: Math.max(1, X(r.v) - x0), height: bh, rx: 3, fill: tok(r.color) }, g);
+      el("svg:text", { x: X(r.v) + 6, y: y0 + bh - 4, class: "lab" }, g, o.valFmt(r.v));
+      hover(host, svg, W, H, { x: x0, y: y0, width: Math.max(8, X(r.v) - x0), height: bh }, () => r.tip, r.label, X(r.v), y0);
+    });
+    if (o.table) numbers(host, o.table.head, o.table.rows);
+  };
+  register(host, draw);
+}
+
+/* ---------- rotation ---------- */
+(function () {
+  const R = DATA.c.rotation.pretrained.all, T = DATA.c.rotation.float_muon_s2.all;
+  const names = { "none": "stored as is", "hadamard16 (in)": "Hadamard within each block of 16", "hadamard256 (in)": "Hadamard over 256 inputs",
+    "hadamard256 (in and out)": "Hadamard over 256, both sides", "random full (in)": "random rotation, all inputs" };
+  const keys = Object.keys(names);
+  barChart(document.getElementById("ch-rot"), {
+    title: "Average 4-bit gap ÷ typical weight", sub: "smaller is better; the grey bar is no rotation",
+    domain: [0.28, 0.32], ticks: [0.28, 0.29, 0.30, 0.31, 0.32], valFmt: v => fmt(v, 4),
+    rows: keys.map((k, i) => ({ label: names[k], v: R[k].gap, color: i ? "--c-m2" : "--c-m0",
+      tip: [{ label: "gap ÷ weight", value: fmt(R[k].gap, 4) }, { label: "block max ÷ weight", value: fmt(R[k].scale, 3) }, { label: "round-to-nearest error ÷ weight", value: fmt(R[k].rtn, 4) }] })),
+    table: { head: ["storage", "gap", "block max", "rounding error", "gap, trained weights"],
+      rows: keys.map(k => [names[k], fmt(R[k].gap, 4), fmt(R[k].scale, 3), fmt(R[k].rtn, 4), fmt(T[k].gap, 4)]) },
+  });
+})();
+
+/* ---------- whole-model gains ---------- */
+(function () {
+  const G = DATA.gains;
+  const rows = [
+    { label: "keep error out of the top 1%", v: G.keep1, color: "--c-m3" },
+    { label: "sequential feedback (GPTQ rule)", v: G.seq, color: "--c-a" },
+    { label: "keep error out of the top 10%", v: G.keep10, color: "--c-c" },
+    { label: "ceiling (perfect aiming)", v: G.ceiling, color: "--c-m1" },
+  ];
+  rows.forEach(r => r.tip = [{ label: "less disturbance", value: fmt(r.v) + "×" }, { label: "like dividing the noise by", value: fmt(Math.sqrt(r.v)) }]);
+  barChart(document.getElementById("ch-ways"), {
+    title: "Less output disturbance for the same rounding error", sub: "1 = rounding error spread evenly, as now",
+    domain: [1, 4], ticks: [1, 2, 3, 4], tickFmt: v => v + "×", valFmt: v => fmt(v) + "×", rows,
+    table: { head: ["method", "gain", "noise ÷ by"], rows: rows.map(r => [r.label, fmt(r.v) + "×", fmt(Math.sqrt(r.v))]) },
+  });
+})();
+
+/* ---------- by layer ---------- */
+function byLayer(id, key, o) {
+  lineChart(document.getElementById(id), Object.assign({
+    x: { label: "layer", ticks: [0, 2, 4, 6, 8, 10, 11], domain: [0, 11] },
+    series: () => Object.entries(KIND).map(([k, c]) => ({ label: c.name, color: c.color,
+      points: ROWS.filter(r => r.kind === k).map(r => [r.layer, r[key]]) })),
+  }, o));
+}
+byLayer("ch-layers", "am_over_gm", { title: "Ceiling: average ÷ geometric-mean input energy", sub: "how many times less rounding error could disturb the outputs, if aimed perfectly",
+  y: { domain: [0, 30], ticks: [0, 5, 10, 15, 20, 25, 30], fmt: v => v + "×", tip: v => fmt(v, 1) + "×" } });
+byLayer("ch-share", "top10pct_share", { title: "Input energy in the strongest 10% of directions", sub: "10% would mean evenly spread",
+  y: { domain: [0, 1], ticks: [0, 0.25, 0.5, 0.75, 1], fmt: v => Math.round(v * 100) + "%", tip: v => Math.round(v * 100) + "%" },
+  hlines: [{ y: 0.1, label: "even (10%)" }] });
+
+/* ---------- budget table ---------- */
+(function () {
+  const tb = document.querySelector("#tbl-budget tbody"), f = Math.sqrt(DATA.gains.keep10);
+  [["plain 4-bit, random rounding", 4.0], ["FP8 (milestone 7)", 1.8], ["ticker, 4-bit carry (k/14)", 1.1], ["ticker, FP8 carry", 0.6], ["ticker, 8-bit integer carry (k/254)", 0.25]]
+    .forEach(([n, v]) => { const tr = document.createElement("tr"); tr.innerHTML = `<td>${n}</td><td class="n">${fmt(v)}</td><td class="n">${fmt(v / f)}</td>`; tb.appendChild(tr); });
+})();
+
+})();
+</script>

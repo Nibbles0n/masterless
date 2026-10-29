@@ -1,0 +1,265 @@
+% Every entry below was checked on the web on 2026-10-28 (arXiv abstract page, publisher page or the authors' own
+% page) for authors, title, year and identifier. Entries marked "PARTLY VERIFIED" have a note saying what could not be
+% checked.
+
+% ---------------------------------------------------------------- no master weights / error feedback into the optimizer
+
+@article{nikdan2026eco,
+  title   = {{ECO}: Quantized Training without Full-Precision Master Weights},
+  author  = {Nikdan, Mahdi and Zandieh, Amir and Alistarh, Dan and Mirrokni, Vahab},
+  journal = {arXiv preprint arXiv:2601.22101},
+  year    = {2026},
+  eprint  = {2601.22101},
+  archivePrefix = {arXiv}
+}
+
+@article{bonin2026errordiffusion,
+  title   = {Error Diffusion Replaces Latent Weights: Training Binary-Weight Language Models on a Few Bits of Dithered State},
+  author  = {Bonin, Pierre-Olivier},
+  journal = {arXiv preprint arXiv:2610.34566},
+  year    = {2026},
+  eprint  = {2610.34566},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{helwegen2019bop,
+  title     = {Latent Weights Do Not Exist: Rethinking Binarized Neural Network Optimization},
+  author    = {Helwegen, Koen and Widdicombe, James and Geiger, Lukas and Liu, Zechun and Cheng, Kwang-Ting and Nusselder, Roeland},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2019},
+  eprint    = {1906.02107},
+  archivePrefix = {arXiv}
+}
+
+% ---------------------------------------------------------------- compensated summation and stochastic rounding
+
+@article{kahan1965,
+  title   = {Further Remarks on Reducing Truncation Errors},
+  author  = {Kahan, William},
+  journal = {Communications of the ACM},
+  volume  = {8},
+  number  = {1},
+  pages   = {40},
+  year    = {1965},
+  doi     = {10.1145/363707.363723}
+}
+
+@article{zamirai2020bf16,
+  title   = {Revisiting {BFloat16} Training},
+  author  = {Zamirai, Pedram and Zhang, Jian and Aberger, Christopher R. and De Sa, Christopher},
+  journal = {arXiv preprint arXiv:2010.06192},
+  year    = {2020},
+  eprint  = {2010.06192},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{yu2024collage,
+  title     = {Collage: Light-Weight Low-Precision Strategy for {LLM} Training},
+  author    = {Yu, Tao and Gupta, Gaurav and Gopalswamy, Karthick and Mamidala, Amith and Zhou, Hao and Huynh, Jeffrey and Park, Youngsuk and Diamant, Ron and Deoras, Anoop and Huan, Luke},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2024},
+  eprint    = {2405.03637},
+  archivePrefix = {arXiv}
+}
+
+@article{gupta2015limited,
+  title   = {Deep Learning with Limited Numerical Precision},
+  author  = {Gupta, Suyog and Agrawal, Ankur and Gopalakrishnan, Kailash and Narayanan, Pritish},
+  journal = {arXiv preprint arXiv:1502.02551},
+  year    = {2015},
+  eprint  = {1502.02551},
+  archivePrefix = {arXiv}
+}
+
+@article{croci2022sr,
+  title   = {Stochastic Rounding: Implementation, Error Analysis and Applications},
+  author  = {Croci, Matteo and Fasi, Massimiliano and Higham, Nicholas J. and Mary, Theo and Mikaitis, Mantas},
+  journal = {Royal Society Open Science},
+  volume  = {9},
+  number  = {3},
+  pages   = {211631},
+  year    = {2022},
+  doi     = {10.1098/rsos.211631}
+}
+
+% ---------------------------------------------------------------- error feedback for compressed gradients
+
+@inproceedings{seide2014onebit,
+  title     = {1-Bit Stochastic Gradient Descent and its Application to Data-Parallel Distributed Training of Speech {DNNs}},
+  author    = {Seide, Frank and Fu, Hao and Droppo, Jasha and Li, Gang and Yu, Dong},
+  booktitle = {Proc. Interspeech},
+  pages     = {1058--1062},
+  year      = {2014},
+  doi       = {10.21437/Interspeech.2014-274}
+}
+
+@inproceedings{karimireddy2019efsgd,
+  title     = {Error Feedback Fixes {SignSGD} and other Gradient Compression Schemes},
+  author    = {Karimireddy, Sai Praneeth and Rebjock, Quentin and Stich, Sebastian U. and Jaggi, Martin},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2019},
+  eprint    = {1901.09847},
+  archivePrefix = {arXiv}
+}
+
+% ---------------------------------------------------------------- Muon and low-bit Muon
+
+@misc{jordan2024muon,
+  title  = {Muon: An optimizer for hidden layers in neural networks},
+  author = {Jordan, Keller and Jin, Yuchen and Boza, Vlado and You, Jiacheng and Cesista, Franz and Newhouse, Laker and Bernstein, Jeremy},
+  year   = {2024},
+  howpublished = {\url{https://kellerjordan.github.io/posts/muon/}}
+}
+
+@article{liu2025moonlight,
+  title   = {Muon is Scalable for {LLM} Training},
+  author  = {Liu, Jingyuan and Su, Jianlin and Yao, Xingcheng and Jiang, Zhejun and Lai, Guokun and Du, Yulun and Qin, Yidao and Xu, Weixin and Lu, Enzhe and Yan, Junjie and others},
+  journal = {arXiv preprint arXiv:2502.16982},
+  year    = {2025},
+  eprint  = {2502.16982},
+  archivePrefix = {arXiv}
+}
+
+@article{su2026muonq,
+  title   = {{MuonQ}: Enhancing Low-Bit Muon Quantization via Directional Fidelity Optimization},
+  author  = {Su, Yupeng and Zhang, Ruijie and Liu, Ziyue and Zhao, Yequan and Zhang, Zheng},
+  journal = {arXiv preprint arXiv:2605.11396},
+  year    = {2026},
+  eprint  = {2605.11396},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{wu2026grasp,
+  title     = {Achieving Low-Bit {Muon} Through Subspace Preservation and Grid Quantization},
+  author    = {Wu, Huaijin and Li, Bingrui and Yang, Yebin and Tu, Yi and Zhou, Zhanpeng and Chen, Jianfei and Yan, Junchi},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  note      = {No arXiv identifier found}
+}
+
+% ---------------------------------------------------------------- 4-bit training and memory-efficient optimizers
+
+@article{ding2026fullstackfp4,
+  title   = {Full-Stack {FP4}: Stable {LLM} Pretraining with Quantized Projections, Optimizers, and Attention},
+  author  = {Ding, Siyu and Ma, Mingchuan and Tong, Jiabo and Xing, Xingrun and Wang, Ziming and Li, Guoqi},
+  journal = {arXiv preprint arXiv:2607.04422},
+  year    = {2026},
+  eprint  = {2607.04422},
+  archivePrefix = {arXiv}
+}
+
+@article{gonzalezortiz2026flashoptim,
+  title   = {{FlashOptim}: Optimizers for Memory-Efficient Training},
+  author  = {Gonzalez Ortiz, Jose Javier and Gupta, Abhay and Rinard, Christopher and Blalock, Davis},
+  journal = {arXiv preprint arXiv:2602.23349},
+  year    = {2026},
+  eprint  = {2602.23349},
+  archivePrefix = {arXiv}
+}
+
+@article{nvidia2025nvfp4,
+  title   = {Pretraining Large Language Models with {NVFP4}},
+  author  = {{NVIDIA} and Abecassis, Felix and Agrusa, Anjulie and Ahn, Dong and others},
+  journal = {arXiv preprint arXiv:2509.25149},
+  year    = {2025},
+  eprint  = {2509.25149},
+  archivePrefix = {arXiv}
+}
+
+@article{rouhani2023mx,
+  title   = {Microscaling Data Formats for Deep Learning},
+  author  = {Rouhani, Bita Darvish and Zhao, Ritchie and More, Ankit and Hall, Mathew and Khodamoradi, Alireza and Deng, Summer and others},
+  journal = {arXiv preprint arXiv:2310.10537},
+  year    = {2023},
+  eprint  = {2310.10537},
+  archivePrefix = {arXiv}
+}
+
+% ---------------------------------------------------------------- RL with quantized weights
+
+@article{huang2025qerl,
+  title   = {{QeRL}: Beyond Efficiency -- Quantization-enhanced Reinforcement Learning for {LLMs}},
+  author  = {Huang, Wei and Ge, Yi and Yang, Shuai and Xiao, Yicheng and Mao, Huizi and Lin, Yujun and Ye, Hanrong and Liu, Sifei and Cheung, Ka Chun and Yin, Hongxu and Lu, Yao and Qi, Xiaojuan and Han, Song and Chen, Yukang},
+  journal = {arXiv preprint arXiv:2510.11696},
+  year    = {2025},
+  eprint  = {2510.11696},
+  archivePrefix = {arXiv}
+}
+
+% PARTLY VERIFIED: blog post; authors, date and URL checked on the authors' page and in citing papers (e.g.
+% arXiv:2602.01103); the page itself did not render for the checker, so the title is as cited by others.
+@misc{yao2025offpolicy,
+  title  = {Your Efficient {RL} Framework Secretly Brings You Off-Policy {RL} Training},
+  author = {Yao, Feng and Liu, Liyuan and Zhang, Dinghuai and Dong, Chengyu and Shang, Jingbo and Gao, Jianfeng},
+  year   = {2025},
+  month  = aug,
+  howpublished = {\url{https://fengyao.notion.site/off-policy-rl}}
+}
+
+% PARTLY VERIFIED: blog post; authors (Liu and Yao equal contribution), date (2025-08-11) and URL checked; the exact
+% page title could not be read, so the entry uses the project name only (quantized rollouts with truncated
+% importance sampling).
+@misc{liu2025flashrl,
+  title  = {{FlashRL}},
+  author = {Liu, Liyuan and Yao, Feng and Zhang, Dinghuai and Dong, Chengyu and Shang, Jingbo and Gao, Jianfeng},
+  year   = {2025},
+  month  = aug,
+  howpublished = {\url{https://fengyao.notion.site/flash-rl}}
+}
+
+% ---------------------------------------------------------------- models, data and RL method used in the experiments
+
+@techreport{radford2019gpt2,
+  title       = {Language Models are Unsupervised Multitask Learners},
+  author      = {Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya},
+  institution = {OpenAI},
+  year        = {2019}
+}
+
+@article{penedo2024fineweb,
+  title   = {The {FineWeb} Datasets: Decanting the Web for the Finest Text Data at Scale},
+  author  = {Penedo, Guilherme and Kydl{\'\i}{\v{c}}ek, Hynek and Ben allal, Loubna and Lozhkov, Anton and Mitchell, Margaret and Raffel, Colin and Von Werra, Leandro and Wolf, Thomas},
+  journal = {arXiv preprint arXiv:2406.17557},
+  year    = {2024},
+  eprint  = {2406.17557},
+  archivePrefix = {arXiv}
+}
+
+@article{cobbe2021gsm8k,
+  title   = {Training Verifiers to Solve Math Word Problems},
+  author  = {Cobbe, Karl and Kosaraju, Vineet and Bavarian, Mohammad and Chen, Mark and Jun, Heewoo and others},
+  journal = {arXiv preprint arXiv:2110.14168},
+  year    = {2021},
+  eprint  = {2110.14168},
+  archivePrefix = {arXiv}
+}
+
+@article{shao2024deepseekmath,
+  title   = {{DeepSeekMath}: Pushing the Limits of Mathematical Reasoning in Open Language Models},
+  author  = {Shao, Zhihong and Wang, Peiyi and Zhu, Qihao and Xu, Runxin and Song, Junxiao and others},
+  journal = {arXiv preprint arXiv:2402.03300},
+  year    = {2024},
+  eprint  = {2402.03300},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{hu2022lora,
+  title     = {{LoRA}: Low-Rank Adaptation of Large Language Models},
+  author    = {Hu, Edward J. and Shen, Yelong and Wallis, Phillip and Allen-Zhu, Zeyuan and Li, Yuanzhi and Wang, Shean and Wang, Lu and Chen, Weizhu},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2022}
+}
+
+@inproceedings{dettmers2023qlora,
+  title     = {{QLoRA}: Efficient Finetuning of Quantized {LLMs}},
+  author    = {Dettmers, Tim and Pagnoni, Artidoro and Holtzman, Ari and Zettlemoyer, Luke},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2023}
+}
+
+@article{li2026scaleqlora,
+  title   = {{Scale-QLoRA}: Code-Invariant Adapter Merging for Native 4-bit Microscaling {LLMs}},
+  author  = {Li, Tung-Ling and Huang, Jiale and Wang, Lee-Chi and Gotei, Janaki Ram},
+  journal = {arXiv preprint arXiv:2609.04526},
+  year    = {2026}
+}

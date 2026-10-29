@@ -1,0 +1,26 @@
+mean block scale (layer 5 c_attn): 0.04374; a 4-bit gap near the middle of the grid is 0.5-1 scale
+     lr  variant          changed/step undone next  parked
+  1e-05  float + RTN            0.001%        6.3%        
+  1e-05  ticker 4-bit           1.595%       45.7%   6.64%
+  1e-05  ticker 4-bit /15       0.000%        0.0%  12.41%
+  1e-05  ticker 8-bit           0.090%       45.4%   0.37%
+  3e-05  float + RTN            0.004%        7.1%        
+  3e-05  ticker 4-bit           1.596%       45.6%   6.65%
+  3e-05  ticker 4-bit /15       0.000%        0.0%  12.41%
+  3e-05  ticker 8-bit           0.091%       44.5%   0.37%
+  1e-04  float + RTN            0.015%        7.2%        
+  1e-04  ticker 4-bit           1.600%       45.4%   6.64%
+  1e-04  ticker 4-bit /15       0.000%        0.0%  12.42%
+  1e-04  ticker 8-bit           0.095%       41.8%   0.37%
+  3e-04  float + RTN            0.044%        7.0%        
+  3e-04  ticker 4-bit           1.615%       45.0%   6.64%
+  3e-04  ticker 4-bit /15       0.001%        0.5%  12.46%
+  3e-04  ticker 8-bit           0.110%       35.5%   0.37%
+  1e-03  float + RTN            0.147%        7.0%        
+  1e-03  ticker 4-bit           1.667%       43.5%   6.64%
+  1e-03  ticker 4-bit /15       0.005%        1.7%  12.85%
+  1e-03  ticker 8-bit           0.164%       22.8%   0.37%
+  3e-03  float + RTN            0.437%        7.1%        
+  3e-03  ticker 4-bit           1.824%       39.7%   6.67%
+  3e-03  ticker 4-bit /15       0.016%        2.8%  14.82%
+  3e-03  ticker 8-bit           0.337%       11.2%   0.37%

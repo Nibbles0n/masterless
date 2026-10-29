@@ -1,0 +1,17 @@
+{"study": "gpt2", "arm": "fp8_m8", "muon_lr": 0.003, "adamw_lr": 0.0001, "seed": 1, "steps": 30, "warmup": 1, "seqs_per_step": 32, "seq_len": 1024, "tokens_per_step": 32768, "eval_windows": 64, "weight_decay": 0.1, "compile": false, "device": "cuda", "gpu": "Tesla T4", "dtype": "fp16-autocast", "torch": "2.11.0+cu130", "hidden_weights": 84934656, "params": 124439808, "state_bytes_per_weight": 2.28125, "val_ce_pretrained": 3.52617, "val_se_pretrained": 0.05173}
+{"step": 0, "val_ce": 3.52899, "val_se": 0.05173, "wall_s": 2.7}
+{"step": 5, "train_loss": 3.4585, "grad_norm": 1.9166, "changed": 0.0316737210309064, "lr_frac": 0.9764, "tok_per_s": 9858, "skipped": 0, "mem_gb": 8.96}
+{"step": 10, "train_loss": 3.3761, "grad_norm": 1.4654, "changed": 0.029274493087956936, "lr_frac": 0.8413, "tok_per_s": 11751, "skipped": 0, "mem_gb": 8.96}
+{"step": 15, "train_loss": 3.3408, "grad_norm": 1.4191, "changed": 0.024122056843322002, "lr_frac": 0.6228, "tok_per_s": 11851, "skipped": 0, "mem_gb": 8.96}
+{"step": 20, "train_loss": 3.3797, "grad_norm": 1.3407, "changed": 0.017253663804796007, "lr_frac": 0.3834, "tok_per_s": 11915, "skipped": 0, "mem_gb": 8.96}
+{"step": 25, "train_loss": 3.37, "grad_norm": 1.2364, "changed": 0.010413440657250675, "lr_frac": 0.1918, "tok_per_s": 11938, "skipped": 0, "mem_gb": 8.96}
+{"step": 30, "train_loss": 3.3915, "grad_norm": 1.1927, "changed": 0.005676709869761526, "lr_frac": 0.1026, "tok_per_s": 11946, "skipped": 0, "mem_gb": 8.96}
+{"step": 30, "val_ce": 3.45274, "val_se": 0.05181, "wall_s": 88.2}
+Traceback (most recent call last):
+  File "/content/ml/side_gpt2.py", line 532, in <module>
+    main()
+    ~~~~^^
+  File "/content/ml/side_gpt2.py", line 512, in main
+    assert all(on_fp8_grid(p) for p in hidden), "a matrix left the FP8 grid"
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: a matrix left the FP8 grid

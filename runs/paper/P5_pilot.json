@@ -1,0 +1,135 @@
+{
+ "study": "P5 pilot",
+ "gpu": "NVIDIA A100-SXM4-40GB",
+ "torch": "2.13.0+cu130",
+ "transformers": "5.19.0",
+ "vllm": "0.32.0",
+ "fla": "0.6.0",
+ "models": {
+  "post_trained": {
+   "0.8B": "Qwen/Qwen3.5-0.8B",
+   "2B": "Qwen/Qwen3.5-2B"
+  },
+  "base": {
+   "0.8B": "Qwen/Qwen3.5-0.8B-Base",
+   "2B": "Qwen/Qwen3.5-2B-Base"
+  },
+  "licence": "apache-2.0",
+  "first_transformers": "5.2.0",
+  "first_vllm": "0.17.0"
+ },
+ "model_chosen": "Qwen/Qwen3.5-0.8B",
+ "model_rule": "smallest of 0.8B/2B with float greedy non-thinking GSM8K test accuracy in [25%, 70%]; 0.8B qualifies, so 2B was not evaluated",
+ "float_acc": 0.54663,
+ "float_se": 0.01371,
+ "float_truncated": 0.0849,
+ "float_mean_len": 422.9,
+ "rtn4_acc": 0.48143,
+ "rtn4_se": 0.01376,
+ "rtn4_truncated": 0.1744,
+ "rtn4_minus_float": {
+  "diff_points": -6.52,
+  "ci95_half_width": 2.81
+ },
+ "rtn4_loses_more_than_half": false,
+ "healing_run_needed": false,
+ "eval_max_new_tokens": 1024,
+ "train_max_new_tokens": 768,
+ "adamw": {
+  "lr": 1e-06,
+  "acc_start": 0.54663,
+  "acc_end": 0.62244,
+  "end_minus_start": {
+   "diff_points": 7.58,
+   "ci95_half_width": 2.73
+  },
+  "timing": {
+   "steps": 30,
+   "first_step_s": 112.5,
+   "mean_step_s_from_step3": 40.24,
+   "median_step_s_from_step3": 35.88,
+   "last10_step_s": 31.98,
+   "last10_gen_s": 16.38,
+   "last10_train_s": 15.39,
+   "last10_opt_sync_s": 0.11,
+   "last10_mean_len": 288.27,
+   "last10_truncated": 0.05,
+   "peak_mem_gb": 33.14
+  },
+  "update_rms_mean": 3.6607354338770163e-07,
+  "prob_gap_mean": 0.003,
+  "gen_minus_train_logp": 0.00034,
+  "logp_gap_max": 5.1295
+ },
+ "muon": {
+  "lr": 1.37e-05,
+  "lr_rule": "matched to AdamW's mean per-weight update size over the 30 AdamW steps (Muon's per-unit-lr update size measured in a 2-step calibration run)",
+  "muon_direction_rms": 0.02677,
+  "acc_start": 0.54663,
+  "acc_end": 0.56861,
+  "timing": {
+   "steps": 30,
+   "first_step_s": 44.58,
+   "mean_step_s_from_step3": 44.94,
+   "median_step_s_from_step3": 44.94,
+   "last10_step_s": 41.25,
+   "last10_gen_s": 21.07,
+   "last10_train_s": 19.15,
+   "last10_opt_sync_s": 0.87,
+   "last10_mean_len": 414.77,
+   "last10_truncated": 0.16,
+   "peak_mem_gb": 31.28
+  },
+  "minus_adamw_at_step30": {
+   "diff_points": -5.38,
+   "ci95_half_width": 2.55
+  }
+ },
+ "hf": {
+  "steps": 8,
+  "gen_batch": 256,
+  "timing": {
+   "steps": 8,
+   "first_step_s": 189.15,
+   "mean_step_s_from_step3": 157.42,
+   "median_step_s_from_step3": 156.71,
+   "last10_step_s": 161.38,
+   "last10_gen_s": 123.73,
+   "last10_train_s": 37.4,
+   "last10_opt_sync_s": 0.11,
+   "last10_mean_len": 494.64,
+   "last10_truncated": 0.29,
+   "peak_mem_gb": 26.45
+  },
+  "mean_step_s_excl_first": 157.4,
+  "vllm_steps_1_to_8_mean_s": 59.1,
+  "note": "hf generate (KV cache, batch 256; batch 512 ran out of memory) vs vLLM on the same steps"
+ },
+ "generator_chosen": "vllm",
+ "optimizer_chosen": "adamw",
+ "optimizer_reason": "Muon (lr matched to AdamW's mean update size) gained 2.2 points in 30 steps against AdamW's 7.6; paired Muon - AdamW at step 30: -5.4 +- 2.5 points (one seed, one Muon lr)",
+ "cost": {
+  "rate_units_per_hour": 5.3,
+  "steady_step_s_64q": 32.0,
+  "run_hours_64q_200steps": 1.997,
+  "run_hours_64q_float_arm": 1.954,
+  "run_hours_32q_200steps_projected": 1.15,
+  "rule_applied": "64 questions per step projects to 2.00 A100-hours per run for the ticker arm (1.95 for float), plus about 0.15 h to install packages on a fresh VM: 2.15 h, over 2, so the rule halves questions per step to 32 and keeps 200 steps (borderline: without the install time it is just under 2)",
+  "questions_per_step": 32,
+  "steps": 200,
+  "units_per_run": 6.1,
+  "runs_P5": {
+   "a_float": 2,
+   "b_lora4": 1,
+   "c_ticker": 2
+  },
+  "units_P5_5_runs": 34.6,
+  "units_P5_with_third_seeds": 48.4,
+  "note": "0.15 h per run added for installing packages on a fresh VM; the 32-question step time is projected, not measured"
+ },
+ "units_spent": {
+  "t4": 2.71,
+  "a100": 8.96,
+  "total": 11.66
+ }
+}

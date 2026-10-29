@@ -1,0 +1,10 @@
+{"step": 0, "val_ce": 4.18845, "val_se": 0.00216, "wall_s": 0.3}
+{"step": 62, "val_ce": 2.39444, "val_se": 0.0122, "wall_s": 4.8}
+{"step": 124, "val_ce": 2.10542, "val_se": 0.01338, "wall_s": 9.9}
+{"step": 186, "val_ce": 2.00338, "val_se": 0.01458, "wall_s": 14.4}
+{"step": 248, "val_ce": 1.95258, "val_se": 0.01541, "wall_s": 19.6}
+{"step": 310, "val_ce": 1.86782, "val_se": 0.01562, "wall_s": 25.0}
+{"step": 372, "val_ce": 1.82175, "val_se": 0.01707, "wall_s": 30.6}
+{"step": 434, "val_ce": 1.78955, "val_se": 0.01751, "wall_s": 36.1}
+{"step": 496, "val_ce": 1.76382, "val_se": 0.01755, "wall_s": 41.7}
+{"step": 500, "val_ce": 1.7617, "val_se": 0.01736, "wall_s": 42.1}

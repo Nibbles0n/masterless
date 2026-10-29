@@ -1,0 +1,469 @@
+<title>P5 RL Pilot: Muon Re-tune</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #86b6ef; --r2: #3987e5; --r3: #184f95;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #184f95; --r2: #3987e5; --r3: #9ec5f4; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #184f95; --r2: #3987e5; --r3: #9ec5f4; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.note { background: var(--wash); padding: 10px 14px; border-radius: 6px; }
+.verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 10px; margin-block: 1.2rem; }
+.verdict div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.verdict b { display: block; font-family: var(--f-display); font-size: 0.95rem; }
+.verdict span { color: var(--ink-2); font-size: 0.9rem; }
+.arms, .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 10px; margin-block: 1rem; }
+.arms div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.arms b { display: block; font-family: var(--f-display); }
+.arms span { color: var(--ink-2); font-size: 0.92rem; }
+.two > div { min-width: 0; }
+.two h3 { margin: 0.4rem 0; }
+blockquote.note { margin-block: 1rem; }
+</style>
+<main>
+<header>
+  <div class="eyebrow">Masterless Muon · paper step P5 · pilot · Muon re-tune · 3 runs on an A100</div>
+  <h1>The RL Test, and Muon's Fair Try</h1>
+  <p class="lede">P5 is the paper's hardest test. Can a language model learn by trial and error with every weight stored in 4 bits and no full-precision copy? Before running it, we gave Muon the fair try the pilot had skipped. At a larger learning rate it beats the AdamW setting the pilot had picked, so P5 can run Muon, the optimizer the paper is about.</p>
+  <p class="meta">29 October 2026 · Qwen3.5-0.8B, GSM8K, 30 steps × 64 questions × 8 answers, seed 1 · source: <code>p5_rl.py</code>, <code>report/p5tune_analysis.py</code>, <code>runs/paper/P5_PILOT.md</code></p>
+</header>
+
+<section class="verdict" aria-label="results">
+  <div><b>Muon 1e-4 · 70.3%</b><span>8.0 ± 2.7 points above AdamW, best of the four Muon rates</span></div>
+  <div><b>Muon 4e-5 · 66.9%</b><span>4.7 ± 2.6 points above AdamW, steadier answers</span></div>
+  <div><b>AdamW 1e-6 · 62.2%</b><span>the pilot's choice; tried at one rate only</span></div>
+  <div><b>Start · 54.7%</b><span>the model before training (float)</span></div>
+</section>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><b>The pilot's Muon was held back, not beaten.</b> Its rate was set to copy AdamW's average step size. Muon learns best with steps 4 to 10 times larger.</li>
+    <li><b>By the plan's own rule, P5 now uses Muon.</b> The rule was "Muon, unless the pilot shows it does clearly worse". It doesn't. The RL result then backs the paper's title directly, and our 4-bit training takes 2.78 bytes per weight instead of 3.81.</li>
+    <li><b>We do not claim Muon beats AdamW at RL.</b> AdamW got one learning rate and Muon got four. P5 compares arms that use the same optimizer, so it does not need that claim.</li>
+    <li><b>One decision is yours: the learning rate for the 200-step runs.</b> These runs were 30 steps long.</li>
+  </ol>
+</section>
+
+<h2 id="task"><span class="secnum">1</span>What the RL task is</h2>
+<p><b>The test: grade-school maths word problems.</b> GSM8K is a public set of 8,500 problems: 7,473 to practise on and 1,319 kept aside for the final exam. The model writes out its working, then its final number after "####". Only that number is marked: right scores 1, wrong scores 0. Here is the first exam question:</p>
+<blockquote class="note">Janet's ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market? <b>Answer: 18</b></blockquote>
+<p><b>How it learns by trial and error.</b> The method is GRPO, short for group relative policy optimization. Each training step goes like this:</p>
+<ol>
+  <li>Take 32 practice questions. Let the model write 8 different answers to each, choosing words at random by its own probabilities.</li>
+  <li>Mark each answer 1 or 0, then compare it with its own group of 8. An answer that beats its group's average has its words made a little more likely. One that falls below is made a little less likely.</li>
+  <li>If all 8 are right, or all 8 wrong, that question teaches nothing that step. Learning comes from questions the model sometimes gets right.</li>
+</ol>
+<p>No one shows the model a correct answer. It only learns which of its own attempts worked. The model is Qwen3.5-0.8B, a 0.8-billion-weight model released in March 2026. Before any training it scores 54.7% on the exam. Rounded to 4 bits, it scores 48.1%.</p>
+
+<p><b>Why this is the hardest case for 4-bit weights.</b> Each RL step moves a weight by about 3 millionths. The gap between neighbouring 4-bit values is about 4 thousandths, roughly 1,500 times bigger. So if each step simply rounded the weight to the nearest 4-bit value, every step would be undone and the model would never learn. That is why today's 4-bit RL methods, such as QeRL, freeze the 4-bit model and train a small float add-on beside it, called LoRA. Our ticker instead keeps the leftover of each rounding in a small 8-bit counter, so the 4-bit weights themselves can learn.</p>
+
+<p><b>Three setups, each trained for 200 steps:</b></p>
+<div class="arms">
+  <div><b>(a) Normal training</b><span>16-bit weights with a full-precision copy. Every weight learns. The upper bar.</span></div>
+  <div><b>(b) Today's 4-bit method</b><span>The 4-bit model is frozen. A small float LoRA add-on (rank 32) learns beside it.</span></div>
+  <div><b>(c) Ours</b><span>Every weight learns, stored in 4 bits, with an 8-bit carry. No full-precision copy.</span></div>
+</div>
+<p><b>The pass lines</b>, fixed before any run, compare each of the 1,319 exam questions across setups:</p>
+<ul>
+  <li><b>P5a:</b> ours is no more than 4 points behind normal training. Precisely, the low end of the 95% interval for (c) − (a) must be above −4.</li>
+  <li><b>P5b:</b> ours really learns. It gains at least 5 points over its own 4-bit start of 48.1%, and the 95% interval is above zero.</li>
+</ul>
+
+<h2 id="claim"><span class="secnum">2</span>How well it supports the claim</h2>
+<div class="two">
+  <div>
+    <h3>What a pass would show</h3>
+    <ul>
+      <li>Every weight of a current model learns in 4 bits during RL, with no full-precision copy. Today's methods cannot do this: they freeze the 4-bit weights.</li>
+      <li>It works in the setting where rounding hurts most: tiny steps against large gaps.</li>
+      <li>It holds up against the normal method on a real exam with clean right-or-wrong marking, compared question by question.</li>
+      <li>With Muon, it tests the method the paper is named after, not a side version of it.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>What it would not show</h3>
+    <ul>
+      <li>One small model (0.8B), one task, 200 steps, 2 seeds. Larger models and longer runs are untested.</li>
+      <li>GSM8K answers are single numbers. Part of an RL gain can be format, such as shorter answers that are not cut off, rather than better reasoning.</li>
+      <li>To write answers quickly, the answer-writing engine (vLLM) holds a 16-bit version of the weights. It has exactly the 4-bit values, with no extra information, but it still takes memory. A 4-bit engine would remove it; we do not build one.</li>
+      <li>The ticker saves optimizer and weight memory only. Activations and the answer-writing engine are not counted.</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="tune"><span class="secnum">3</span>Muon's fair try</h2>
+<p>All runs start from the same float model (54.7%) and train for 30 steps. Each is scored on the same 1,319 exam questions, so the differences are compared question by question.</p>
+<figure class="wide">
+  <div class="chart" id="ch-acc"></div>
+  <figcaption><b>Muon at 4e-5 and 1e-4 is ahead of AdamW, by more than the error bar.</b> At 2.5e-4 it is too large and falls back. The pilot's rate, 1.37e-5, was too small.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-reward"></div>
+  <figcaption><b>The largest rate learns fastest, then turns down after about 15 steps.</b> That is the warning sign for the 200-step runs: the learning rate does not shrink over time, so a rate that is best at 30 steps may overshoot by step 200.</figcaption>
+</figure>
+
+<h2 id="decision"><span class="secnum">4</span>Your decision: the learning rate for 200 steps</h2>
+<div class="two">
+  <div>
+    <h3>4e-5 (recommended)</h3>
+    <ul>
+      <li>Still 4.7 points ahead of AdamW at 30 steps.</li>
+      <li>Steady: answer length and cut-off answers stay flat.</li>
+      <li>The main runs are 6.7 times longer, with half as many questions per step. Each step is noisier, but just as large.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>1e-4</h3>
+    <ul>
+      <li>Best at 30 steps: 70.3%.</li>
+      <li>Training answers grow again after step 15, and 22% get cut off.</li>
+      <li>200 steps at this rate travel about 5 times as far as the point where 2.5e-4 started falling.</li>
+    </ul>
+  </div>
+</div>
+<p class="note">Both choices are logged before any P5 run. A good sign for our method: at these rates, each RL step is about the same size relative to the 4-bit gap as in the GPT-2 runs, where the 8-bit carry held for 3,050 steps.</p>
+
+<h2 id="caveats"><span class="secnum">5</span>What this does not show</h2>
+<ul>
+  <li>One seed and 30 steps per learning rate. This is tuning, not evidence.</li>
+  <li>AdamW was tried at one rate only, so Muon against AdamW is not a fair contest in either direction.</li>
+  <li>All four runs are float runs. 4-bit RL is P5 itself.</li>
+</ul>
+</main>
+
+<script>
+const DATA = {"tune":{"study":"P5 pilot, Muon re-tune","start_acc":0.54663,"rows":[{"run":"AdamW 1e-6","muon_lr":null,"acc_end":0.62244,"vs_start":[7.58,2.73],"vs_adamw":[0.0,0.0],"eval_mean_len":282.5,"eval_truncated":0.022,"train_reward_last10":0.5539,"train_len_last10":288.27,"update_rms_last10":2.69803e-07,"step_s":41.16,"wall_s":1407.7},{"run":"Muon 1.37e-5 (pilot)","muon_lr":1.37e-05,"acc_end":0.56861,"vs_start":[2.2,2.63],"vs_adamw":[-5.38,2.55],"eval_mean_len":340.4,"eval_truncated":0.047,"train_reward_last10":0.45587,"train_len_last10":414.77,"update_rms_last10":3.68498e-07,"step_s":44.99,"wall_s":1458.1},{"run":"Muon 4e-05","muon_lr":4e-05,"acc_end":0.66945,"vs_start":[12.28,2.79],"vs_adamw":[4.7,2.55],"eval_mean_len":387.3,"eval_truncated":0.0258,"train_reward_last10":0.60254,"train_len_last10":373.37,"update_rms_last10":1.07557e-06,"step_s":46.98,"wall_s":1745.6},{"run":"Muon 0.0001","muon_lr":0.0001,"acc_end":0.70281,"vs_start":[15.62,2.84],"vs_adamw":[8.04,2.67],"eval_mean_len":496.0,"eval_truncated":0.0902,"train_reward_last10":0.65802,"train_len_last10":530.78,"update_rms_last10":2.70006e-06,"step_s":43.55,"wall_s":1431.2},{"run":"Muon 0.00025","muon_lr":0.00025,"acc_end":0.59591,"vs_start":[4.93,3.01],"vs_adamw":[-2.65,2.95],"eval_mean_len":389.9,"eval_truncated":0.0591,"train_reward_last10":0.60878,"train_len_last10":385.68,"update_rms_last10":6.72256e-06,"step_s":35.86,"wall_s":1197.2}],"curves":{"AdamW 1e-6":[{"step":1,"reward":0.4141,"mean_len":507.4},{"step":2,"reward":0.3848,"mean_len":519.8},{"step":3,"reward":0.3965,"mean_len":519.3},{"step":4,"reward":0.4531,"mean_len":483.1},{"step":5,"reward":0.4453,"mean_len":474.8},{"step":6,"reward":0.4766,"mean_len":474.2},{"step":7,"reward":0.4375,"mean_len":467.5},{"step":8,"reward":0.4902,"mean_len":453.1},{"step":9,"reward":0.3867,"mean_len":475.8},{"step":10,"reward":0.4766,"mean_len":414.7},{"step":11,"reward":0.5078,"mean_len":384.9},{"step":12,"reward":0.5293,"mean_len":382.9},{"step":13,"reward":0.4043,"mean_len":384.0},{"step":14,"reward":0.5293,"mean_len":330.9},{"step":15,"reward":0.5078,"mean_len":327.8},{"step":16,"reward":0.4883,"mean_len":314.8},{"step":17,"reward":0.5254,"mean_len":285.5},{"step":18,"reward":0.4648,"mean_len":297.0},{"step":19,"reward":0.4766,"mean_len":329.4},{"step":20,"reward":0.5605,"mean_len":296.9},{"step":21,"reward":0.4473,"mean_len":292.0},{"step":22,"reward":0.498,"mean_len":274.8},{"step":23,"reward":0.5742,"mean_len":302.9},{"step":24,"reward":0.5898,"mean_len":288.4},{"step":25,"reward":0.5273,"mean_len":322.1},{"step":26,"reward":0.5645,"mean_len":275.8},{"step":27,"reward":0.541,"mean_len":273.4},{"step":28,"reward":0.6055,"mean_len":281.6},{"step":29,"reward":0.5664,"mean_len":290.3},{"step":30,"reward":0.625,"mean_len":281.4}],"Muon 1.37e-5 (pilot)":[{"step":1,"reward":0.4141,"mean_len":507.4},{"step":2,"reward":0.3848,"mean_len":518.4},{"step":3,"reward":0.3301,"mean_len":536.7},{"step":4,"reward":0.4375,"mean_len":499.6},{"step":5,"reward":0.4258,"mean_len":487.8},{"step":6,"reward":0.4199,"mean_len":508.4},{"step":7,"reward":0.3926,"mean_len":521.1},{"step":8,"reward":0.4805,"mean_len":498.2},{"step":9,"reward":0.3418,"mean_len":547.6},{"step":10,"reward":0.4238,"mean_len":496.4},{"step":11,"reward":0.4238,"mean_len":489.8},{"step":12,"reward":0.4336,"mean_len":499.5},{"step":13,"reward":0.3262,"mean_len":527.0},{"step":14,"reward":0.4531,"mean_len":464.6},{"step":15,"reward":0.4355,"mean_len":473.5},{"step":16,"reward":0.4277,"mean_len":461.3},{"step":17,"reward":0.4824,"mean_len":448.5},{"step":18,"reward":0.4082,"mean_len":452.2},{"step":19,"reward":0.3965,"mean_len":489.8},{"step":20,"reward":0.4863,"mean_len":452.7},{"step":21,"reward":0.3516,"mean_len":464.0},{"step":22,"reward":0.4551,"mean_len":430.5},{"step":23,"reward":0.4688,"mean_len":431.8},{"step":24,"reward":0.4453,"mean_len":432.7},{"step":25,"reward":0.4238,"mean_len":447.4},{"step":26,"reward":0.4922,"mean_len":381.1},{"step":27,"reward":0.4668,"mean_len":380.4},{"step":28,"reward":0.4844,"mean_len":392.2},{"step":29,"reward":0.4551,"mean_len":413.8},{"step":30,"reward":0.5156,"mean_len":373.8}],"Muon 4e-05":[{"step":1,"reward":0.4141,"mean_len":507.4},{"step":2,"reward":0.3887,"mean_len":521.8},{"step":3,"reward":0.3691,"mean_len":533.3},{"step":4,"reward":0.4648,"mean_len":485.8},{"step":5,"reward":0.4336,"mean_len":477.8},{"step":6,"reward":0.4551,"mean_len":481.1},{"step":7,"reward":0.4551,"mean_len":471.8},{"step":8,"reward":0.5293,"mean_len":441.6},{"step":9,"reward":0.416,"mean_len":481.4},{"step":10,"reward":0.4668,"mean_len":427.7},{"step":11,"reward":0.5078,"mean_len":398.7},{"step":12,"reward":0.5312,"mean_len":386.7},{"step":13,"reward":0.3867,"mean_len":402.5},{"step":14,"reward":0.5586,"mean_len":372.1},{"step":15,"reward":0.5156,"mean_len":368.4},{"step":16,"reward":0.5,"mean_len":349.1},{"step":17,"reward":0.582,"mean_len":334.8},{"step":18,"reward":0.4922,"mean_len":344.1},{"step":19,"reward":0.4922,"mean_len":393.6},{"step":20,"reward":0.6152,"mean_len":351.0},{"step":21,"reward":0.5273,"mean_len":365.9},{"step":22,"reward":0.5586,"mean_len":347.6},{"step":23,"reward":0.5742,"mean_len":365.8},{"step":24,"reward":0.6348,"mean_len":352.8},{"step":25,"reward":0.5898,"mean_len":397.4},{"step":26,"reward":0.6328,"mean_len":344.0},{"step":27,"reward":0.6074,"mean_len":363.3},{"step":28,"reward":0.6309,"mean_len":387.7},{"step":29,"reward":0.6426,"mean_len":412.9},{"step":30,"reward":0.627,"mean_len":396.3}],"Muon 0.0001":[{"step":1,"reward":0.4141,"mean_len":507.4},{"step":2,"reward":0.3945,"mean_len":515.9},{"step":3,"reward":0.3984,"mean_len":508.0},{"step":4,"reward":0.5,"mean_len":463.2},{"step":5,"reward":0.4727,"mean_len":475.4},{"step":6,"reward":0.5039,"mean_len":487.6},{"step":7,"reward":0.4785,"mean_len":468.7},{"step":8,"reward":0.5508,"mean_len":434.4},{"step":9,"reward":0.502,"mean_len":429.8},{"step":10,"reward":0.5254,"mean_len":418.1},{"step":11,"reward":0.5645,"mean_len":390.0},{"step":12,"reward":0.6035,"mean_len":396.0},{"step":13,"reward":0.4551,"mean_len":470.2},{"step":14,"reward":0.6348,"mean_len":443.7},{"step":15,"reward":0.6289,"mean_len":453.6},{"step":16,"reward":0.6113,"mean_len":451.6},{"step":17,"reward":0.6738,"mean_len":422.4},{"step":18,"reward":0.6152,"mean_len":442.6},{"step":19,"reward":0.5703,"mean_len":502.0},{"step":20,"reward":0.7012,"mean_len":476.7},{"step":21,"reward":0.5801,"mean_len":556.6},{"step":22,"reward":0.6543,"mean_len":517.9},{"step":23,"reward":0.6582,"mean_len":559.6},{"step":24,"reward":0.6758,"mean_len":543.7},{"step":25,"reward":0.6367,"mean_len":577.4},{"step":26,"reward":0.6758,"mean_len":536.6},{"step":27,"reward":0.668,"mean_len":508.7},{"step":28,"reward":0.6758,"mean_len":512.7},{"step":29,"reward":0.6836,"mean_len":507.4},{"step":30,"reward":0.6719,"mean_len":487.2}],"Muon 0.00025":[{"step":1,"reward":0.4141,"mean_len":507.4},{"step":2,"reward":0.4492,"mean_len":477.9},{"step":3,"reward":0.4609,"mean_len":389.4},{"step":4,"reward":0.5488,"mean_len":298.5},{"step":5,"reward":0.582,"mean_len":308.1},{"step":6,"reward":0.6133,"mean_len":267.9},{"step":7,"reward":0.6133,"mean_len":299.6},{"step":8,"reward":0.6543,"mean_len":271.4},{"step":9,"reward":0.5684,"mean_len":228.6},{"step":10,"reward":0.5684,"mean_len":176.7},{"step":11,"reward":0.6328,"mean_len":290.7},{"step":12,"reward":0.6914,"mean_len":253.3},{"step":13,"reward":0.502,"mean_len":352.1},{"step":14,"reward":0.6875,"mean_len":347.9},{"step":15,"reward":0.6875,"mean_len":356.9},{"step":16,"reward":0.627,"mean_len":379.3},{"step":17,"reward":0.6738,"mean_len":359.2},{"step":18,"reward":0.6602,"mean_len":431.5},{"step":19,"reward":0.5898,"mean_len":481.7},{"step":20,"reward":0.6328,"mean_len":462.2},{"step":21,"reward":0.5469,"mean_len":427.8},{"step":22,"reward":0.623,"mean_len":424.2},{"step":23,"reward":0.6465,"mean_len":441.5},{"step":24,"reward":0.6816,"mean_len":360.9},{"step":25,"reward":0.6055,"mean_len":411.6},{"step":26,"reward":0.5859,"mean_len":344.4},{"step":27,"reward":0.6367,"mean_len":322.9},{"step":28,"reward":0.5781,"mean_len":353.6},{"step":29,"reward":0.582,"mean_len":374.1},{"step":30,"reward":0.6016,"mean_len":395.8}]}}};
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1 }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const sgn = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const T = DATA.tune;
+const COL = { "AdamW 1e-6": "--c-a", "Muon 1.37e-5 (pilot)": "--c-m0", "Muon 4e-05": "--c-c", "Muon 0.0001": "--c-m2", "Muon 0.00025": "--c-m3" };
+const NAME = { "AdamW 1e-6": "AdamW 1e-6", "Muon 1.37e-5 (pilot)": "Muon 1.37e-5 (pilot)", "Muon 4e-05": "Muon 4e-5", "Muon 0.0001": "Muon 1e-4", "Muon 0.00025": "Muon 2.5e-4" };
+
+function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
+  const tip = host._tip || (host._tip = tipBox(host));
+  const hit = el("svg:rect", Object.assign({ fill: "transparent", tabindex: "0" }, hitAttrs), svg);
+  const on = () => { tipRows(tip, title, rowsFn()); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+  hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+  hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+}
+
+/* ---------- accuracy after 30 steps ---------- */
+(function () {
+  const host = document.getElementById("ch-acc");
+  const rows = T.rows;
+  const draw = () => {
+    header(host, { title: "GSM8K exam accuracy after 30 steps of RL, float model", sub: "1,319 questions, greedy; bars are 95% intervals of the difference from AdamW, question by question; dashed: the start, 54.7%" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 36, m = { l: narrow ? 118 : 150, r: narrow ? 46 : 60, t: 8, b: 34 };
+    const H = m.t + rows.length * rh + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "accuracy per run" }, host);
+    const X = scale(50, 75, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [50, 55, 60, 65, 70, 75]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok("--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v + "%"); }
+    const s = 100 * T.start_acc;
+    el("svg:line", { x1: X(s), x2: X(s), y1: m.t, y2: H - m.b, stroke: tok("--ink-2"), "stroke-dasharray": "4 4" }, g);
+    const a = 100 * rows[0].acc_end;
+    rows.forEach((r, i) => {
+      const y = m.t + i * rh + rh / 2, v = 100 * r.acc_end, c = tok(COL[r.run]), h = r.vs_adamw[1];
+      el("svg:text", { x: m.l - 10, y: y + 4, "text-anchor": "end" }, g, NAME[r.run]);
+      if (i > 0) el("svg:line", { x1: X(v - h), x2: X(v + h), y1: y, y2: y, stroke: c, "stroke-width": 2, "stroke-linecap": "round" }, g);
+      el("svg:circle", { cx: X(v), cy: y, r: r.run === "Muon 0.0001" ? 7 : 5.5, fill: c, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      el("svg:text", { x: X(Math.max(v + h, v)) + 9, y: y + 4, class: "lab" }, g, v.toFixed(1) + "%");
+      hover(host, svg, W, H, { x: 0, y: y - rh / 2, width: W, height: rh }, () => [
+        { value: v.toFixed(1) + "%", label: "accuracy", color: c },
+        { value: sgn(r.vs_start[0]) + " ± " + fmt(r.vs_start[1], 1), label: "points vs start" },
+        ...(i ? [{ value: sgn(r.vs_adamw[0]) + " ± " + fmt(r.vs_adamw[1], 1), label: "points vs AdamW" }] : []),
+        { value: fmt(r.eval_mean_len, 0), label: "answer length, tokens" }], NAME[r.run], X(v), y);
+    });
+    el("svg:line", { x1: X(a), x2: X(a), y1: m.t, y2: H - m.b, stroke: tok("--c-a"), "stroke-opacity": 0.35 }, g);
+    numbers(host, ["run", "accuracy", "vs start (points)", "vs AdamW (points)", "answer length"], rows.map(r => [NAME[r.run], fmt(100 * r.acc_end, 1) + "%", sgn(r.vs_start[0]) + " ± " + fmt(r.vs_start[1], 1), r.run.startsWith("AdamW") ? "–" : sgn(r.vs_adamw[0]) + " ± " + fmt(r.vs_adamw[1], 1), fmt(r.eval_mean_len, 0)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- training reward ---------- */
+const smooth = (pts, k = 5) => pts.map((p, i) => { const w = pts.slice(Math.max(0, i - k + 1), i + 1); return [p[0], w.reduce((s, q) => s + q[1], 0) / w.length]; });
+lineChart(document.getElementById("ch-reward"), {
+  title: "Share of practice answers marked right, during training",
+  sub: "mean over the last 5 steps; 64 questions × 8 answers per step",
+  height: 300,
+  x: { ticks: [0, 5, 10, 15, 20, 25, 30], domain: [1, 30], label: "step" },
+  y: { domain: [0.38, 0.72], ticks: [0.4, 0.5, 0.6, 0.7], fmt: v => v.toFixed(1), tip: v => fmt(v, 3) },
+  series: () => Object.keys(COL).map(k => ({ label: NAME[k], color: COL[k], strong: k === "Muon 0.0001", points: smooth(T.curves[k].map(c => [c.step, c.reward])) })),
+});
+
+})();
+</script>

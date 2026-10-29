@@ -1,0 +1,118 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · round 3 · milestone 6 and side study B2 · all runs on one Colab T4</div>
+  <h1>Reordered Muon at 4 Bits</h1>
+  <p class="lede">Two ideas from the owner, tested. Can Muon's momentum act as an accumulator, so that a 4-bit weight moves one grid step only once enough small pushes have added up? And do bigger batches with bigger learning rates make 4-bit rounding hurt less?</p>
+  <p class="meta">25 October 2026 · 93 training runs on one free Colab T4 (fp16) · every number comes from <code>runs/m6</code>, <code>runs/batch_lr</code> and <code>report/data</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>Milestone 6 failed, clearly.</strong> Reordered Muon with 4-bit weights and the leftover kept in the momentum ended at 2.05, against 1.75 for plain random rounding (m3) and 1.65 for 4-bit with a float copy (m2). All three pass lines fail.</li>
+    <li><strong>The cause is known.</strong> The momentum hands a leftover back over about 20 steps, so a weight moves only after about 10 gaps of wanted movement have piled up. A one-weight simulation shows it lagging 9 gaps behind for good.</li>
+    <li><strong>8-bit momentum is free.</strong> Storing the momentum in 8 bits changed the loss by +0.001 ± 0.006. That supports a roughly 2-byte-per-weight budget once a rule that works is found.</li>
+    <li><strong>Reordering costs even with float weights</strong> (+0.069 against Muon), so this order of Muon is a dead end.</li>
+    <li><strong>Bigger learning rates make 4-bit rounding hurt more, not less.</strong> At every batch size, raising the rate widened the m3 − m1 gap. Bigger batches allow bigger rates and reach the same loss in 2–4 times fewer steps, but no lower loss.</li>
+    <li><strong>Keep small scale blocks, in 8 bits.</strong> One scale per matrix doubled one-off rounding damage, for a saving of about 4% of memory.</li>
+  </ol>
+</section>
+
+<h2 id="idea"><span class="secnum">1</span>The idea behind milestone 6</h2>
+<p>A 4-bit weight can only sit on one of 15 values. Without a float copy, a step smaller than the gap between two values is lost unless something remembers it. ECO's trick for Adam keeps the unused part (the <em>leftover</em>) in the momentum, and it comes back out on later steps. That works for Adam because each weight's step depends only on that weight's own momentum. In milestone 4, Muon broke it: Muon squashes the whole momentum matrix before stepping, and only about 70% of a fed-back leftover came out pointing the right way.</p>
+<p>Milestone 6 swaps Muon's two operations, so the step becomes a plain multiple of the momentum again:</p>
+<div class="eq">normal Muon     M ← 0.95·M + 0.05·G         step = lr · NS(M)       (average, then squash)
+reordered       A ← 0.95·A + 0.05·NS(G)     step = lr · A           (squash, then average)
+leftover        e = wanted weight − stored 4-bit weight
+                A ← A + (1 − 1/0.95) · e / lr                       (e comes back out over the next steps)</div>
+<p>Here NS is Muon's squashing step (Newton–Schulz), which gives every direction of a matrix the same strength. With nearest rounding, a weight stays put until its pushes add up past half a gap, then moves one level. That is the owner's Bop-style "tick when the accumulator crosses a threshold", with no extra memory: the momentum holds the leftover.</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m3)"></span>m3, no copy</h4><ol><li>average gradients</li><li>squash</li><li>round at random</li></ol><p class="kept">leftover: thrown away · 4.75 bytes per weight</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-c)"></span>m4c, leftover buffer</h4><ol><li>average gradients</li><li>squash</li><li>add last leftover, round</li><li class="err">leftover → extra 2-byte buffer</li></ol><p class="kept">6.75 bytes per weight</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-a)"></span>m6, reordered 4-bit</h4><ol><li>squash each gradient</li><li>average into A</li><li>round to nearest</li><li class="err">leftover → back into A</li></ol><p class="kept">4.75 bytes per weight; 1.78 with an 8-bit A</p></div>
+</div>
+
+<h2 id="m6"><span class="secnum">2</span>Milestone 6 results</h2>
+<p>All runs were on one Colab T4, with milestones 1, 2, 3 and 4c rerun there as baselines. The m1 and m3 reruns matched study B's T4 numbers to four digits, so the T4 is repeatable. <strong>All three pass lines fail, by a wide margin.</strong> The 4-bit arm ends at 2.05, worse than plain random rounding (m3, 1.75).</p>
+<figure>
+  <div class="chart" id="ch-tune"></div>
+  <figcaption><b>Picking the learning rate (seed 1, tuning, not evidence).</b> Averaging steps that are already squashed gives smaller steps than Muon's, so this version needs a bigger rate. The best was 0.08 (1.696), eight times Muon's 0.01, and it still ends about 0.065 behind Muon. 0.16 was worse again, so the best rate sits inside the range tried. The 4-bit arms used 0.08 without further tuning, as written down in advance.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-m6curves"></div>
+  <figcaption><b>Validation loss during training, mean of three seeds.</b> Switch between the 4-bit arms and the float arms. The m6 4-bit arms (purple, magenta) fall behind from the start and never recover. With float weights, the reordered Muon (grey) runs a steady 0.07 behind normal Muon.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-m6diffs"></div>
+  <figcaption><b>The pass lines, seed by seed.</b> Each dot is one seed's difference. The first three rows are the pass lines (each needs all three dots left of +0.03). The bottom rows are context: m6 4-bit is 0.29 worse than random rounding and 0.36 worse than milestone 4c's leftover buffer.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Pass line (written before the runs)</th><th class="n">Seeds that pass</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-m6mem"></div>
+  <figcaption><b>Quality against memory.</b> The shaded box is the goal: at most 2 bytes per weight and within 0.03 of milestone 2. The 8-bit momentum arm reached the memory (1.78 bytes) but not the quality. Its 8-bit momentum cost nothing measurable against the 32-bit one (+0.001 ± 0.006), so the momentum's storage is not the problem; the rule is.</figcaption>
+</figure>
+<h3>Why it failed</h3>
+<p>The momentum does act as an accumulator, but it hands back what it holds slowly: each step uses only about 1/20 of it (that is what 0.95 momentum means). The rounding looks only at one step's share. So a weight moves one level only when a single step's push passes half a gap. By then about 20 times as much, roughly 9 to 10 gaps, is waiting inside the momentum. The weight ends up trailing where it should be by about 9 gaps, permanently. A separate leftover buffer (milestone 4c) doesn't have this problem, because it applies the whole leftover on the very next step.</p>
+<figure class="wide">
+  <div class="chart" id="ch-sim"></div>
+  <figcaption><b>A one-weight simulation of the three rules</b> (<code>report/accum_sim.py</code>). The push is 0.05 gaps per step, about what Muon does at its peak learning rate. The m6 weight (purple) first moves at step 201 and then trails the float weight by about 9 gaps. The separate buffer (green) first moves at step 24 and never trails by more than half a gap. With a noisy push, the picture is the same.</figcaption>
+</figure>
+<p>Two lessons. First, the momentum can't double as the leftover store this way, because it releases what it holds too slowly. A Bop-style tick needs a counter that the rounding reads in full every step, like milestone 4c's buffer. Second, the reordering itself is worse than Muon even with float weights (+0.069). A likely reason (not measured): squashing each noisy gradient on its own gives every direction equal strength, noise included, so averaging afterwards can no longer tell steady directions from noisy ones.</p>
+
+<h2 id="blr"><span class="secnum">3</span>Bigger batches with bigger learning rates</h2>
+<p>Study B showed that bigger batches alone don't help: with the learning rate unchanged, they just get less far on the same data. The owner's follow-up: maybe bigger steps suffer less from rounding, and bigger batches allow bigger steps. So every learning rate (Muon's and AdamW's) was multiplied by 2, 4 or 8, at 1×, 2×, 4× and 8× the batch of 12. Every run reads the same 1.5 million characters.</p>
+<figure class="wide">
+  <div class="chart" id="ch-blr-m3"></div>
+  <figcaption><b>Milestone 3 (4-bit, no copy).</b> Each line is one batch size; further right is a bigger learning rate. At 1× the old rate is best, and doubling it hurts. At 2× and 4×, doubling the rate is best; at 8×, quadrupling. The best points at 1×, 2× and 4× all land near 1.75, the bigger batches in 2–4 times fewer steps.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-blr-m1"></div>
+  <figcaption><b>Milestone 1 (Muon, float weights), for comparison.</b> The float baseline behaves the same way: bigger batches want bigger rates, and none beats 1× at its best. So a batch-matched rate is a speed setting (fewer, bigger steps), not a quality fix.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-blr-gap"></div>
+  <figcaption><b>How much the 4-bit rounding costs, setting by setting.</b> Read across a line: at a fixed batch size, a bigger rate gives a bigger gap (1× goes +0.12, +0.15, +0.22). Read down at the left edge: at the old rate, bigger batches have smaller gaps, but study B showed that is mostly because they got less far.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-blr-prog"></div>
+  <figcaption><b>Separating the batch effect from "got less far".</b> The dashed line is the gap during ordinary training (1×, old rate), plotted against how far float Muon had got at that point. Each dot is one batch-and-rate setting at its end. Dots on the line mean the gap is fully explained by progress. Well-matched settings (8× at rate ×4, 4× at ×2) sit a little below the line, roughly 0.025 below. Rates too high for their batch (1× at ×4, 2× at ×8) sit far above it. The comparison is rough: a point in the middle of a 2000-step run has a higher learning rate than the last point of a short run.</figcaption>
+</figure>
+<p>So the owner's idea holds only in a weak form. Bigger batches let the learning rate grow, and with a matched rate the rounding damage at equal progress is about a fifth smaller. But a bigger step is never safer on its own: the larger the step, the bigger the gap. For the goal of cheaper training, the useful part is speed. A 4× batch at twice the rate reached m3's best loss in a quarter of the steps.</p>
+
+<h2 id="questions"><span class="secnum">4</span>The owner's other questions</h2>
+<h3>Should we just use one scale per matrix?</h3>
+<p>A scale is the ruler a 4-bit code is measured with: weight = code × scale. The codes run only from −6 to 6, and real weights are around 0.02, so at least one ruler per matrix is needed. With one ruler per matrix, a single large weight sets the ruler for everyone, and most small weights land on 0 or ±0.5. Smaller blocks give each group of weights its own ruler.</p>
+<figure class="wide">
+  <div class="chart" id="ch-scales"></div>
+  <figcaption><b>One-off rounding of a trained model (from the earlier tiny test).</b> One ruler per matrix doubles the damage from rounding (+0.028 against +0.014). Keeping one ruler per 16 weights in 8 bits costs 0.06 bytes per weight, and study F found 8-bit rulers no worse than 32-bit ones. So dropping the rulers would save about 4% of a 1.6-byte budget for twice the rounding damage. The right column is what the rulers cost in memory.</figcaption>
+</figure>
+<p>So no, not yet. Keep one ruler per 16 weights, stored in 8 bits. One thing remains untested: in training without a float copy, a block's ruler changes whenever its largest weight changes, which nudges all 16 weights at once. One ruler per matrix would change far less often. That makes a specific, cheap test for later.</p>
+<h3>Has anyone trained with FP8 weights and 8-bit momentum?</h3>
+<p>We haven't tested it here. Outside, the pieces exist, but not all together:</p>
+<div class="tablewrap"><table>
+  <thead><tr><th>Piece</th><th>Status</th><th>Examples</th></tr></thead>
+  <tbody>
+    <tr><td>FP8 matrix multiplies, float copy kept</td><td><span class="pill pass">STANDARD</span></td><td>NVIDIA Transformer Engine; FP8-LM; DeepSeek-V3</td></tr>
+    <tr><td>8-bit optimizer state (momentum)</td><td><span class="pill pass">STANDARD</span></td><td>8-bit Adam; FP8-LM's first moment in FP8; COAT</td></tr>
+    <tr><td>No float copy, 16-bit weights, random rounding</td><td><span class="pill meas">RESEARCH</span></td><td>Ozkara et al. (2025): competitive with a float copy for large LLMs</td></tr>
+    <tr><td>No float copy, FP8 or 4-bit weights</td><td><span class="pill meas">RESEARCH</span></td><td>ECO (ICML 2026, fine-tuning, Adam and momentum SGD); M+Adam (ICML 2026, FP8 weights, 60M–1B pretraining)</td></tr>
+    <tr><td>Any of this with Muon</td><td><span class="pill fail">OPEN</span></td><td>MuonQ and 4-bit Muon shrink Muon's momentum, not its weights</td></tr>
+  </tbody>
+</table></div>
+<p>FP8 weights with no copy plus an 8-bit momentum is about 2 bytes per weight, against 16 for normal AdamW training. That count covers only the weights and the optimizer: gradients and activations need memory too, unless gradients are applied and dropped layer by layer as the backward pass goes.</p>
+
+<h2 id="next"><span class="secnum">5</span>What to test next</h2>
+<div class="options"><div class="opt"><h4>A · Milestone 4c with small buffers <span class="pill meas">about 2.1–2.6 bytes</span></h4><p>Normal Muon, 4-bit weights, no float copy, and milestone 4c's separate leftover buffer, the rule that works in the simulation. The leftover is never bigger than half a gap, so it fits in 4 or 8 bits, and the momentum goes to 8 bits (free, per this round). Milestone 4c was the best no-copy Muon arm so far: 1.683 on the T4, 0.037 behind milestone 2.</p><div class="tags"><span>one change from m4c</span><span>3 seeds on a T4</span></div></div>
+<div class="opt"><h4>B · FP8 weights, no copy, 8-bit momentum <span class="pill meas">about 2 bytes</span></h4><p>The owner's question, tested directly: milestone 3 with an 8-bit float grid instead of the 4-bit one, plus 8-bit momentum. A 4-bit weight with a 4-bit leftover is an 8-bit number in disguise, so A and B spend about the same memory in two different ways. Testing both shows which way is better.</p><div class="tags"><span>one change from m3</span><span>3 seeds on a T4</span></div></div>
+<div class="opt"><h4>Setting for all later runs · 4× batch at twice the rate</h4><p>Same loss as 1× in a quarter of the steps, so every later sweep runs about 3–4 times faster on a T4. That is a speed choice, not a quality one.</p></div></div>
+
+<h2 id="caveats"><span class="secnum">6</span>Not tested</h2>
+<ul><li>Milestone 6: the 4-bit arms used the float arm's learning rate untuned; nearest rounding only; the leftover rule divides by the learning rate, which during warm-up is 1/100 of its peak. None of these is likely to close a 0.29 gap to milestone 3, but none was tried.</li>
+  <li>A fixed version of the accumulator idea, which would compare the whole stored amount with the gap, was not tried.</li>
+  <li>Study B2: rates only in factors of 2; warm-up and cosine schedule scaled as in study B; the same characters at every batch size (more data per step not tried).</li>
+  <li>Everything is the small CPU-preset model (about 0.8 million parameters) on Shakespeare characters, with 2000 steps or fewer; fp16 on a T4.</li>
+  <li>The scale result comes from rounding a trained model once, not from training without a float copy.</li></ul>
+
+<h2 id="reproduce"><span class="secnum">7</span>Reproduce</h2>
+<p>Milestone 6: <code>python m6_accum.py --arm q4 --seed 1 --muon-lr 0.08</code> (arms <code>float</code>, <code>q4</code>, <code>q4_m8</code>). Study B2: <code>python batch_runs.py m3 4 1 2</code> (arm, batch factor, seed, learning-rate multiplier). Summaries: <code>report/m6_summary.py</code>, <code>report/batch_lr_summary.py</code>; this page: <code>report/build_round3.py</code>. Pass lines and questions were written into <code>PLAN.md</code> before any run.</p>
+</main>

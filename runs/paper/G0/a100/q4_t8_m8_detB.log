@@ -1,0 +1,9 @@
+{"study": "paper", "script": "p1_paper_gpt2.py", "arm": "q4_t8_m8", "init": "pretrained", "n_layer": 12, "n_embd": 768, "n_head": 12, "muon_lr": 0.001, "adamw_lr": 0.0001, "seed": 1, "steps": 3050, "stop_at": 50, "warmup": 152, "seqs_per_step": 32, "micro": 8, "seq_len": 1024, "tokens_per_step": 32768, "eval_windows": 256, "weight_decay": 0.1, "train_shards": "fineweb_train_000001.bin", "compile": true, "device": "cuda", "gpu": "NVIDIA A100-SXM4-40GB", "amp": "torch.float16", "ns_dtype": "torch.float16", "torch": "2.11.0+cu130", "hidden_weights": 84934656, "params": 124439808, "state_bytes_per_weight": 2.7812, "check": true, "deterministic": true, "val_ce_start": 3.40253, "val_se_start": 0.02239}
+{"step": 0, "val_ce": 3.462, "val_se": 0.02249, "wall_s": 0.6, "on_grid": true}
+{"step": 10, "train_loss": 3.4523, "grad_norm": 2.6145, "changed4": 0.0009732658480420524, "lr_frac": 0.0658, "tok_per_s": 43992, "skipped": 0, "viol": 0, "mem_gb": 5.7}
+{"step": 20, "train_loss": 3.4364, "grad_norm": 1.8701, "changed4": 0.000987076464994454, "lr_frac": 0.1316, "tok_per_s": 135081, "skipped": 0, "viol": 0, "mem_gb": 5.7}
+{"step": 30, "train_loss": 3.6038, "grad_norm": 1.6887, "changed4": 0.0009561939004026814, "lr_frac": 0.1974, "tok_per_s": 134683, "skipped": 0, "viol": 0, "mem_gb": 5.7}
+{"step": 40, "train_loss": 3.5009, "grad_norm": 1.4151, "changed4": 0.0010345247056749132, "lr_frac": 0.2632, "tok_per_s": 134608, "skipped": 0, "viol": 0, "mem_gb": 5.7}
+{"step": 50, "train_loss": 3.5684, "grad_norm": 1.5025, "changed4": 0.0010327704158830055, "lr_frac": 0.3289, "tok_per_s": 134346, "skipped": 0, "viol": 0, "mem_gb": 5.7}
+{"step": 50, "val_ce": 3.38599, "val_se": 0.02247, "wall_s": 18.4, "on_grid": true}
+final val CE 3.3860 +- 0.0225 at step 50, 18.4 s

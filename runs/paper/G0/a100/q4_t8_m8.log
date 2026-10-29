@@ -1,0 +1,36 @@
+{"study": "paper", "script": "p1_paper_gpt2.py", "arm": "q4_t8_m8", "init": "pretrained", "n_layer": 12, "n_embd": 768, "n_head": 12, "muon_lr": 0.001, "adamw_lr": 0.0001, "seed": 1, "steps": 3050, "stop_at": 300, "warmup": 152, "seqs_per_step": 32, "micro": 8, "seq_len": 1024, "tokens_per_step": 32768, "eval_windows": 256, "weight_decay": 0.1, "train_shards": "fineweb_train_000001.bin", "compile": true, "device": "cuda", "gpu": "NVIDIA A100-SXM4-40GB", "amp": "torch.float16", "ns_dtype": "torch.float16", "torch": "2.11.0+cu130", "hidden_weights": 84934656, "params": 124439808, "state_bytes_per_weight": 2.7812, "check": true, "deterministic": false, "val_ce_start": 3.4025, "val_se_start": 0.02239}
+{"step": 0, "val_ce": 3.46193, "val_se": 0.02249, "wall_s": 0.5, "on_grid": true}
+{"step": 10, "train_loss": 3.4522, "grad_norm": 2.6184, "changed4": 0.0009716881646050347, "lr_frac": 0.0658, "tok_per_s": 9285, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 20, "train_loss": 3.4363, "grad_norm": 1.8527, "changed4": 0.0009895960489908855, "lr_frac": 0.1316, "tok_per_s": 146981, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 30, "train_loss": 3.6043, "grad_norm": 1.7002, "changed4": 0.0009512960174937307, "lr_frac": 0.1974, "tok_per_s": 147225, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 40, "train_loss": 3.5014, "grad_norm": 1.4184, "changed4": 0.0010382687603985822, "lr_frac": 0.2632, "tok_per_s": 147003, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 50, "train_loss": 3.5685, "grad_norm": 1.4639, "changed4": 0.001046510390293451, "lr_frac": 0.3289, "tok_per_s": 146433, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 60, "train_loss": 3.429, "grad_norm": 1.3497, "changed4": 0.0011250648969485435, "lr_frac": 0.3947, "tok_per_s": 146564, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 70, "train_loss": 3.416, "grad_norm": 1.3593, "changed4": 0.0011585730093496818, "lr_frac": 0.4605, "tok_per_s": 146189, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 80, "train_loss": 3.3422, "grad_norm": 1.4628, "changed4": 0.0011638476524823977, "lr_frac": 0.5263, "tok_per_s": 146190, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 90, "train_loss": 3.5634, "grad_norm": 1.2701, "changed4": 0.0012633241253134646, "lr_frac": 0.5921, "tok_per_s": 145975, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 100, "train_loss": 3.3799, "grad_norm": 1.2092, "changed4": 0.0013233231909481095, "lr_frac": 0.6579, "tok_per_s": 145988, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 100, "val_ce": 3.34571, "val_se": 0.02248, "wall_s": 56.5, "on_grid": true}
+{"step": 110, "train_loss": 3.4941, "grad_norm": 1.1944, "changed4": 0.001360740190670814, "lr_frac": 0.7237, "tok_per_s": 145857, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 120, "train_loss": 3.4098, "grad_norm": 1.2763, "changed4": 0.001372184282467689, "lr_frac": 0.7895, "tok_per_s": 145785, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 130, "train_loss": 3.4005, "grad_norm": 1.128, "changed4": 0.0014718962304386093, "lr_frac": 0.8553, "tok_per_s": 145760, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 140, "train_loss": 3.3535, "grad_norm": 1.136, "changed4": 0.0014964916087962963, "lr_frac": 0.9211, "tok_per_s": 145750, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 150, "train_loss": 3.2559, "grad_norm": 0.9871, "changed4": 0.0015839823970088252, "lr_frac": 0.9868, "tok_per_s": 146087, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 160, "train_loss": 3.2793, "grad_norm": 0.975, "changed4": 0.0015759526947398245, "lr_frac": 1.0, "tok_per_s": 146286, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 170, "train_loss": 3.3852, "grad_norm": 0.8715, "changed4": 0.001586313600893374, "lr_frac": 0.9999, "tok_per_s": 146670, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 180, "train_loss": 3.3359, "grad_norm": 0.8363, "changed4": 0.0015930835111641589, "lr_frac": 0.9998, "tok_per_s": 145697, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 190, "train_loss": 3.2801, "grad_norm": 0.802, "changed4": 0.0015795790118935667, "lr_frac": 0.9996, "tok_per_s": 146119, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 200, "train_loss": 3.3666, "grad_norm": 0.767, "changed4": 0.0015808976726767458, "lr_frac": 0.9994, "tok_per_s": 145513, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 200, "val_ce": 3.33121, "val_se": 0.02238, "wall_s": 79.5, "on_grid": true}
+{"step": 210, "train_loss": 3.381, "grad_norm": 0.7086, "changed4": 0.001595720832730517, "lr_frac": 0.9991, "tok_per_s": 145454, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 220, "train_loss": 3.4102, "grad_norm": 0.6733, "changed4": 0.0015965920907479744, "lr_frac": 0.9988, "tok_per_s": 145504, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 230, "train_loss": 3.4522, "grad_norm": 0.6826, "changed4": 0.0016086013228804976, "lr_frac": 0.9984, "tok_per_s": 145438, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 240, "train_loss": 3.3607, "grad_norm": 0.7095, "changed4": 0.0015899752393180942, "lr_frac": 0.998, "tok_per_s": 145544, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 250, "train_loss": 3.3561, "grad_norm": 0.6134, "changed4": 0.00159524988245081, "lr_frac": 0.9975, "tok_per_s": 145407, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 260, "train_loss": 3.4363, "grad_norm": 0.6627, "changed4": 0.0015916117915400752, "lr_frac": 0.997, "tok_per_s": 145291, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 270, "train_loss": 3.4498, "grad_norm": 0.6404, "changed4": 0.0015964037106360918, "lr_frac": 0.9964, "tok_per_s": 145390, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 280, "train_loss": 3.3983, "grad_norm": 0.6098, "changed4": 0.0015993824711552373, "lr_frac": 0.9957, "tok_per_s": 145292, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 290, "train_loss": 3.3748, "grad_norm": 0.625, "changed4": 0.0016009012858072917, "lr_frac": 0.995, "tok_per_s": 145342, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 300, "train_loss": 3.2846, "grad_norm": 0.6466, "changed4": 0.0016205281387140721, "lr_frac": 0.9943, "tok_per_s": 145248, "skipped": 0, "viol": 0, "mem_gb": 5.65}
+{"step": 300, "val_ce": 3.32638, "val_se": 0.02237, "wall_s": 102.5, "on_grid": true}
+final val CE 3.3264 +- 0.0224 at step 300, 102.6 s

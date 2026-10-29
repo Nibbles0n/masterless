@@ -1,0 +1,111 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless Muon · paper step P5 · pilot · Muon re-tune · 3 runs on an A100</div>
+  <h1>The RL Test, and Muon's Fair Try</h1>
+  <p class="lede">P5 is the paper's hardest test. Can a language model learn by trial and error with every weight stored in 4 bits and no full-precision copy? Before running it, we gave Muon the fair try the pilot had skipped. At a larger learning rate it beats the AdamW setting the pilot had picked, so P5 can run Muon, the optimizer the paper is about.</p>
+  <p class="meta">29 October 2026 · Qwen3.5-0.8B, GSM8K, 30 steps × 64 questions × 8 answers, seed 1 · source: <code>p5_rl.py</code>, <code>report/p5tune_analysis.py</code>, <code>runs/paper/P5_PILOT.md</code></p>
+</header>
+
+<section class="verdict" aria-label="results">
+  <div><b>Muon 1e-4 · 70.3%</b><span>8.0 ± 2.7 points above AdamW, best of the four Muon rates</span></div>
+  <div><b>Muon 4e-5 · 66.9%</b><span>4.7 ± 2.6 points above AdamW, steadier answers</span></div>
+  <div><b>AdamW 1e-6 · 62.2%</b><span>the pilot's choice; tried at one rate only</span></div>
+  <div><b>Start · 54.7%</b><span>the model before training (float)</span></div>
+</section>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><b>The pilot's Muon was held back, not beaten.</b> Its rate was set to copy AdamW's average step size. Muon learns best with steps 4 to 10 times larger.</li>
+    <li><b>By the plan's own rule, P5 now uses Muon.</b> The rule was "Muon, unless the pilot shows it does clearly worse". It doesn't. The RL result then backs the paper's title directly, and our 4-bit training takes 2.78 bytes per weight instead of 3.81.</li>
+    <li><b>We do not claim Muon beats AdamW at RL.</b> AdamW got one learning rate and Muon got four. P5 compares arms that use the same optimizer, so it does not need that claim.</li>
+    <li><b>One decision is yours: the learning rate for the 200-step runs.</b> These runs were 30 steps long.</li>
+  </ol>
+</section>
+
+<h2 id="task"><span class="secnum">1</span>What the RL task is</h2>
+<p><b>The test: grade-school maths word problems.</b> GSM8K is a public set of 8,500 problems: 7,473 to practise on and 1,319 kept aside for the final exam. The model writes out its working, then its final number after "####". Only that number is marked: right scores 1, wrong scores 0. Here is the first exam question:</p>
+<blockquote class="note">Janet's ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market? <b>Answer: 18</b></blockquote>
+<p><b>How it learns by trial and error.</b> The method is GRPO, short for group relative policy optimization. Each training step goes like this:</p>
+<ol>
+  <li>Take 32 practice questions. Let the model write 8 different answers to each, choosing words at random by its own probabilities.</li>
+  <li>Mark each answer 1 or 0, then compare it with its own group of 8. An answer that beats its group's average has its words made a little more likely. One that falls below is made a little less likely.</li>
+  <li>If all 8 are right, or all 8 wrong, that question teaches nothing that step. Learning comes from questions the model sometimes gets right.</li>
+</ol>
+<p>No one shows the model a correct answer. It only learns which of its own attempts worked. The model is Qwen3.5-0.8B, a 0.8-billion-weight model released in March 2026. Before any training it scores 54.7% on the exam. Rounded to 4 bits, it scores 48.1%.</p>
+
+<p><b>Why this is the hardest case for 4-bit weights.</b> Each RL step moves a weight by about 3 millionths. The gap between neighbouring 4-bit values is about 4 thousandths, roughly 1,500 times bigger. So if each step simply rounded the weight to the nearest 4-bit value, every step would be undone and the model would never learn. That is why today's 4-bit RL methods, such as QeRL, freeze the 4-bit model and train a small float add-on beside it, called LoRA. Our ticker instead keeps the leftover of each rounding in a small 8-bit counter, so the 4-bit weights themselves can learn.</p>
+
+<p><b>Three setups, each trained for 200 steps:</b></p>
+<div class="arms">
+  <div><b>(a) Normal training</b><span>16-bit weights with a full-precision copy. Every weight learns. The upper bar.</span></div>
+  <div><b>(b) Today's 4-bit method</b><span>The 4-bit model is frozen. A small float LoRA add-on (rank 32) learns beside it.</span></div>
+  <div><b>(c) Ours</b><span>Every weight learns, stored in 4 bits, with an 8-bit carry. No full-precision copy.</span></div>
+</div>
+<p><b>The pass lines</b>, fixed before any run, compare each of the 1,319 exam questions across setups:</p>
+<ul>
+  <li><b>P5a:</b> ours is no more than 4 points behind normal training. Precisely, the low end of the 95% interval for (c) − (a) must be above −4.</li>
+  <li><b>P5b:</b> ours really learns. It gains at least 5 points over its own 4-bit start of 48.1%, and the 95% interval is above zero.</li>
+</ul>
+
+<h2 id="claim"><span class="secnum">2</span>How well it supports the claim</h2>
+<div class="two">
+  <div>
+    <h3>What a pass would show</h3>
+    <ul>
+      <li>Every weight of a current model learns in 4 bits during RL, with no full-precision copy. Today's methods cannot do this: they freeze the 4-bit weights.</li>
+      <li>It works in the setting where rounding hurts most: tiny steps against large gaps.</li>
+      <li>It holds up against the normal method on a real exam with clean right-or-wrong marking, compared question by question.</li>
+      <li>With Muon, it tests the method the paper is named after, not a side version of it.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>What it would not show</h3>
+    <ul>
+      <li>One small model (0.8B), one task, 200 steps, 2 seeds. Larger models and longer runs are untested.</li>
+      <li>GSM8K answers are single numbers. Part of an RL gain can be format, such as shorter answers that are not cut off, rather than better reasoning.</li>
+      <li>To write answers quickly, the answer-writing engine (vLLM) holds a 16-bit version of the weights. It has exactly the 4-bit values, with no extra information, but it still takes memory. A 4-bit engine would remove it; we do not build one.</li>
+      <li>The ticker saves optimizer and weight memory only. Activations and the answer-writing engine are not counted.</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="tune"><span class="secnum">3</span>Muon's fair try</h2>
+<p>All runs start from the same float model (54.7%) and train for 30 steps. Each is scored on the same 1,319 exam questions, so the differences are compared question by question.</p>
+<figure class="wide">
+  <div class="chart" id="ch-acc"></div>
+  <figcaption><b>Muon at 4e-5 and 1e-4 is ahead of AdamW, by more than the error bar.</b> At 2.5e-4 it is too large and falls back. The pilot's rate, 1.37e-5, was too small.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-reward"></div>
+  <figcaption><b>The largest rate learns fastest, then turns down after about 15 steps.</b> That is the warning sign for the 200-step runs: the learning rate does not shrink over time, so a rate that is best at 30 steps may overshoot by step 200.</figcaption>
+</figure>
+
+<h2 id="decision"><span class="secnum">4</span>Your decision: the learning rate for 200 steps</h2>
+<div class="two">
+  <div>
+    <h3>4e-5 (recommended)</h3>
+    <ul>
+      <li>Still 4.7 points ahead of AdamW at 30 steps.</li>
+      <li>Steady: answer length and cut-off answers stay flat.</li>
+      <li>The main runs are 6.7 times longer, with half as many questions per step. Each step is noisier, but just as large.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>1e-4</h3>
+    <ul>
+      <li>Best at 30 steps: 70.3%.</li>
+      <li>Training answers grow again after step 15, and 22% get cut off.</li>
+      <li>200 steps at this rate travel about 5 times as far as the point where 2.5e-4 started falling.</li>
+    </ul>
+  </div>
+</div>
+<p class="note">Both choices are logged before any P5 run. A good sign for our method: at these rates, each RL step is about the same size relative to the 4-bit gap as in the GPT-2 runs, where the 8-bit carry held for 3,050 steps.</p>
+
+<h2 id="caveats"><span class="secnum">5</span>What this does not show</h2>
+<ul>
+  <li>One seed and 30 steps per learning rate. This is tuning, not evidence.</li>
+  <li>AdamW was tried at one rate only, so Muon against AdamW is not a fair contest in either direction.</li>
+  <li>All four runs are float runs. 4-bit RL is P5 itself.</li>
+</ul>
+</main>

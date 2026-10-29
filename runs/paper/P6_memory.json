@@ -1,0 +1,236 @@
+{
+ "settings": {
+  "gpu": "Tesla T4 (Colab)",
+  "data": "random token ids, fixed seed",
+  "activation_checkpointing": "every decoder layer",
+  "loss": "chunked cross-entropy, 256 tokens per chunk under checkpointing, tied head",
+  "compute_dtype": "bf16 (setup b: fp32 weights under bf16 autocast)",
+  "newton_schulz_dtype": "fp16 on T4",
+  "peak": "torch.cuda.max_memory_allocated over a training step, max over steps 2..n (state already allocated)",
+  "steady_state": "torch.cuda.memory_allocated before a step: weights + optimizer state, no gradients",
+  "muon_lr": 0.0001,
+  "rest_lr": 1e-05
+ },
+ "rows": {
+  "Qwen/Qwen3.5-0.8B|a": {
+   "model": "Qwen/Qwen3.5-0.8B",
+   "setup": "a",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 752393024,
+   "hidden_matrix_params": 497614848,
+   "peak_GiB": 11.742661476135254,
+   "peak_first_step_GiB": 11.742661476135254,
+   "steady_state_GiB": 9.83360767364502,
+   "steady_state_counted_GiB": 9.810088753700256,
+   "step_seconds": 6.269163900500018,
+   "fwd_bwd_seconds": 5.972849861000043,
+   "after_backward_seconds": 0.2963140394999755,
+   "losses": [
+    14.672188758850098,
+    13.485703468322754,
+    13.080377578735352
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   }
+  },
+  "Qwen/Qwen3.5-0.8B|b": {
+   "model": "Qwen/Qwen3.5-0.8B",
+   "setup": "b",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 752393024,
+   "hidden_matrix_params": 497614848,
+   "peak_GiB": 10.32893180847168,
+   "peak_first_step_GiB": 10.32990837097168,
+   "steady_state_GiB": 6.554948806762695,
+   "steady_state_counted_GiB": 6.554887771606445,
+   "step_seconds": 7.3404936439999915,
+   "fwd_bwd_seconds": 6.453613278499972,
+   "after_backward_seconds": 0.8868803655000193,
+   "losses": [
+    14.670398712158203,
+    14.529582977294922,
+    14.269471168518066
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   }
+  },
+  "Qwen/Qwen3.5-0.8B|c": {
+   "model": "Qwen/Qwen3.5-0.8B",
+   "setup": "c",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 752393024,
+   "hidden_matrix_params": 497614848,
+   "peak_GiB": 4.313946723937988,
+   "peak_first_step_GiB": 4.312832832336426,
+   "steady_state_GiB": 2.3967905044555664,
+   "steady_state_counted_GiB": 2.3687630146741867,
+   "step_seconds": 11.5266261095,
+   "fwd_bwd_seconds": 6.609012073499969,
+   "after_backward_seconds": 4.917614036000032,
+   "losses": [
+    14.672188758850098,
+    14.239306449890137,
+    13.895883560180664
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   }
+  },
+  "Qwen/Qwen3.5-0.8B|c_lw": {
+   "model": "Qwen/Qwen3.5-0.8B",
+   "setup": "c_lw",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 752393024,
+   "hidden_matrix_params": 497614848,
+   "peak_GiB": 3.954977512359619,
+   "peak_first_step_GiB": 3.954977512359619,
+   "steady_state_GiB": 2.3967905044555664,
+   "steady_state_counted_GiB": 2.3687630146741867,
+   "step_seconds": 12.160704171500015,
+   "fwd_bwd_seconds": 10.50400960050007,
+   "after_backward_seconds": 1.6566945709999459,
+   "losses": [
+    14.672188758850098,
+    14.239306449890137,
+    13.895883560180664
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   }
+  },
+  "Qwen/Qwen3.5-0.8B|d": {
+   "model": "Qwen/Qwen3.5-0.8B",
+   "setup": "d",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 752393024,
+   "hidden_matrix_params": 497614848,
+   "peak_GiB": 3.7379517555236816,
+   "peak_first_step_GiB": 3.7379555702209473,
+   "steady_state_GiB": 2.179234504699707,
+   "steady_state_counted_GiB": 2.166008733212948,
+   "step_seconds": 13.483746738500031,
+   "fwd_bwd_seconds": 11.826199161000034,
+   "after_backward_seconds": 1.6575475774999973,
+   "losses": [
+    14.798818588256836,
+    14.034988403320312,
+    13.708602905273438
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   },
+   "layer_update_seconds": 4.072362861871719,
+   "ticker_layer_steps": [
+    3
+   ]
+  },
+  "Qwen/Qwen3.5-0.8B|d_frozen": {
+   "model": "Qwen/Qwen3.5-0.8B",
+   "setup": "d_frozen",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 752393024,
+   "hidden_matrix_params": 497614848,
+   "peak_GiB": 3.7379517555236816,
+   "peak_first_step_GiB": 3.7379555702209473,
+   "steady_state_GiB": 2.179234504699707,
+   "steady_state_counted_GiB": 2.166008733212948,
+   "step_seconds": 8.644721790500057,
+   "fwd_bwd_seconds": 6.98508889850001,
+   "after_backward_seconds": 1.6596328920000474,
+   "losses": [
+    14.798818588256836,
+    14.705215454101562,
+    14.615137100219727
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   },
+   "ticker_layer_steps": [
+    0
+   ]
+  },
+  "Qwen/Qwen3.5-2B|d": {
+   "model": "Qwen/Qwen3.5-2B",
+   "setup": "d",
+   "status": "ok",
+   "batch": 2,
+   "seq": 1024,
+   "params": 1881825088,
+   "hidden_matrix_params": 1372717056,
+   "peak_GiB": 8.33960771560669,
+   "peak_first_step_GiB": 8.33960771560669,
+   "steady_state_GiB": 5.246062278747559,
+   "steady_state_counted_GiB": 5.242177806794643,
+   "step_seconds": 32.899470237500054,
+   "fwd_bwd_seconds": 29.775180852500057,
+   "after_backward_seconds": 3.1242893849999973,
+   "losses": [
+    14.727505683898926,
+    13.809858322143555,
+    13.464089393615723
+   ],
+   "gpu": "Tesla T4",
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   },
+   "layer_update_seconds": 12.398545728772879,
+   "ticker_layer_steps": [
+    3
+   ]
+  },
+  "Qwen/Qwen3.5-2B|a": {
+   "model": "Qwen/Qwen3.5-2B",
+   "setup": "a",
+   "status": "OOM",
+   "batch": 2,
+   "seq": 1024,
+   "error": "CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 31.81 MiB is free. Including non-PyTorch memory, this process has 14.53 GiB memory in use. Of the allocated memory 14.41 GiB is allocated by PyTorch, and 1.17 MiB is reserved by PyTorch but unallocated.",
+   "peak_before_oom_GiB": 14.412922859191895,
+   "env": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "fla": false
+   }
+  }
+ },
+ "P6a_ratio_ours_to_standard": 0.31832236355619753,
+ "P6a_pass": true,
+ "ours_to_bf16SR_peak": 0.8664807413549814,
+ "ours_to_bf16SR_steady": 0.9092302813485664,
+ "ours_to_bf16SR_layerwise_peak": 0.9451259188812794,
+ "update_adds_seconds": 4.839024947999974
+}

@@ -1,0 +1,11 @@
+{"milestone": "m2", "arm": "c1", "preset": "cpu", "opt": "muon", "muon_lr": 0.01, "seed": 3, "device": "cuda", "dtype": "fp16-autocast", "params": 797056, "state_bytes_per_weight": 8, "torch": "2.11.0+cu130", "config": {"n_layer": 4, "n_head": 4, "n_embd": 128, "block_size": 64, "batch_size": 12, "max_iters": 2000, "dropout": 0.0, "lr": 0.001, "min_lr": 0.0001, "warmup_iters": 100, "weight_decay": 0.1, "beta1": 0.9, "beta2": 0.99, "grad_clip": 1.0, "eval_interval": 250, "eval_windows": 256, "vocab_size": 65}}
+{"step": 0, "val_ce": 4.22419, "val_se": 0.00221, "wall_s": 0.6}
+{"step": 250, "val_ce": 2.26393, "val_se": 0.0126, "wall_s": 20.0}
+{"step": 500, "val_ce": 2.01431, "val_se": 0.01469, "wall_s": 39.9}
+{"step": 750, "val_ce": 1.91172, "val_se": 0.01607, "wall_s": 58.5}
+{"step": 1000, "val_ce": 1.83392, "val_se": 0.01684, "wall_s": 77.2}
+{"step": 1250, "val_ce": 1.75969, "val_se": 0.01746, "wall_s": 96.5}
+{"step": 1500, "val_ce": 1.71609, "val_se": 0.01779, "wall_s": 114.6}
+{"step": 1750, "val_ce": 1.67175, "val_se": 0.01771, "wall_s": 133.2}
+{"step": 2000, "val_ce": 1.64059, "val_se": 0.01809, "wall_s": 153.2}
+final val CE 1.6406 +- 0.0181 nats/char after 2000 steps, 153.2 s

@@ -1,0 +1,113 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · side study G · GPT-2 small, 124M parameters · Colab T4</div>
+  <h1>Two Bytes on GPT-2</h1>
+  <p class="lede">Do the two 2-byte training systems hold up on a real model? Here the pretrained GPT-2 small keeps training on new web text, with its 85 million block weights stored either as FP8 numbers or as 4-bit numbers with a ticker carry. Both cost 2.28 bytes per weight, against 8 for a float copy and 12 for AdamW.</p>
+  <p class="meta">26 October 2026 · 11 training runs on free Colab T4s (fp16), one seed: stage 1 (25M tokens, 5 runs), stage 2 (100M tokens, 4 runs) and stage 3 (2 of the stage-2 runs repeated, with rounding checks) · every number comes from <code>runs/gpt2</code> and <code>report/data/gpt2.json</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>Stable at scale: yes, both.</strong> Across 11 runs of up to 100 million tokens each, no run blew up. Every run improved on its own start, and every run ended below what float GPT-2 scored before any training (3.402). A model stored in 4 bits (the ticker, 3.333) ended better than the float model it started from.</li>
+    <li><strong>Close to full precision: no, for either, at 100M tokens.</strong> FP8 ended 0.035 behind float Muon, and the ticker 0.047 behind 4-bit training with a float copy. Both lines were 0.03.</li>
+    <li><strong>How far off, really? Against “train in float, round once at the end”:</strong> In FP8, rounding at the end costs only 0.003, while training in FP8 costs 0.032, ten times more. FP8 is fine for storing weights. The loss comes from rounding at random at every step. In 4 bits, the ticker ends level with float Muon rounded at the end (+0.003 ± 0.001). The FP8-trained model rounded to 4 bits ends 0.039 behind that, stuck since step 500.</li>
+    <li><strong>The ticker’s flat line is a design flaw, not the learning rate.</strong> Its 4-bit carry parks about 7% of its weights exactly on a rounding line. There they flip a whole step back and forth with the sign of each update, whatever its size. In a probe, an 8-bit carry fixes most of this: its change rate then follows the learning rate, close to an exact weight’s. Reading the same 4 bits as fifteenths overshoots, and the weights freeze. The 8-bit carry has not yet been run on GPT-2.</li>
+    <li><strong>FP8 got worse with longer training.</strong> After 25M tokens it was 0.014 behind float Muon. After 100M it ended at 3.302, worse than its own 3.296. Its loss went flat during the 900 steps at the largest learning rate. Even at the end, 0.77% of its weights cross a 4-bit rounding line every step, against 0.012% for float Muon. Random rounding keeps jiggling them.</li>
+    <li><strong>The memory saving holds:</strong> 2.28 bytes per weight against 8 for a float copy and 12 for AdamW.</li>
+    <li><strong>Time and cost:</strong> 18.2 hours of T4 time across the three stages, run two at a time. The whole study, pilots included, used about 21 Colab compute units out of 393. Stage 3 used 6.</li>
+  </ol>
+</section>
+
+<h2 id="setup"><span class="secnum">1</span>What was tested</h2>
+<p>The model is OpenAI's released GPT-2 small: 12 layers, 124 million numbers. It already writes reasonable English, and training continues on new web text (FineWeb, the same 50,257-token vocabulary). The question is not "can it learn from scratch" but the harder, finer one: when a model is already good and every step is tiny, do the two 2-byte systems keep it improving, or do their coarse weights shake it apart?</p>
+<p>The 48 big matrices inside the blocks hold 85 million of the 124 million numbers, and they are what each system stores in low precision. Muon updates them. The embeddings, biases and layer norms stay in float with AdamW in every run, as in the earlier milestones. At step 0 the pretrained weights are rounded to the nearest value each system can store, which costs some quality right away.</p>
+<div class="flows">
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-b)"></span>FP8 + 8-bit momentum</h4><ol><li>Muon step (momentum stored in 8 bits)</li><li>add it to the 8-bit weight</li><li class="err">round at random to a neighbouring FP8 value</li></ol><p class="kept">2.28 bytes per weight · milestone 7</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m3)"></span>4-bit ticker</h4><ol><li>Muon step (8-bit momentum)</li><li>add the carried leftover</li><li>nearest 4-bit value</li><li class="err">leftover kept as k/14 of a gap, k = −7..7</li></ol><p class="kept">2.28 bytes per weight · side study T</p></div>
+  <div class="flow"><h4><span class="swatch" style="background:var(--c-m2)"></span>4-bit + float copy (yardstick)</h4><ol><li>forward pass uses 4-bit weights</li><li>the gradient updates a hidden 32-bit copy</li></ol><p class="kept">8 bytes per weight · milestone 2</p></div>
+</div>
+<p>Two float runs, Muon and AdamW, show what full precision gets. Every run sees exactly the same batches of text, in the same order, and is scored on the same 256 held-out stretches of 1,024 tokens. The score is the average loss per token in nats (lower is better; 3.40 means the model gives the right next token a probability of about e<sup>−3.4</sup> ≈ 1/30 on average). Because only one seed fits the budget, the error bars on differences come from those 256 stretches: the same stretch is scored by both runs, and the spread of the per-stretch differences gives a standard error.</p>
+<p>Two stages: 760 steps (25 million tokens) for all five runs, then 3,050 steps (100 million tokens) for the four Muon runs. Each step uses 32 stretches of 1,024 tokens. The learning rate warms up over the first 5% of steps, then falls along a cosine to 10% of its peak. Learning rates were picked in a 200-step check before stage 1: Muon 0.001 (0.0003, 0.003 and 0.01 were worse) and AdamW 0.0001 (0.00003 and 0.0003 were worse).</p>
+<figure class="wide">
+  <div class="chart" id="ch-bytes"></div>
+  <figcaption><b>Where the bytes go.</b> Only the 48 block matrices are counted (85M weights, 68% of the model). Both 2-byte systems store a little over a quarter of what the float-copy yardstick needs, and a fifth of AdamW.</figcaption>
+</figure>
+
+<h2 id="results"><span class="secnum">2</span>Results</h2>
+<div class="tablewrap"><table id="tbl-pass"><thead><tr><th>Stage</th><th>Run</th><th>Pass line (written before the runs)</th><th class="n">Measured</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-start"></div>
+  <figcaption><b>Start and end, stage 2.</b> Rounding the pretrained weights costs almost nothing in FP8 (+0.003) but 0.059 in 4 bits. Every run then improves, and all of them end below the float model they started from. The diamonds show the float runs rounded to 4 bits at the end. Float Muon rounded this way (3.330) lands level with the ticker (3.333), which trained in 4 bits the whole time. Only 4-bit training with a float copy (3.286) clearly beats both.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-diffs"></div>
+  <figcaption><b>Differences between runs.</b> The bars are small (about ±0.001) because both runs are scored on the same 256 stretches, so the luck of which stretches were picked cancels out. From stage 1 (hollow) to stage 2 (filled), FP8 moves from inside its line to outside it. The ticker moves toward its line, but stays outside.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-curves-s2"></div>
+  <figcaption><b>Stage 2.</b> Four times as many steps, with the learning rate high for longer. Float Muon and 4-bit with a float copy fall steadily the whole way. FP8 (red) stalls at 3.309–3.311 from step 300 to 1,200, then improves only as the learning rate falls. The ticker (amber) improves to 3.351 by step 1,200, then bounces between 3.333 and 3.353.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-curves-s1"></div>
+  <figcaption><b>Stage 1.</b> The float runs and FP8 fall steadily the whole way. 4-bit with a float copy falls in parallel, about 0.02 higher. The ticker improves fast for 400 steps (3.462 → 3.351), then drifts back up to 3.361 while the learning rate shrinks.</figcaption>
+</figure>
+
+<h2 id="stability"><span class="secnum">3</span>Stability</h2>
+<figure class="wide">
+  <div class="chart" id="ch-train"></div>
+  <figcaption><b>Training loss, stage 2.</b> All runs see the same batches, so their wiggles line up. Over the last 200 steps: float Muon 3.268, 4-bit with a float copy 3.290, FP8 3.307, ticker 3.346. No run runs away.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-grad"></div>
+  <figcaption><b>Gradient size, stage 2.</b> Float Muon, 4-bit with a float copy and FP8 settle near 0.62. The ticker’s gradients stay about 2.5 times as large (median 1.6) and spiky, peaking at 7.6 against 3.6 for the others. Its weights keep getting knocked off the spot the gradient wants. One ticker step in each stage was skipped because the fp16 loss scaler saw an overflow. That is routine for fp16 training and harmless.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-changed"></div>
+  <figcaption><b>Weights that move.</b> Solid lines, stage 2: FP8’s share follows the learning rate, from 1.3% at the peak down to 0.24% at the end. The ticker’s share stays between 1.6% and 1.9% the whole run, even when the steps are ten times smaller. Dashed lines, stage 3, show what a healthy curve looks like. For float Muon, the share of FP8 values that change peaks at 1.25% and falls to 0.17%. Its share of 4-bit values peaks at 0.12% and falls to 0.012%. The FP8 run’s share of 4-bit values (red, dotted) stays at 0.65–0.83% from start to end, about 65 times float Muon’s by the end. That is random rounding, not learning. Section 4 shows why the ticker is flat.</figcaption>
+</figure>
+
+<h2 id="flat"><span class="secnum">4</span>Why the ticker’s line is flat</h2>
+<p>The ticker changed about 1.7% of its weights every step, from the first step of warm-up to the last step of the cool-down, while the learning rate went from near zero to its peak and down to a tenth of it. FP8’s share follows the learning rate, as it should. The learning rate does reach the ticker (the code sets it every step, and the ticker’s step uses it). The cause is how the carry is stored.</p>
+<p>When a ticker weight ticks to the next 4-bit value, its leftover is, by definition, just under half a gap. The carry stores that as 7/14, the largest value it can hold, so the weight now sits <em>exactly on the rounding line</em> between two values. A step back inward, however tiny, only leaves the line by random rounding, with a chance of 14 × step ÷ gap. With steps of about 1/1,000 of a gap, that takes about 70 steps on average. A step outward, however tiny, ticks it straight back across. So about 1 weight in 15 is always parked on a line, flipping a whole gap whenever the sign of its update changes. Those flips follow the update’s sign, not its size, so their rate does not depend on the learning rate. It is noise the size of a full 4-bit gap, applied to about 7% of the weights.</p>
+<p>To check this, a small probe ran four real GPT-2 matrices through Muon-like steps (random gradients, the same momentum and orthogonalising step) at six learning rates. It counted how often each weight’s 4-bit value changes for an exact float weight rounded to nearest, for the ticker as run, and for two variants.</p>
+<figure class="wide">
+  <div class="chart" id="ch-probe"></div>
+  <figcaption><b>The ticker’s change rate ignores the learning rate.</b> An exact weight changes in proportion to the learning rate: 0.001% per step at 0.00001, 0.15% at 0.001 (the runs’ peak). The ticker changes 1.6–1.8% at every rate, 11 times the exact rate at the peak and 1,600 times at 0.00001. 45% of its changes are undone the very next step (exact: 7%). 6.6% of its weights sit parked on a rounding line. An 8-bit carry (green) nearly matches the exact rate at the peak (0.16%), with a floor of 0.09% at tiny rates. Reading the same 4 bits as fifteenths (purple, dashed) moves the parked weights just inside the line. That overshoots: the carry then discards any push beyond its largest value, so weights almost never tick (0.005% at the peak) and would stop learning.</figcaption>
+</figure>
+
+<h2 id="quant"><span class="secnum">5</span>Storing in a format against training in it</h2>
+<p>The owner asked how far off the 2-byte systems really are. What if a model trained in full precision and was rounded only once, at the end? To find out, float Muon and FP8 were run again with the same seed. Their final losses repeat stage 2 to within 0.0005. Every 500 steps, the float Muon weights were scored rounded to FP8 and to 4 bits, and the FP8-trained weights rounded to 4 bits. Rounding changes only the block matrices, the part the 2-byte systems store. Each comparison scores both models on the same 256 stretches of text, so the error bars are small.</p>
+<figure class="wide">
+  <div class="chart" id="ch-quant"></div>
+  <figcaption><b>How far off are we, really?</b> Each dot is a final loss. Filled dots trained in the format they are stored in. Hollow dots trained in a finer format and were rounded once at the end. <b>Stored in FP8:</b> float Muon rounded to FP8 costs only 0.003 (3.267 → 3.269). Training in FP8 throughout ends at 3.301, 0.032 behind that. <b>Stored in 4 bits:</b> float Muon rounded to 4 bits costs 0.063 (3.329). The ticker, trained in 4 bits throughout, is 0.003 behind it (3.333), too close to call. The FP8-trained model rounded to 4 bits is 0.039 worse (3.368). 4-bit training with a float copy (3.286) beats rounding at the end by 0.043, because that model learns to work around its rounded weights.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-quant"><thead><tr><th>Comparison (same 256 windows)</th><th class="n">Difference in final loss</th></tr></thead><tbody></tbody></table></div>
+<figure class="wide">
+  <div class="chart" id="ch-qcurves"></div>
+  <figcaption><b>Over training.</b> Checks every 500 steps. Float Muon rounded to FP8 stays a steady 0.0025–0.003 above float Muon the whole way. Rounded to 4 bits, it stays 0.055–0.063 above. The FP8-trained model rounded to 4 bits is stuck at 3.368–3.373 from step 500 to the end. Over the same steps, float Muon rounded to 4 bits keeps improving, from 3.354 to 3.329. The ticker (stage 2, sampled at the same steps) trails float Muon rounded to 4 bits by 0.008 at step 500 and 0.003 at the end. In between it bounces, for example 0.017 behind at step 3,000.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">6</span>What it means</h2>
+<p><b>Stability is settled.</b> The owner’s question was whether these systems stay stable on a real model, on the fine-grained job of improving one that is already good. They do. Over 100 million tokens, neither ever diverged. Their largest rise above their own best check was 0.002 (FP8) and 0.018 (the ticker), and both ended well below the pretrained model.</p>
+<p><b>Quality is not settled, and the two systems fail for different reasons.</b> FP8 as a storage format is nearly free: rounding a finished model to FP8 costs 0.003. What costs 0.032 is rounding at random at every step, with noise that grows with the step. At a high learning rate it washes out progress, and more steps do not help. The ticker’s trouble is its carry design. About 7% of its weights sit on a rounding line and flip with the sign of each update. The probe shows an 8-bit carry removes most of that.</p>
+<p><b>The fair target.</b> Rounding at the end needs a float copy during training, which is exactly the memory these systems exist to save. So the fair test for a 2-byte system is to land at or below “float, rounded at the end” in the same format. The 4-bit ticker already does, within 0.003, despite its flaw. FP8 misses its target by 0.032, and it is worse than the 4-bit ticker once both are stored in 4 bits.</p>
+<p><b>What would most likely close the gaps:</b> for the ticker, an 8-bit carry (half a byte more per weight; the probe’s fix). For FP8, a smaller learning rate, or a carried leftover in place of random rounding. Each is a cheap follow-up: one 100M-token run is about 2.5 hours on a free T4.</p>
+
+<h2 id="cost"><span class="secnum">7</span>Time and cost</h2>
+<div class="tablewrap"><table id="tbl-time"><thead><tr><th>Stage</th><th>Run</th><th class="n">Tokens</th><th class="n">Tokens per second</th><th class="n">Time</th><th class="n">Compute units</th></tr></thead><tbody></tbody></table></div>
+
+<h2 id="caveats"><span class="secnum">8</span>Not tested</h2>
+<ul>
+  <li>One seed. The error bars cover which text the model is scored on, not the luck of training.</li>
+  <li>One learning rate for all Muon runs (0.001, best for float Muon). The 2-byte runs were not tuned. FP8’s stall at the peak learning rate suggests it wants a smaller one on long runs.</li>
+  <li>No fix was run on GPT-2. The 8-bit ticker carry was only tested by the probe: 50 steps on four matrices, with random gradients. For FP8, a smaller learning rate or a carried leftover in place of random rounding are untested. Rounding after training was measured for float Muon and FP8 only, not for 4-bit with a float copy, which is already stored in 4 bits.</li>
+  <li>Only the loss on held-out web text. No downstream tests (question answering, reading comprehension), no text samples.</li>
+  <li>GPT-2 small only, continuing from a pretrained model. Training from scratch, and larger models, are untested.</li>
+  <li>Byte counts cover weights and optimizer state of the block matrices only, not gradients, activations or the float embeddings. The low-bit numbers are stored exactly, but the matrix multiplies run in fp16, so there is no speed gain to measure.</li>
+  <li>A rare edge case in the FP8 rounding (a block’s largest weight could round down by one step and shrink the block scale) was found and fixed in this file. Milestone 7’s code has the same edge case. It was harmless there, but has not been re-run.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">9</span>Reproduce</h2>
+<p><code>python side_gpt2.py --arm fp8_m8 --steps 760 --compile</code>. The script downloads GPT-2’s weights and the FineWeb shards on first run. The arms are <code>adamw_float</code>, <code>muon_float</code>, <code>q4_float_copy</code>, <code>fp8_m8</code> and <code>q4_t4_m8</code>, and stage 2 adds <code>--steps 3050</code>. Summary: <code>report/gpt2_summary.py</code>. This page: <code>report/build_gpt2.py</code>. The pass lines were written into <code>PLAN.md</code> (section G) before any stage-1 run.</p>
+</main>

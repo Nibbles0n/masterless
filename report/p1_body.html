@@ -1,0 +1,58 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless Muon · paper step P1 · main result · 14 training runs on an A100</div>
+  <h1>4-bit GPT-2 Without a Full-Precision Copy</h1>
+  <p class="lede">We trained GPT-2 small on 100 million more tokens with its weights stored in 4 bits and no full-precision copy anywhere. It finished within 0.002 of the standard method, which keeps a 32-bit copy of every weight, in all three seeds. It used about a third of the memory: 2.78 bytes per weight against 8.</p>
+  <p class="meta">28 October 2026 · pretrained GPT-2 small (124M), FineWeb, 3,050 steps × 32 × 1,024 tokens · A100 40GB, fp16, deterministic · source: <code>p1_paper_gpt2.py</code>, <code>report/p1_analysis.py</code>, <code>runs/paper/P1_RESULT.md</code></p>
+</header>
+
+<section class="verdict" aria-label="pass lines">
+  <div><b>P1a · PASS</b><span>ours vs 4-bit + float copy: +0.0011, +0.0006, +0.0023 (line: +0.03)</span></div>
+  <div><b>P1b · PASS</b><span>naive is 0.160 worse; ECO-Muon 0.037 worse (line: 0.02, and above 0.033 for one seed)</span></div>
+  <div><b>P1c · PASS</b><span>bf16-SR rounded to 4 bits is 0.043–0.049 worse, every seed</span></div>
+  <div><b>P1d · PASS</b><span>ours vs exact carry (Kahan): +0.0012 (line: 0.01)</span></div>
+</section>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><b>The headline holds.</b> Ours ends at 3.2888 on average, the 4-bit float copy at 3.2875. The gap, 0.0013, is a twentieth of the 0.03 we allowed ourselves before the runs, and about 1.3 times the evaluation noise.</li>
+    <li><b>The 8-bit carry loses almost nothing against an exact one.</b> Kahan summation keeps the leftover in 32 bits (5.78 bytes). Ours keeps it in 8 bits and lands 0.0012 behind.</li>
+    <li><b>The cheap alternatives fail.</b> Random rounding with no carry (naive) ends at 3.448, worse than where it started (3.403). Training in bf16 with random rounding is fine as a 16-bit model, but rounding it to 4 bits at the end costs 0.046. ECO's rule for feeding the rounding error back, moved over to Muon, ends 0.037 behind ours: it freezes the 4-bit weights.</li>
+    <li><b>Training in 4 bits beats training in float and rounding at the end</b>, by 0.042.</li>
+  </ol>
+</section>
+
+<h2 id="memory"><span class="secnum">1</span>Memory against quality</h2>
+<p>Each point is one way of training. Left is less memory, down is better. Memory counts the weights and the optimizer's state per weight of the 48 big matrices, not gradients or activations.</p>
+<figure class="wide">
+  <div class="chart" id="ch-mem"></div>
+  <figcaption><b>Ours sits with the 8- and 12-byte methods, at 2.78 bytes.</b> Everything else under 4 bytes is at least 0.037 worse. ECO-Muon gets its gain from the small float parts of the model, not the 4-bit matrices. bf16-SR scored before rounding (3.27) is not shown: it is then a 16-bit model, not a 4-bit one.</figcaption>
+</figure>
+
+<h2 id="headline"><span class="secnum">2</span>The headline test, seed by seed</h2>
+<p>Each seed changes the order of the data and the random rounding. The gap is taken window by window on the same 256 validation windows, so the evaluation noise cancels. What is left, about 0.0005, is the error bar.</p>
+<figure class="wide">
+  <div class="chart" id="ch-gap"></div>
+  <figcaption><b>All three seeds pass with room to spare.</b> The gaps are small but real (2 to 4 error bars above zero): the 8-bit carry costs about 0.001 to 0.002.</figcaption>
+</figure>
+
+<h2 id="curves"><span class="secnum">3</span>How training went</h2>
+<figure class="wide">
+  <div class="chart" id="ch-curves"></div>
+  <figcaption><b>Ours, the float copy and Kahan move together the whole way.</b> Naive drifts up: without a carry, small updates are lost to random rounding. The 16- and 32-bit models end lower because they are not 4-bit models. Rounded to 4 bits they end at 3.33.</figcaption>
+</figure>
+
+<h2 id="eco"><span class="secnum">4</span>What happened to ECO-Muon</h2>
+<p>ECO fixes rounding by adding each step's rounding error, divided by the step size, into the momentum. A 4-bit rounding error is far larger than one Muon step, so the momentum ends up dominated by rounding errors.</p>
+<p><b>The first run overflowed in 10 steps, and that was our code's fault, not ECO's.</b> Our script turns the momentum into 16-bit numbers before scaling it down, and ECO's huge momentum does not fit. Rerun with that step in 32-bit, ECO-Muon trains, and that is the run counted here. It is the only arm with a 32-bit Newton–Schulz, which can only help it.</p>
+<p><b>The rerun shows how ECO fails with Muon: the 4-bit weights stop moving.</b> Only 4 in a million change per step, falling to none by the end, against 14 in ten thousand for ours. Each step mostly tries to undo its own last rounding. The loss still falls from 3.403 to 3.325, through the small float parts of the model (embeddings, norms, biases), which every arm trains in float.</p>
+
+<h2 id="caveats"><span class="secnum">5</span>What this does not show</h2>
+<ul>
+  <li>One model, one learning rate, continued training only. Training from scratch is P2. Other learning rates are P3.</li>
+  <li>The 1-seed arms (Kahan, naive, ECO-Muon, float Muon, AdamW copy) have one seed each. ECO-Muon's margin, 0.037, is only just above the 0.033 that one seed can resolve.</li>
+  <li>ECO-Muon is our own move of ECO to Muon. The ECO paper gives SGD and Adam only.</li>
+  <li>The standard AdamW float copy (12 bytes) is 0.004 ahead of ours in seed 1. That is below what one seed can resolve.</li>
+</ul>
+</main>

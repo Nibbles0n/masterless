@@ -1,0 +1,10 @@
+{"study": "gpt2", "arm": "q4_float_copy", "muon_lr": 0.003, "adamw_lr": 0.0001, "seed": 1, "steps": 30, "warmup": 1, "seqs_per_step": 32, "seq_len": 1024, "tokens_per_step": 32768, "eval_windows": 64, "weight_decay": 0.1, "compile": false, "device": "cuda", "gpu": "Tesla T4", "dtype": "fp16-autocast", "torch": "2.11.0+cu130", "hidden_weights": 84934656, "params": 124439808, "state_bytes_per_weight": 8, "val_ce_pretrained": 3.52617, "val_se_pretrained": 0.05173}
+{"step": 0, "val_ce": 3.584, "val_se": 0.05144, "wall_s": 3.3}
+{"step": 5, "train_loss": 3.5028, "grad_norm": 1.946, "changed": null, "lr_frac": 0.9764, "tok_per_s": 9524, "skipped": 0, "mem_gb": 8.96}
+{"step": 10, "train_loss": 3.411, "grad_norm": 1.5304, "changed": null, "lr_frac": 0.8413, "tok_per_s": 11841, "skipped": 0, "mem_gb": 8.96}
+{"step": 15, "train_loss": 3.3714, "grad_norm": 1.4349, "changed": null, "lr_frac": 0.6228, "tok_per_s": 11901, "skipped": 0, "mem_gb": 8.96}
+{"step": 20, "train_loss": 3.411, "grad_norm": 1.3696, "changed": null, "lr_frac": 0.3834, "tok_per_s": 11943, "skipped": 0, "mem_gb": 8.96}
+{"step": 25, "train_loss": 3.3992, "grad_norm": 1.2421, "changed": null, "lr_frac": 0.1918, "tok_per_s": 11970, "skipped": 0, "mem_gb": 8.96}
+{"step": 30, "train_loss": 3.4179, "grad_norm": 1.2013, "changed": null, "lr_frac": 0.1026, "tok_per_s": 11969, "skipped": 0, "mem_gb": 8.96}
+{"step": 30, "val_ce": 3.47992, "val_se": 0.05163, "wall_s": 89.2}
+final val CE 3.4799 +- 0.0516 nats/token after 30 steps, 89.2 s

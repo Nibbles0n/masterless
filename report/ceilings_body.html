@@ -1,0 +1,62 @@
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · GPT-2 small · measured on saved weights, no training</div>
+  <h1>Aiming the Rounding Noise</h1>
+  <p class="lede">Two ways to make rounding hurt less without storing more. The first stores each weight matrix rotated, so the 4-bit gaps get smaller. The second steers the rounding error into input directions the layer barely uses. Before building either, this page measures how much each could give at most, on GPT-2 small's real weights and real inputs.</p>
+  <p class="meta">27 October 2026 · pretrained GPT-2 small and the float-Muon stage-2 weights · inputs from 24 × 1024 FineWeb validation tokens · every number comes from <code>report/data/gpt2_ceilings.json</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>Rotating the stored weights gives nothing.</strong> The average 4-bit gap stays at 0.309 of a typical weight with a Hadamard rotation, and goes up slightly with the others. GPT-2's blocks of 16 weights are already as evenly spread as a rotation would make them. Muon really doesn't see the rotation (checked: the steps agree to 2 parts in a million), but there's nothing for it to buy.</li>
+    <li><strong>The inputs are very lopsided, so aiming the noise has real room.</strong> In a typical layer, the strongest 10% of input directions carry 60–90% of the input energy. If rounding error could be steered perfectly into the weak directions, it would disturb the layer outputs 3.4 times less (whole model, weighted by size). That is the ceiling.</li>
+    <li><strong>A cheap version gets most of it.</strong> Keeping the error out of just the strongest 10% of input directions gives 3.0 of that 3.4. Keeping it out of the strongest 1% (7 directions in most layers) still gives 1.9.</li>
+    <li><strong>In noise ÷ signal terms</strong>, a 3× cut in damage is like dividing the noise by about 1.75. That would bring FP8 storage from 1.8 to about 1.0, and the 8-bit-carry ticker from 0.25 to about 0.14. That's an upper estimate, measured at the layer outputs, not the loss.</li>
+  </ol>
+</section>
+
+<h2 id="rotation"><span class="secnum">1</span>Rotated storage: no gain</h2>
+<p>Muon has a property Adam lacks. Store a matrix W as W·Q for any rotation Q, and Muon's step comes out rotated by the same Q. Training is unchanged; only the rounding changes. Rotations such as the Hadamard transform mix each weight with many others. That makes the values look like a bell curve and tames outliers. Since the 4-bit scale of each block of 16 is set by its largest weight, fewer outliers should mean smaller gaps.</p>
+<figure class="wide">
+  <div class="chart" id="ch-rot"></div>
+  <figcaption><b>Average 4-bit gap after each rotation</b>, as a fraction of the typical (root-mean-square) weight; pretrained GPT-2 weights, all 48 big matrices weighted by size. Random rounding adds noise variance in proportion to the gap, so smaller is better. The trained stage-2 weights give the same numbers to three digits.</figcaption>
+</figure>
+<p><b>Why it fails.</b> Rotation only helps when blocks hold outliers. In GPT-2 small the largest weight in a block of 16 is already about 2 times the typical weight. That's what 16 draws from a bell curve give, so the blocks have no outliers to tame. Rotation shrinks the block maximum by just 2%. The gaps don't shrink at all, because the 4-bit float grid's gaps also depend on where in the grid each weight lands. Rotation tricks help in published work because they use whole rows or blocks of 128 per scale, where outliers do dominate. Our blocks of 16 already got that benefit.</p>
+
+<h2 id="inputs"><span class="secnum">2</span>Aimed rounding error: real room</h2>
+<p>A layer multiplies its weight matrix by an input vector x. A weight error E changes the output by E·x. On average that costs the sum, over input directions, of (error in that direction)² × (input energy in that direction). With error spread evenly, the cost is set by the <em>average</em> input energy. With error pushed into the weak directions, the best possible cost is set by the <em>geometric mean</em> of the energies, which is much lower when a few directions dominate. The ratio of the two is the ceiling. Three practical versions were also measured:</p>
+<ul>
+  <li><b>Keep-out, top 1% or top 10%:</b> make the rounding error have no part along the strongest 1% (or 10%) of input directions. The rest of the error spreads over the remaining directions. Needs only those directions stored per layer: 7 to 30 vectors for 1%.</li>
+  <li><b>Sequential feedback:</b> GPTQ's rule. When one weight in a row rounds, the later weights in that row absorb its error in the best way the inputs allow. Here it's in the plain column order, without GPTQ's reordering.</li>
+</ul>
+<figure class="wide">
+  <div class="chart" id="ch-ways"></div>
+  <figcaption><b>How many times less the rounding error disturbs the layer outputs</b>, for the same amount of rounding error. Geometric mean over the 48 matrices, weighted by size.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-layers"></div>
+  <figcaption><b>The ceiling, layer by layer.</b> Attention's input (c_attn) and output projection (attn_c_proj) are the most lopsided, up to 27× in layer 1. The MLP layers sit at 2 to 6×. Early layers are more lopsided than late ones. The FineWeb inputs gave no near-zero directions, so the ceiling doesn't come from numerical noise. Flooring every energy at 1/10,000 of the average changes nothing.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-share"></div>
+  <figcaption><b>Share of input energy in the strongest 10% of input directions.</b> If energy were spread evenly it would be 10%.</figcaption>
+</figure>
+
+<h2 id="meaning"><span class="secnum">3</span>What it means for the noise budget</h2>
+<p>The GPT-2 noise ÷ signal numbers below come from the rounding law in <code>zigzag_theory.md</code>, section 10. A k-times cut in damage is like dividing the noise by √k. With the top-10% keep-out (k = 3.05, so ÷ 1.75):</p>
+<div class="tablewrap"><table id="tbl-budget"><thead><tr><th>storage</th><th class="n">noise ÷ signal now</th><th class="n">with keep-out (upper estimate)</th></tr></thead><tbody></tbody></table></div>
+<p class="note">This stacks with the other two insertion points. The carry sets how much noise is made, and step filters set how much movement each unit of progress needs. Aiming the noise sets how much the noise that is made actually costs. The three multiply.</p>
+
+<h2 id="caveats"><span class="secnum">4</span>Not tested, and why the real gain could be smaller</h2>
+<ul>
+  <li><b>Layer outputs, not the loss.</b> Some disturbances to a layer's output matter little further on. The loss could be more or less sensitive than this measure.</li>
+  <li><b>Training already corrects part of it.</b> The gradient pushes back hardest on errors the loss feels. With plain rounding, errors in strong directions may already be fixed faster than errors in weak ones. The gain over what training already does could therefore be smaller than the ceiling.</li>
+  <li><b>Whether flips can do it.</b> Each step only about 1 in 1000 stored weights changes value. Steering the error means choosing which ones flip, through the carries. Shaped error is larger in weight space (it piles up in the weak directions), so the carries need range for it. Nothing here shows that can be done with a low-bit carry.</li>
+  <li><b>The input directions move.</b> They were measured once, on the pretrained model. During training they would need refreshing, and from scratch they change fast early on.</li>
+  <li><b>One model, one data sample.</b> GPT-2 small, 24,576 tokens of FineWeb validation text. Larger models are known to have stronger outlier input directions (more lopsided), which would raise the ceiling, but that wasn't measured.</li>
+</ul>
+
+<h2 id="reproduce"><span class="secnum">5</span>Reproduce</h2>
+<p><code>python report/gpt2_ceilings.py</code> (about 10 minutes on 2 CPU threads), then <code>python report/build_ceilings.py</code>. Needs <code>data/gpt2_s3/muon_float_lr0.001_s1.pt</code> from side study G, stage 2.</p>
+</main>

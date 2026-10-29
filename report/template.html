@@ -1,0 +1,938 @@
+<title>Masterless Muon at 4 Bits</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (about 68 characters) with charts that break out to a wider measure; the data carries
+   all the colour, the page itself stays ink on paper. */
+:root {
+  --bg: #f4f5f3; --surface: #fcfcfb; --ink: #15181b; --ink-2: #4b5157; --muted: #7d838a;
+  --grid: #e3e5e2; --axis: #c2c6c2; --line: rgba(21,24,27,0.12); --wash: #eceeeb;
+  --c-m0: #898781; --c-m1: #15181b; --c-m2: #2a78d6; --c-m3: #eda100; --c-c: #1baf7a; --c-b: #e34948; --c-a: #6250d6; --c-m5: #b8337e; --c-m3-2: #a86f00; --c-m3-3: #6b4700;
+  --k-code: #15181b; --k-copy: #6f767c; --k-mom: #a5abb0; --k-v: #cfd3d6; --k-err: #1baf7a;
+  --r1: #86b6ef; --r2: #3987e5; --r3: #184f95;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 42rem; --wide: 60rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #184f95; --r2: #3987e5; --r3: #9ec5f4; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111315; --surface: #181a1c; --ink: #eceeec; --ink-2: #b9bdbf; --muted: #858b90;
+  --grid: #272a2d; --axis: #3a3e42; --line: rgba(255,255,255,0.12); --wash: #1f2224;
+  --c-m0: #898781; --c-m1: #eceeec; --c-m2: #3987e5; --c-m3: #c98500; --c-c: #199e70; --c-b: #e34948; --c-a: #9085e9; --c-m5: #c64a95; --c-m3-2: #e6ae4a; --c-m3-3: #f5d491;
+  --k-code: #eceeec; --k-copy: #9aa0a5; --k-mom: #686e73; --k-v: #43484c; --k-err: #199e70;
+  --r1: #184f95; --r2: #3987e5; --r3: #9ec5f4; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { display: grid; gap: 0; padding-block: 2.5rem 5rem; }
+main > * { width: 100%; max-width: var(--measure); margin-inline: auto; min-width: 0; }
+main > .wide { max-width: var(--wide); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin-block: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; }
+p, ul, ol { margin-block: 0.9rem 0; }
+li + li { margin-top: 0.35rem; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+strong { font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; }
+.meta { font-family: var(--f-display); font-size: 0.9rem; color: var(--muted); margin-top: 0.75rem; }
+.secnum { color: var(--muted); font-weight: 600; margin-right: 0.4rem; }
+
+.short { margin-top: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.25rem 1.4rem; }
+.short h2 { margin: 0; padding: 0; max-width: none; border: 0; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.short ol { padding-left: 1.3rem; }
+.callout { margin-top: 1.25rem; padding: 0.9rem 1.1rem; border-left: 2px solid var(--ink); background: var(--wash); }
+.callout p:first-child { margin-top: 0; }
+.eq { font-family: var(--f-mono); font-size: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.9rem; overflow-x: auto; white-space: pre; }
+
+figure { margin-block: 1.6rem 0; }
+figcaption { font-family: var(--f-display); font-size: 0.86rem; line-height: 1.45; color: var(--ink-2); margin-top: 0.5rem; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.75rem 0.25rem; }
+.chart-title { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart-sub { font-family: var(--f-display); font-size: 0.82rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); margin: 0.5rem 0 0.25rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--f-display); }
+.chart svg text { fill: var(--muted); font-size: 11px; }
+.chart svg text.lab { fill: var(--ink-2); font-size: 11.5px; }
+.chart svg text.lab-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 0.45rem 0.6rem; font-family: var(--f-display); font-size: 0.8rem; min-width: 9rem; }
+.tip .tx { color: var(--muted); font-size: 0.75rem; margin-bottom: 0.2rem; }
+.tip .row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip .row b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); min-width: 3.6rem; }
+.tip .row i { display: inline-block; width: 12px; height: 2px; }
+.tip .row span { color: var(--ink-2); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.2rem; }
+.controls .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.controls button { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-2); background: transparent; border: 0; padding: 0.3rem 0.65rem; cursor: pointer; }
+.controls button + button { border-left: 1px solid var(--line); }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+details.numbers { margin: 0.4rem 0 0.5rem; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+details.numbers summary { cursor: pointer; color: var(--muted); }
+.tbl { overflow-x: auto; max-height: 22rem; margin-top: 0.4rem; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.85rem; width: 100%; }
+th, td { text-align: left; padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; margin-top: 1rem; }
+.tablewrap table { min-width: 34rem; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.4rem; vertical-align: 0; }
+.pill { display: inline-block; font-family: var(--f-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; padding: 0.05rem 0.45rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--ink); }
+.pill.fail { color: var(--c-b); }
+.pill.meas { color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.75rem 1.5rem; margin-top: 1rem; }
+.facts div { min-width: 0; font-size: 0.97rem; }
+.facts dt { font-family: var(--f-display); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.facts dd { margin: 0.15rem 0 0; }
+
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.75rem; margin-top: 1.25rem; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; font-family: var(--f-display); font-size: 0.84rem; min-width: 0; }
+.flow h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.45rem; }
+.flow ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
+.flow li { margin: 0; padding: 0.25rem 0.5rem; border-radius: 3px; background: var(--wash); color: var(--ink-2); }
+.flow li.err { background: transparent; border: 1px dashed var(--muted); color: var(--ink); }
+.flow .kept { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+.widget { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; margin-top: 1.2rem; font-family: var(--f-display); font-size: 0.9rem; }
+.widget label { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.widget input[type=range] { flex: 1 1 12rem; accent-color: var(--ink); }
+.widget output { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.probbar { display: flex; height: 26px; margin-top: 0.7rem; gap: 2px; }
+.probbar div { display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--surface); border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.options { display: grid; gap: 0.75rem; margin-top: 1.2rem; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; }
+.opt h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+.opt p { margin-top: 0.45rem; font-size: 0.98rem; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.opt .tags span { font-family: var(--f-display); font-size: 0.76rem; color: var(--ink-2); background: var(--wash); border-radius: 3px; padding: 0.1rem 0.45rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">Masterless research notes · milestones 1–5 · CPU preset · long runs on a T4</div>
+  <h1>Masterless Muon at 4 Bits</h1>
+  <p class="lede">What ran, what broke, and why. Can Muon train weights that live only on a 4-bit grid, with no float copy kept, if the rounding error is fed back the way ECO does it? Not yet. This page shows why from several angles, and what it would take to make 4-bit stable before going to ternary.</p>
+  <p class="meta">25 October 2026 · 47 scored training runs (29 on this machine's CPU, 18 on a free T4) and 8 instrumented re-runs · every number comes from <code>runs/</code> and <code>report/data</code></p>
+</header>
+
+<section class="short">
+  <h2>The short version</h2>
+  <ol>
+    <li><strong>Muon is much better than AdamW on this model:</strong> 1.628 against 1.915 nats per character, the same in all 3 seeds.</li>
+    <li><strong>A 4-bit grid is cheap if you keep a float copy:</strong> +0.019 (milestone 2).</li>
+    <li><strong>Dropping the float copy costs six times more:</strong> +0.117 (milestone 3). The cost keeps growing as the learning rate falls.</li>
+    <li><strong>ECO's fix works for Adam and backfires for Muon.</strong> ECO feeds the rounding error into the momentum. For Adam, 4-bit training ends only 0.013 behind full precision. For Muon, the loss gets <em>worse</em> than with no fix at all (1.898). Newton-Schulz, Muon's orthogonalising step, throws away about half of the fed-back error and bends the rest.</li>
+    <li><strong>Feeding the error in after Newton-Schulz nearly passes</strong> (+0.027 against the +0.03 line, 1 of 3 seeds inside it). But it needs a separate 2-byte error store, and that store plus the 4-bit weight is just a float copy in two pieces.</li>
+    <li><strong>The root problem is that a Muon step is tiny next to the grid.</strong> It moves a weight by 0.1–7% of the gap between two grid values. That fraction has to be stored somewhere, or replaced by noise. Adam's momentum can hold it. Muon's cannot, because Newton-Schulz rewrites the momentum's size.</li>
+  </ol>
+  <h3>What the follow-ups added</h3>
+  <ol start="7">
+    <li><strong>Spreading the rounding error over the matrix makes things worse</strong> (milestone 5: +0.088 against m3, every seed, as an offline check predicted). Without a float copy, each weight is already within a tiny step of a grid point, where random rounding is nearly exact. Spreading pushes weights to the middle of a gap, where it is noisiest (section 10).</li>
+    <li><strong>FP8 block scales, as in NVFP4, barely matter:</strong> +0.008, the size of the seed-to-seed spread (section 11).</li>
+    <li><strong>Trained 5× longer, the picture changes.</strong> Muon's lead over AdamW shrinks from 0.29 to 0.034, so it was mostly speed. m3 is faster than AdamW early on but is overtaken around step 3,250 and ends 0.13 behind: no-copy 4-bit has a higher floor (section 12).</li>
+  </ol>
+</section>
+
+<figure class="wide">
+  <div class="chart" id="ch-pareto"></div>
+  <figcaption><b>Every arm, quality against memory.</b> Each large dot is the mean of 3 seeds and the small dots are the single seeds. Lower is better on both axes. Memory is the training state for the four big matrices of each layer (99% of the weights). The shaded corner is the goal: within 0.03 of milestone 2, with the weights stored only in 4 bits (about 5 bytes or less). No arm reaches it yet.</figcaption>
+</figure>
+
+<h2 id="setup"><span class="secnum">1</span>What was run</h2>
+<p>One small language model was trained on one small dataset, many times. Each milestone changes exactly one thing about how the model's big matrices are stored or updated, and is judged against the milestone before it.</p>
+<dl class="facts">
+  <div><dt>Model</dt><dd>A GPT-style transformer: 4 layers, width 128, 4 attention heads, 64-character context, 0.80 million weights. Each layer has four big matrices, <code>qkv</code> (128→384), <code>proj</code> (128→128), <code>fc</code> (128→512) and <code>fc_out</code> (512→128). Together they hold 786k weights.</dd></div>
+  <div><dt>Data</dt><dd>Tiny Shakespeare: 1.1 million characters, 65 different symbols. The first 90% is for training, the last 10% for validation.</dd></div>
+  <div><dt>Training</dt><dd>2000 steps of 12 sequences × 64 characters (1.5 million characters, about 1.5 passes over the training text). The learning rate warms up for 100 steps, then follows a cosine curve down to 10% of its peak.</dd></div>
+  <div><dt>Score</dt><dd>Validation cross-entropy in nats per character, on the same 256 fixed windows every time. Lower is better: 4.17 (ln 65) is blind guessing, and 1.6 means the model narrows each next character to about 5 likely choices (e<sup>1.6</sup>).</dd></div>
+  <div><dt>Noise</dt><dd>Three seeds (1, 2, 3) per arm. Seeds of the same arm differ by 0.005–0.02. The 256-window sample adds about ±0.018 to any single number, but that part is shared by every run, so comparisons between arms are much sharper than that.</dd></div>
+  <div><dt>Optimizers</dt><dd>AdamW (learning rate 1e-3, nanoGPT's setting) for the embeddings, the head and the norms in every arm. The four big matrices get either AdamW or Muon (learning rate 0.01, picked by a 3-point sweep).</dd></div>
+</dl>
+
+<div class="tablewrap">
+<table id="tbl-ladder">
+  <thead><tr><th>#</th><th>The one change</th><th>Pass line (written before the run)</th><th class="n">Result</th><th></th></tr></thead>
+  <tbody></tbody>
+</table>
+</div>
+
+<h2 id="ideas"><span class="secnum">2</span>Three ideas you need</h2>
+
+<h3>The 4-bit grid</h3>
+<p>The 4-bit format here is the value set of NVFP4, called E2M1: 1 sign bit, 2 exponent bits and 1 mantissa bit. It can hold exactly fifteen values: 0, ±0.5, ±1, ±1.5, ±2, ±3, ±4 and ±6. The spacing is uneven: 0.5 apart near zero, 2 apart at the top. Each block of 16 neighbouring weights gets its own <strong>scale</strong>, its largest |weight| divided by 6, so the biggest weight in the block lands exactly on ±6.</p>
+<figure class="wide">
+  <div class="chart" id="ch-grid"></div>
+  <figcaption><b>One block of 16 weights on its grid.</b> These are real weights from layer 1's <code>fc</code> matrix at the start of training. The grey dots are the true values and the ticks are the fifteen places they may sit. The gap between neighbouring grid values (one <b>grid gap</b>) is 0.5–2 in grid units, about 0.004–0.016 in weight units here.</figcaption>
+</figure>
+
+<h3>Random rounding</h3>
+<p>Without a float copy, every step has to land the weight back on the grid. Nearest rounding would undo any move smaller than half a gap, so the weights would freeze. <strong>Random (stochastic) rounding</strong> instead picks one of the two neighbours at random, weighted so the average lands in the right place. A value 30% of the way from 2 to 3 rounds up with probability 0.3. It is right <em>on average</em>, but each single result is off by up to a full gap.</p>
+<div class="widget">
+  <label for="sr-x">Value in grid units <input id="sr-x" type="range" min="0" max="6" step="0.05" value="2.3"> <output id="sr-out">2.30</output></label>
+  <div class="probbar" id="sr-bar" aria-live="polite"></div>
+  <div id="sr-note" style="margin-top:0.5rem;color:var(--ink-2)"></div>
+</div>
+
+<h3>Muon and Newton-Schulz</h3>
+<p>Muon keeps one <strong>momentum</strong> matrix per weight matrix: a running average of recent gradients (0.95 of the old value plus 0.05 of the new gradient each step). It does not step along the momentum directly. Any matrix stretches some directions more than others, and its <strong>singular values</strong> measure those stretches. Muon keeps the momentum's directions and sets every stretch to about 1. So the step says <em>which way</em> to move and ignores <em>how much</em>. The step size comes from the learning rate alone.</p>
+<p>The operation is <strong>Newton-Schulz</strong> (NS): divide the matrix by its overall size, then apply this polynomial five times.</p>
+<div class="eq">X ← a·X + b·(X Xᵀ)X + c·(X Xᵀ)²X
+(a, b, c) = (3.4445, −4.7750, 2.0315)</div>
+<figure class="wide">
+  <div class="chart" id="ch-ns"></div>
+  <figcaption><b>What five rounds of Newton-Schulz do to one singular value.</b> An input anywhere from about 0.002 to 1 comes out between 0.7 and 1.2. The wiggles are deliberate: these coefficients trade exactness for speed. Strong and weak directions end up roughly equal. The tick marks along the bottom are the real singular values of layer 1's <code>fc</code> momentum at step 1000 (0.04–0.19), all inside that band. This flattening is exactly what destroys a fed-back error (section 5).</figcaption>
+</figure>
+
+<h3>Where the rounding error goes in each arm</h3>
+<p>Each arm differs only in what happens to <em>e</em>, the gap between the weight the optimizer wanted and the grid value actually stored.</p>
+<div class="flows" id="flows"></div>
+
+<h2 id="results"><span class="secnum">3</span>Results</h2>
+<figure class="wide">
+  <div class="chart" id="ch-curves"></div>
+  <figcaption><b>Validation loss during training.</b> Use the buttons to pick arms and a seed. Step 0 (4.21 for every arm) is off the top of the chart. Two things to look for: the 4-bit arms fall behind as the learning rate decays, and arm (b) turns upward after step 1500.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-diffs"></div>
+  <figcaption><b>Each milestone against the one it is judged on, seed by seed.</b> Each dot is one seed's difference. The vertical mark on each row is that row's pass line, and the side of the mark that passes is labelled. Milestone 1 needed all three dots left of −0.02. Milestone 4 needed all three of its best arm's dots left of +0.03: arm (c) has two dots just outside, by 0.0035 and 0.0010.</figcaption>
+</figure>
+<figure>
+  <div class="chart" id="ch-sweep"></div>
+  <figcaption><b>The Muon learning-rate sweep (seed 1, tuning, not evidence).</b> 0.04 stalled around 2.1 between steps 500 and 750 and never caught up. 0.01 was best, and it is the smallest value tried, so something smaller might do even better.</figcaption>
+</figure>
+
+<h2 id="nocopy"><span class="secnum">4</span>Why dropping the float copy hurts</h2>
+<p>With a float copy (milestone 2), tiny moves pile up in the copy, and the 4-bit value changes only when the copy crosses a midpoint between two grid values. Without one (milestone 3), nothing remembers the tiny moves. The first chart shows how tiny they are: half of all weights move by less than this fraction of a grid gap per step.</p>
+<figure class="wide">
+  <div class="chart" id="ch-stepgap"></div>
+  <figcaption><b>Median step size as a fraction of the local grid gap</b> (log scale, seed 1, all four matrix types). At the peak learning rate a Muon step is about 7% of a gap, and at the end 0.1–0.2%. That is a 40–60× drop, while the learning rate falls only 10×. The rest most likely comes from the grid gaps widening as the weights grow (not measured separately). Adam's steps shrink much less (5% to 2.6%), even though its learning rate falls 10× too.</figcaption>
+</figure>
+<p>Random rounding turns a 2% move into "jump a whole gap with probability 2%". On average that's right. But after <em>N</em> steps of size <em>s</em> on a grid with gap <em>g</em>, the wanted move is <em>N·s</em> while the random part is about <span class="mono">√(N·s·g)</span>. Their ratio, <span class="mono">√(N·s/g)</span>, falls as <em>s</em> falls. The noise doesn't shrink with the learning rate the way the signal does.</p>
+<figure class="wide">
+  <div class="chart" id="ch-track"></div>
+  <figcaption><b>Do the stored 4-bit weights follow where Muon wanted them to go?</b> This is the cosine between the change Muon asked for and the change in the stored 4-bit values, both summed over each 100-step window (1 = perfectly in line, 0 = unrelated). Milestone 2 (float copy) and arm (c) track well for most of training. Milestone 3 drifts off early. Late in training every arm falls, because 100 small steps add up to less than one grid gap.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-flips"></div>
+  <figcaption><b>Share of 4-bit codes that change each step.</b> For milestone 2 this counts the forward-pass weights, which change only when the float copy crosses a midpoint. Arm (c) stands out at 31% every step: its weights flicker between neighbouring values, steered by the stored error (section 6).</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-gap"></div>
+  <figcaption><b>How far each no-copy arm trails milestone 2, during training</b> (mean of 3 seeds). The pass line applies only at the final step. Milestone 3's gap grows steadily as the learning rate decays, the pattern the √(N·s/g) argument predicts.</figcaption>
+</figure>
+<div class="callout"><p><strong>A side finding about noise.</strong> One re-run of milestone 3 differed from the committed run only in the order of one multiplication, a last-decimal change. It ended at 1.756 instead of 1.766. Random-rounding runs are chaotic: a tiny change sends them down a different path. So single-run differences below about 0.01 between no-copy arms mean nothing. Only the 3-seed means count.</p></div>
+
+<h2 id="ns"><span class="secnum">5</span>Why feeding the error into Muon's momentum fails</h2>
+<p>ECO (<a href="https://arxiv.org/abs/2601.22101">arXiv 2601.22101</a>) starts from a simple idea. The rounding error <em>e</em> is exactly the part of the step that didn't happen, so put it into the momentum and the next steps will redo it. With plain momentum or Adam, the step equals a known number (or one known number per weight) times the momentum. Whatever you add to the momentum comes out of the next steps scaled by that known amount, so you can aim it exactly. ECO's rule (its equations 6–7) does just that.</p>
+<div class="eq">momentum ← momentum + (1/η)(1 − 1/β)·e
+η = step size, β = 0.95</div>
+<p>For Muon we used the same rule, with η replaced by Muon's step size per unit of momentum. That substitution is our adaptation, not the paper's. But Muon's step is NS(momentum), and NS is not "a number times". So we measured, every 25 steps for all 16 matrices, how the change NS makes, <span class="mono">NS(M + d) − NS(M)</span>, compares with the injected term <em>d</em>.</p>
+<figure class="wide">
+  <div class="chart" id="ch-surv"></div>
+  <figcaption><b>How much of the injected error survives Newton-Schulz</b> (cosine between injected and surviving error, seed 1). It is flat all through training. The square <code>proj</code> matrix keeps much less than the three rectangular ones, and the average over all 16 matrices is about 0.69, about 46° off target.</figcaption>
+</figure>
+<p>Why about half? Picture the momentum's own directions as a set of axes, and split the error into three parts.</p>
+<ul>
+  <li><strong>Stretch:</strong> makes one of the momentum's existing directions stronger or weaker. NS sets every strength to about 1, so this part is <em>deleted</em>.</li>
+  <li><strong>Rotate:</strong> turns the existing directions into each other. It survives, divided by how strong those directions are.</li>
+  <li><strong>Outside:</strong> points into directions the momentum doesn't use at all (only rectangular matrices have room for these). It survives, divided by the strength of the direction it attaches to.</li>
+</ul>
+<figure class="wide">
+  <div class="chart" id="ch-decomp"></div>
+  <figcaption><b>The real fed-back error split into its three parts</b> (layer 1, step 1000). In the square <code>proj</code> matrix half the error is stretch and gets deleted. In the rectangular matrices about 73% points outside and survives.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-cos"><thead><tr><th>Matrix (layer 1, step 1000)</th><th class="n">If every direction were equally strong</th><th class="n">Exact orthogonalisation</th><th class="n">Newton-Schulz (5 rounds)</th><th class="n">Same, for a random error</th></tr></thead><tbody></tbody></table></div>
+<p>The table reads left to right, as three losses stacked on top of each other. First, deleting the stretch part caps the cosine (first column). Then the survivors get boosted by different amounts, weak directions most, which bends them further (second column). Then Newton-Schulz with only five rounds is an approximate orthogonaliser, which costs a bit more (third column). The last column is the key check: <strong>a random error of the same size survives just as badly.</strong> Nothing special about rounding errors causes this. NS does it to any small change in the momentum.</p>
+<figure class="wide">
+  <div class="chart" id="ch-inject"></div>
+  <figcaption><b>The injected error keeps growing compared with the momentum</b> (size of injected term ÷ size of momentum, mean of 3 seeds). The rounding error stays about one grid gap while the steps shrink with the learning rate, so ECO's 1/η factor makes the injection grow. By the end the error is half the size of the momentum. Muon's direction is then set largely by rounding noise, and the loss turns upward.</figcaption>
+</figure>
+
+<h2 id="bypass"><span class="secnum">6</span>Why the bypass nearly works, and why it isn't masterless</h2>
+<p>Arm (c) keeps <em>e</em> in its own buffer and adds it back after Newton-Schulz, so nothing scrambles it. It tracks Muon's intended path almost as well as the float copy does (chart in section 4) and ends 0.027 behind milestone 2.</p>
+<div class="callout">
+  <p><strong>Arm (c) is a float copy in two pieces.</strong> The stored 4-bit weight plus the buffer equals the weight the optimizer wanted: <span class="mono">ŵ + e = w̃</span>. With a full-precision buffer and nearest rounding, arm (c) would be milestone 2, step for step. With a 16-bit buffer it is a 4 + 16 bit float copy: 6.75 bytes per weight against milestone 2's 8. It saves 1.25 bytes, and it isn't the method the question asks about.</p>
+</div>
+<p>Its remaining gap probably comes from random rounding in the forward pass. Because the buffer keeps pushing the weight back and forth, 31% of its codes flip every step, so the model always sees a randomly rounded version of the float copy. Milestone 2 sees a nearest-rounded, steady one. That's a hypothesis, untested. Section 9 lists the run that would check it.</p>
+
+<h2 id="adam"><span class="secnum">7</span>The control: ECO with Adam works</h2>
+<figure class="wide">
+  <div class="chart" id="ch-adam"></div>
+  <figcaption><b>AdamW at full precision against ECO with Adam at 4 bits with no float copy</b> (mean of 3 seeds). The gap at the end is 0.013. ECO does what its paper says, even at 4 bits.</figcaption>
+</figure>
+<p>For Adam, each weight's step is its momentum times that weight's own step size. ECO divides the injected error by that same step size, so the error comes back out exactly. Muon has no per-weight step size: its step depends on the whole matrix at once, through Newton-Schulz. That is the whole difference.</p>
+<p>The control doesn't rescue the question, though. Adam is 0.29 behind Muon on this model, so 4-bit Adam via ECO (1.928) is far worse than 4-bit Muon with a float copy (1.646).</p>
+
+<h2 id="memory"><span class="secnum">8</span>Memory per weight</h2>
+<figure class="wide">
+  <div class="chart" id="ch-bytes"></div>
+  <figcaption><b>Training-state bytes per weight of the four big matrices.</b> Everything in fp32 except the 4-bit codes, their scales and arm (c)'s 16-bit error buffer. These are computed from the storage format; the simulation keeps grid values in fp32 tensors and doesn't measure memory. Storing the momentum in 16 bits would cut 2 bytes from every Muon arm (Adam: 4).</figcaption>
+</figure>
+
+<h2 id="next"><span class="secnum">9</span>Where this leaves us</h2>
+<div class="callout">
+  <p><strong>The problem, stated precisely.</strong> A Muon step moves each weight by 0.1–7% of one 4-bit grid gap. That fraction must be stored somewhere, or it gets replaced by random noise. Four places have been tried.</p>
+</div>
+<div class="tablewrap"><table id="tbl-where"><thead><tr><th>Where the fraction lives</th><th>Arm</th><th class="n">Behind m2</th><th class="n">Bytes</th><th>What happened</th></tr></thead><tbody></tbody></table></div>
+<p>So stabilising 4-bit Muon means making one of the last three rows work: a much cheaper version of the fourth, a version of the third that Newton-Schulz can't scramble, or a way to make the noise of the second smaller. Ternary waits until a 4-bit arm without a hidden float copy passes the milestone 4 line (within 0.03 of milestone 2 in 3 of 3 seeds).</p>
+<p>Options below, roughly in the order I'd run them. Each changes one thing. Their pass lines are proposals for you to approve before any run.</p>
+<div class="options" id="options"></div>
+
+<h2 id="spread"><span class="secnum">10</span>Follow-up: spreading the rounding error over the matrix</h2>
+<p>The idea: random rounding makes an error <em>e</em> on every weight. Instead of leaving each error where it falls, push it onto neighbouring weights that feed the same output, so the errors cancel in the layer's <em>output</em>. GPTQ does exactly this, once, when it compresses a finished model. It rounds one input column at a time and corrects the later columns, weighted by how the layer's inputs move together, which is their covariance <span class="mono">H = average(x xᵀ)</span>. Done each step, it would be "noise shaping", like dithering an image. The question is whether it lowers the noise when done every training step.</p>
+<p>Before any training run, we measured it offline. We took three moments of a milestone 3 run and rounded the same intended weights in several ways, three times each. Then we measured how much noise reached each layer's output on held-out text, relative to the output change the step intended. All methods use random rounding, so all are right on average, and lower noise is strictly better.</p>
+<div class="tablewrap"><table id="tbl-spread"><thead><tr><th>Method (noise relative to plain random rounding; 1 = same, below 1 = better)</th><th class="n">step 250</th><th class="n">step 1000</th><th class="n">step 1900</th></tr></thead><tbody></tbody></table></div>
+<p>Every method made the noise <em>worse</em>, and worse later in training. Theory said otherwise: judged by the inputs' covariance alone, the full method should cut the noise to 0.16–0.39×. Two test runs found the cause.</p>
+<ul>
+  <li><strong>On an evenly spaced grid, spreading works</strong> (0.3–0.5×, close to theory). But plain random rounding on that grid is already 4.5× noisier than on the 4-bit float grid, which keeps its fine 0.5 steps near zero, where most weights sit.</li>
+  <li><strong>The real reason is that the target is always next to a grid point.</strong> Without a float copy, the weight we want is the stored grid value plus a tiny step (0.1–7% of a gap). Random rounding of such a value is nearly exact: it stays put with high probability, and its noise per weight is only about <span class="mono">step × gap</span>. Spreading hands every later weight a correction about one rounding error in size, which moves it to the middle of a gap, where random rounding is noisiest (<span class="mono">gap²/4</span>). The smaller the steps get, the worse the trade.</li>
+  <li><strong>Spreading the error of nearest rounding instead</strong> (no randomness) changes nothing at step 1000. The step-sized errors never add up to a flip, which is milestone 2's freeze again.</li>
+</ul>
+<p>Milestone 5 then trained the cheap version anyway, with its pass line written first: spread only inside each block of 16, at 0.29 extra bytes per weight. That was a check that the offline measurement predicts training, not a hope.</p>
+<figure class="wide">
+  <div class="chart" id="ch-m5"></div>
+  <figcaption><b>Milestone 5 minus milestone 3, during training</b> (mean of 3 seeds; the pass line needed −0.02 or lower at the end). It ends 0.088 ± 0.002 behind, worse in every seed, and the gap grows as the steps shrink, as the offline numbers predicted. <b>FAIL.</b></figcaption>
+</figure>
+<div class="callout"><p><strong>What this says about any "redistribute the error" scheme.</strong> Without a float copy, random rounding's noise adds up to roughly <span class="mono">(total distance the weights travel) × (grid gap)</span>. Moving the error to other weights within one step can't shrink that, because every weight is already as close to the grid as it will ever be. Moving it to later steps is milestone 4, and Newton-Schulz scrambles it. What's left is shortening the path (fewer back-and-forth moves), shrinking the gap (more bits, or a better scale), or storing the fraction somewhere (a copy, by another name).</p></div>
+
+<h2 id="fp8"><span class="secnum">11</span>Follow-up: FP8 block scales</h2>
+<p>Milestone 3 stores each block's scale in fp32 and recomputes it every step. So each block's largest weight always lands exactly on ±6, and in effect trains at full precision. The ablation stores scales as NVFP4 does: an 8-bit float per block of 16, under one fp32 scale per matrix.</p>
+<div class="tablewrap"><table id="tbl-fp8"><thead><tr><th>Seed</th><th class="n">m3, fp32 scales</th><th class="n">FP8 scales</th><th class="n">difference</th></tr></thead><tbody></tbody></table></div>
+<p>FP8 scales cost about 0.008, the size of the seed-to-seed spread, and save 0.19 bytes per weight. The hidden full-precision weight in each block explains little of milestone 3's result. Activations are a separate question: the scales here belong to the stored <em>weights</em>. A 4-bit activation format would need its own scales, computed fresh for every input, and none of these runs quantise activations.</p>
+
+<h2 id="long"><span class="secnum">12</span>Follow-up: training 5× longer, floors and speed</h2>
+<p>Do the arms just descend at different speeds, or do they level off at different <em>floors</em>? The same model was trained for 10,000 steps instead of 2000 on a free T4 GPU, using 16-bit arithmetic (so the numbers are not comparable digit for digit with the CPU runs). Each arm's peak learning rate was re-picked on seed 1 from three values: AdamW 0.002, Muon 0.005. As planned in advance, m3 used Muon's and ECO-Adam used AdamW's. Then each ran seeds 1–3. 10,000 steps is 7.7 million characters, about 7.6 passes over the training text.</p>
+<figure class="wide">
+  <div class="chart" id="ch-long"></div>
+  <figcaption><b>Validation loss over 10,000 steps</b> (mean of 3 seeds; the learning rate follows the same warm-up and cosine shape, stretched to 10,000 steps). m3 starts out faster than AdamW and is overtaken around step 3,250. Muon stays in front throughout, but AdamW closes most of the gap. No arm is overfitting yet: every curve is still falling at the end.</figcaption>
+</figure>
+<div class="tablewrap"><table id="tbl-long"><thead><tr><th>Arm (10,000 steps)</th><th class="n">final loss, mean ± SE</th><th class="n">first step at 2.0</th><th class="n">at 1.8</th><th class="n">at 1.7</th></tr></thead><tbody></tbody></table></div>
+<p>The five questions were written down before the runs.</p>
+<ol id="long-answers"></ol>
+<figure>
+  <div class="chart" id="ch-m3lr"></div>
+  <figcaption><b>Extra, decided after seeing the main results: m3 at higher learning rates</b> (seed 1 only, tuning, not evidence). The idea was that a bigger step is a bigger fraction of a grid gap, so random rounding's noise would be smaller next to it (section 4). It didn't help. At 0.01, m3 ended at 1.741, worse than 1.681 at 0.005. At 0.02, it stalled around 2.0 and then blew up (the loss became NaN, not a number, at step 2,750; the line stops there). Full-precision Muon was stable at 0.02. The fixed choice, 0.005, was m3's best of the three.</figcaption>
+</figure>
+<div class="callout"><p><strong>Floors against speed.</strong> On this model, Muon's big lead at 2000 steps is mostly speed: at 10,000 steps AdamW is only 0.034 behind. m3's problem is a floor. It is faster than AdamW early on, then levels off about 0.13 higher. That fits the noise argument: random rounding's noise grows with the total distance the weights travel, so the longer the run, the more it costs. For single-pass training on a huge dataset, the question is which arm is lowest after a fixed number of new characters. That favours speed, but these runs repeat the same small text 7.6 times, so they don't answer it. A single-pass test needs a bigger text (for example, the 100 MB enwik8), where no character is seen twice.</p></div>
+
+<h2 id="caveats"><span class="secnum">13</span>What this does not show</h2>
+<ul>
+  <li>One small model (0.8M weights, 2000 steps) on one small dataset, on the CPU preset. The orderings may change at the GPU preset (6 layers, width 384, 5000 steps) or at real scale.</li>
+  <li>Muon's learning rate was tuned at full precision only. The 4-bit arms might prefer a different one, and the best value (0.01) was the smallest tried.</li>
+  <li>Block scales are fp32 in milestones 2–5. Storing them in FP8 as NVFP4 does cost m3 only +0.008 (section 11). No arm quantises activations.</li>
+  <li>Arm (b) uses our own Muon version of ECO's step size. A different choice would inject a different amount. Because a random error survives just as badly, a different amount is unlikely to fix the scrambling.</li>
+  <li>Survival was measured on the plain momentum, not on the Nesterov mix Muon actually orthogonalises, and for one perturbation at a time.</li>
+  <li>ECO's exact form, which also uses the previous step's error, was not tried. Nor was nearest rounding with feedback.</li>
+  <li>AdamW was not retuned at 2000 steps. At 10,000 steps with a re-picked learning rate, Muon's lead shrinks to 0.034 (section 12), so most of the 0.29 was speed.</li>
+  <li>The long runs used 16-bit arithmetic on a T4 and read the same text 7.6 times. Single-pass training on a large text is untested. m3's learning rate there was Muon's, fixed in advance. The higher learning rates in section 12 are one seed each.</li>
+  <li>Error spreading was tested within one step only, and without any float remainder.</li>
+</ul>
+
+<h2 id="repro"><span class="secnum">14</span>Reproduce</h2>
+<div class="eq">~/.venvs/masterless/bin/python m1_muon.py --seed 1 --muon-lr 0.01
+~/.venvs/masterless/bin/python m2_fake4.py --seed 1
+~/.venvs/masterless/bin/python m3_nomaster_sr.py --seed 1
+# m4 arms: eco_adam | muon_pre | muon_post
+~/.venvs/masterless/bin/python m4_eco.py --seed 1 --arm muon_pre
+# instrumented seed-1 re-runs: m1 m2 m3 eco_adam muon_pre muon_post
+~/.venvs/masterless/bin/python report/diagnostics.py --mode m3
+~/.venvs/masterless/bin/python report/ns_analysis.py
+# follow-ups: offline spreading check, milestone 5, FP8 scales, long runs (T4)
+~/.venvs/masterless/bin/python report/spread_probe.py
+~/.venvs/masterless/bin/python m5_spread.py --seed 1
+~/.venvs/masterless/bin/python ablate_fp8_scales.py --seed 1
+python long_runs.py --list jobs.txt -j 2    # lines "arm lr seed", 10,000 steps each
+~/.venvs/masterless/bin/python report/long_summary.py
+~/.venvs/masterless/bin/python report/collect.py &amp;&amp; ~/.venvs/masterless/bin/python report/build.py</div>
+<p>The instrumented re-runs in <code>report/diagnostics.py</code> reproduce the committed seed-1 losses to five decimals, so the inside view and the scores come from the same runs.</p>
+</main>
+
+<script>
+const DATA = __DATA__;
+</script>
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ARM = {
+  m0: { name: "m0 AdamW", color: "--c-m0" }, m1: { name: "m1 Muon", color: "--c-m1" },
+  m2: { name: "m2 4-bit + copy", color: "--c-m2" }, m3: { name: "m3 4-bit, no copy", color: "--c-m3" },
+  a: { name: "m4a ECO Adam", color: "--c-a" }, b: { name: "m4b error before NS", color: "--c-b" },
+  c: { name: "m4c error after NS", color: "--c-c" },
+  m5: { name: "m5 error spread", color: "--c-m5" },
+};
+const MODE2ARM = { m1: "m1", m2: "m2", m3: "m3", eco_adam: "a", muon_pre: "b", muon_post: "c" };
+const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
+const sgn = (v, d = 3) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+
+function el(tag, attrs = {}, parent, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function niceTicks(min, max, n = 5) {
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = []; for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function logTicks(min, max) { const out = []; for (let p = Math.ceil(Math.log10(min) - 1e-9); p <= Math.log10(max) + 1e-9; p++) out.push(Math.pow(10, p)); return out; }
+function scale(d0, d1, r0, r1, log) {
+  const f = log ? v => Math.log10(v) : v => v, a = f(d0), b = f(d1);
+  const s = v => r0 + (f(v) - a) / (b - a) * (r1 - r0);
+  s.inv = p => { const t = a + (p - r0) / (r1 - r0) * (b - a); return log ? Math.pow(10, t) : t; };
+  return s;
+}
+function header(host, spec) {
+  host.textContent = "";
+  if (spec.title) el("div", { class: "chart-title" }, host, spec.title);
+  if (spec.sub) el("div", { class: "chart-sub" }, host, spec.sub);
+}
+function legend(host, items, box) {
+  if (items.length < 2) return;
+  const lg = el("div", { class: "legend" }, host);
+  for (const it of items) { const s = el("span", {}, lg); const i = el("i", { class: box ? "box" : null }, s); i.style.background = it.color; s.appendChild(document.createTextNode(it.label)); }
+}
+function numbers(host, head, rows) {
+  const d = el("details", { class: "numbers" }, host); el("summary", {}, d, "Numbers behind this chart");
+  const w = el("div", { class: "tbl" }, d), t = el("table", {}, w), tr = el("tr", {}, el("thead", {}, t));
+  head.forEach((h, i) => el("th", { class: i ? "n" : null }, tr, h));
+  const tb = el("tbody", {}, t);
+  for (const r of rows) { const row = el("tr", {}, tb); r.forEach((c, i) => el("td", { class: i ? "n" : null }, row, c)); }
+}
+function tipBox(host) { const t = el("div", { class: "tip", hidden: "" }, host); return t; }
+function placeTip(host, tip, px, py) {
+  tip.hidden = false;
+  const hw = host.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = px + 14; if (x + tw > hw - 4) x = px - tw - 14; if (x < 4) x = 4;
+  let y = py - th / 2; if (y < 4) y = 4;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function tipRows(tip, title, rows) {
+  tip.textContent = ""; el("div", { class: "tx" }, tip, title);
+  for (const r of rows) { const d = el("div", { class: "row" }, tip); if (r.color) { const i = el("i", {}, d); i.style.background = r.color; } el("b", {}, d, r.value); el("span", {}, d, r.label); }
+}
+
+/* ---------- line chart ---------- */
+function lineChart(host, spec) {
+  const draw = () => {
+    header(host, spec);
+    if (spec.controls) spec.controls(host);
+    const series = spec.series().filter(s => s.points.length);
+    legend(host, series.map(s => ({ label: s.label, color: tok(s.color) })));
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560;
+    const H = spec.height || (narrow ? 230 : 280);
+    const m = { l: 50, r: narrow || spec.noEndLabels ? 14 : 132, t: 10, b: 38 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": spec.title || "chart", tabindex: "0" }, host);
+    const xs = series.flatMap(s => s.points.map(p => p[0])), ys = series.flatMap(s => s.points.map(p => p[1]));
+    const xd = spec.x.domain || [Math.min(...xs), Math.max(...xs)];
+    let yd = spec.y.domain || [Math.min(...ys), Math.max(...ys)];
+    if (!spec.y.domain && !spec.y.log) { const pad = (yd[1] - yd[0]) * 0.08 || 0.1; yd = [yd[0] - pad, yd[1] + pad]; }
+    const X = scale(xd[0], xd[1], m.l, W - m.r, spec.x.log), Y = scale(yd[0], yd[1], H - m.b, m.t, spec.y.log);
+    const g = el("svg:g", {}, svg);
+    const yt = spec.y.ticks || (spec.y.log ? logTicks(yd[0], yd[1]) : niceTicks(yd[0], yd[1], narrow ? 4 : 5));
+    for (const v of yt) {
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid"), "stroke-width": 1 }, g);
+      el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, spec.y.fmt ? spec.y.fmt(v) : v);
+    }
+    const xt = spec.x.ticks || (spec.x.log ? logTicks(xd[0], xd[1]) : niceTicks(xd[0], xd[1], narrow ? 4 : 6));
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    for (const v of xt) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, spec.x.fmt ? spec.x.fmt(v) : v);
+    if (spec.x.label) el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, spec.x.label);
+    if (spec.y.label) el("svg:text", { x: m.l, y: m.t - 0, "text-anchor": "start", dy: "-0.2em" }, g, "");
+    for (const b of spec.bands || []) {
+      const y0 = Y(Math.min(b.y1, yd[1])), y1 = Y(Math.max(b.y0, yd[0]));
+      el("svg:rect", { x: m.l, y: y0, width: W - m.r - m.l, height: Math.max(0, y1 - y0), fill: tok("--wash") }, g);
+    }
+    for (const h of spec.hlines || []) {
+      if (h.y < yd[0] || h.y > yd[1]) continue;
+      el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: tok("--ink-2"), "stroke-width": 1 }, g);
+      el("svg:text", { x: W - m.r - 6, y: Y(h.y) - 5, "text-anchor": "end", class: "lab" }, g, h.label);
+    }
+    if (spec.rug) for (const v of spec.rug.values) {
+      if (v < xd[0] || v > xd[1]) continue;
+      el("svg:line", { x1: X(v), x2: X(v), y1: H - m.b - 9, y2: H - m.b, stroke: tok(spec.rug.color || "--ink-2"), "stroke-width": 1, opacity: 0.7 }, g);
+    }
+    const ends = [];
+    for (const s of series) {
+      const pts = s.points.filter(p => p[1] >= yd[0] && p[1] <= yd[1] && p[0] >= xd[0] && p[0] <= xd[1]);
+      if (!pts.length) continue;
+      const d = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      el("svg:path", { d, fill: "none", stroke: tok(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.opacity || 1 }, g);
+      const last = pts[pts.length - 1];
+      if (!s.noDot) el("svg:circle", { cx: X(last[0]), cy: Y(last[1]), r: 4, fill: tok(s.color), stroke: tok("--surface"), "stroke-width": 2 }, g);
+      if (!s.noLabel) ends.push({ y: Y(last[1]), x: X(last[0]), label: s.endLabel || s.label, strong: s.strong });
+    }
+    if (!(narrow || spec.noEndLabels) && ends.length) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].ly = (ends[i - 1].ly ?? ends[i - 1].y) + 13;
+      for (const e of ends) e.ly = Math.max(e.ly ?? e.y, 0);
+      for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 13) ends[i].ly = ends[i - 1].ly + 13;
+      const floor = H - m.b - 4; if (ends[ends.length - 1].ly > floor) { ends[ends.length - 1].ly = floor; for (let i = ends.length - 2; i >= 0; i--) ends[i].ly = Math.min(ends[i].ly, ends[i + 1].ly - 13); }
+      for (const e of ends) {
+        const lx = W - m.r + 10;
+        if (Math.abs(e.ly - e.y) > 2) el("svg:line", { x1: e.x + 5, x2: lx - 2, y1: e.y, y2: e.ly, stroke: tok("--axis"), "stroke-width": 1 }, g);
+        el("svg:text", { x: lx, y: e.ly + 4, class: e.strong ? "lab-strong" : "lab" }, g, e.label);
+      }
+    }
+    // crosshair + tooltip
+    const tip = tipBox(host);
+    const allX = [...new Set(series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+    const cross = el("svg:line", { y1: m.t, y2: H - m.b, stroke: tok("--axis"), "stroke-width": 1, visibility: "hidden" }, g);
+    const hit = el("svg:rect", { x: m.l, y: m.t, width: W - m.r - m.l, height: H - m.b - m.t, fill: "transparent" }, svg);
+    let idx = -1;
+    const show = i => {
+      if (i < 0 || i >= allX.length) return; idx = i; const xv = allX[i];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      const rows = series.map(s => { let best = null; for (const p of s.points) if (best == null || Math.abs(p[0] - xv) < Math.abs(best[0] - xv)) best = p; return best && { value: spec.y.tip ? spec.y.tip(best[1]) : fmt(best[1]), label: s.label, color: tok(s.color), v: best[1] }; }).filter(Boolean);
+      rows.sort((a, b) => spec.y.tipAscending ? a.v - b.v : b.v - a.v);
+      tipRows(tip, (spec.x.tipLabel || "step") + " " + (spec.x.tipFmt ? spec.x.tipFmt(xv) : xv), rows);
+      const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      placeTip(host, tip, r.left - hr.left + X(xv) * r.width / W, r.top - hr.top + (m.t + (H - m.b - m.t) / 3) * r.height / H);
+    };
+    hit.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width, xv = X.inv(px);
+      let bi = 0; allX.forEach((x, i) => { if (Math.abs((spec.x.log ? Math.log10(x) - Math.log10(xv) : x - xv)) < Math.abs((spec.x.log ? Math.log10(allX[bi]) - Math.log10(xv) : allX[bi] - xv))) bi = i; });
+      show(bi);
+    });
+    const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", ev => { if (ev.key === "ArrowRight") { show(Math.min(allX.length - 1, idx + 1)); ev.preventDefault(); } if (ev.key === "ArrowLeft") { show(Math.max(0, idx < 0 ? allX.length - 1 : idx - 1)); ev.preventDefault(); } });
+    svg.addEventListener("blur", hide);
+    if (spec.after) spec.after({ svg, g, X, Y, W, H, m });
+    if (spec.table !== false) numbers(host, [spec.x.tipLabel || "step", ...series.map(s => s.label)], allX.map(xv => [spec.x.tipFmt ? spec.x.tipFmt(xv) : xv, ...series.map(s => { const p = s.points.find(q => q[0] === xv); return p ? (spec.y.tip ? spec.y.tip(p[1]) : fmt(p[1])) : ""; })]));
+  };
+  register(host, draw);
+}
+
+const REG = [];
+function register(host, draw) { REG.push({ host, draw, w: 0 }); draw(); }
+let raf = 0;
+new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const r of REG) { const w = r.host.clientWidth; if (Math.abs(w - r.w) > 8) { r.w = w; r.draw(); } } }); }).observe(document.body);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => REG.forEach(r => r.draw()));
+new MutationObserver(() => REG.forEach(r => r.draw())).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+/* ---------- data helpers ---------- */
+const A = DATA.arms;
+function meanCurve(key) {
+  const seeds = Object.values(A[key].seeds), steps = seeds[0].curve.map(p => p[0]);
+  return steps.map((s, i) => [s, seeds.reduce((t, sd) => t + sd.curve[i][1], 0) / seeds.length]);
+}
+function seedCurve(key, s) { return A[key].seeds[s].curve; }
+const probes = mode => DATA.diag[mode] ? DATA.diag[mode].probes : [];
+const wins = mode => DATA.diag[mode] ? DATA.diag[mode].windows : [];
+
+/* ---------- 0. pareto ---------- */
+(function () {
+  const host = document.getElementById("ch-pareto");
+  const draw = () => {
+    header(host, { title: "Validation loss against bytes per weight", sub: "Lower-left is better. Mean of 3 seeds (large dots) and single seeds (small dots)." });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, H = narrow ? 300 : 340, m = { l: 50, r: 16, t: 14, b: 40 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Loss against memory for every arm" }, host);
+    const X = scale(0, 13, m.l, W - m.r), Y = scale(1.58, 1.97, H - m.b, m.t), g = el("svg:g", {}, svg);
+    const tgtY = A.m2.mean + 0.03;
+    el("svg:rect", { x: X(0), y: Y(tgtY), width: X(5) - X(0), height: Y(1.58) - Y(tgtY), fill: tok("--wash") }, g);
+    el("svg:text", { x: X(0.2), y: Y(1.58) - 8, class: "lab" }, g, narrow ? "goal" : "goal: ≤ 5 bytes, ≤ m2 + 0.03");
+    for (const v of [1.6, 1.7, 1.8, 1.9]) { el("svg:line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: tok("--grid") }, g); el("svg:text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, g, v.toFixed(1)); }
+    for (const v of [0, 2, 4, 6, 8, 10, 12]) el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v);
+    el("svg:line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: tok("--axis") }, g);
+    el("svg:text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, g, "training-state bytes per weight (four big matrices)");
+    const tip = tipBox(host);
+    const lab = { m0: [8, -10, "start"], m1: [-10, 14, "end"], m2: [10, -4, "start"], m3: [10, 4, "start"], a: [-10, 16, "end"], b: [10, 4, "start"], c: [10, -6, "start"] };
+    for (const [k, arm] of Object.entries(A)) {
+      const col = tok(ARM[k].color), cx = X(arm.bytes), cy = Y(arm.mean);
+      for (const sd of Object.values(arm.seeds)) el("svg:circle", { cx, cy: Y(sd.final), r: 2.5, fill: col, opacity: 0.55 }, g);
+      el("svg:circle", { cx, cy, r: 6, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      const [dx, dy, anc] = lab[k];
+      el("svg:text", { x: cx + dx, y: cy + dy, "text-anchor": anc, class: "lab-strong" }, g, ARM[k].name);
+      const hit = el("svg:circle", { cx, cy, r: 14, fill: "transparent", tabindex: "0" }, svg);
+      const on = () => { tipRows(tip, ARM[k].name, [{ value: fmt(arm.mean) + " ± " + fmt(arm.se), label: "loss, mean ± SE", color: col }, { value: String(arm.bytes), label: "bytes per weight" }, { value: Object.values(arm.seeds).map(s => fmt(s.final)).join(" · "), label: "seeds 1 · 2 · 3" }]); const r = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, r.left - hr.left + cx * r.width / W, r.top - hr.top + cy * r.height / H); };
+      hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on);
+      hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+    }
+    numbers(host, ["arm", "bytes per weight", "mean loss", "SE over seeds", "seed 1", "seed 2", "seed 3"], Object.entries(A).map(([k, a]) => [ARM[k].name, a.bytes, fmt(a.mean, 4), fmt(a.se, 4), ...[1, 2, 3].map(s => fmt(a.seeds[s].final, 4))]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- ladder table ---------- */
+(function () {
+  const tb = document.querySelector("#tbl-ladder tbody");
+  const rows = [
+    ["0", "Baby GPT, AdamW, fp32 (the reference)", "mean ≤ 1.95", fmt(A.m0.mean), ["pass", "PASS"]],
+    ["1", "Muon on the four big matrices", "≥ 0.02 below AdamW, 3 of 3 seeds", fmt(A.m1.mean), ["pass", "PASS"]],
+    ["2", "Weights on the 4-bit grid in the forward pass; float copy kept (C1)", "measure: gap to m1, below +0.10 is usable", sgn(A.m2.mean - A.m1.mean), ["pass", "USABLE"]],
+    ["3", "No float copy; random rounding each step (C3a)", "measure; expected worse than m2", sgn(A.m3.mean - A.m2.mean), ["meas", "MEASURED"]],
+    ["4", "No float copy; rounding error fed back (ECO-style), three arms (C3b)", "best Muon arm within 0.03 of m2, 3 of 3 seeds", sgn(A.c.mean - A.m2.mean) + " (c)", ["fail", "FAIL"]],
+  ];
+  for (const r of rows) { const tr = el("tr", {}, tb); r.slice(0, 4).forEach((c, i) => el("td", { class: i === 3 ? "n" : null }, tr, c)); el("span", { class: "pill " + r[4][0] }, el("td", {}, tr), r[4][1]); }
+})();
+
+/* ---------- grid diagram ---------- */
+(function () {
+  const host = document.getElementById("ch-grid");
+  const E = [0, 0.5, 1, 1.5, 2, 3, 4, 6], G = [...E.slice(1).map(v => -v).reverse(), ...E];
+  // a real block: 16 consecutive weights of blocks.1.fc at initialisation (seed 1), in grid units
+  const blk = DATA.block;
+  const draw = () => {
+    header(host, { title: "The E2M1 grid, in grid units (weight ÷ block scale)", sub: blk ? `block scale ${blk.scale.toExponential(2)}: grid unit 1 = ${blk.scale.toFixed(4)} in weight units` : "" });
+    const W = Math.max(280, host.clientWidth - 24), H = 160, m = { l: 14, r: 14 };
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "E2M1 grid with one block of weights" }, host);
+    const X = scale(-6.4, 6.4, m.l, W - m.r), g = el("svg:g", {}, svg), y0 = 72;
+    el("svg:line", { x1: X(-6.2), x2: X(6.2), y1: y0, y2: y0, stroke: tok("--axis") }, g);
+    for (const v of G) {
+      el("svg:line", { x1: X(v), x2: X(v), y1: y0 - 10, y2: y0 + 10, stroke: tok("--ink"), "stroke-width": 1.5 }, g);
+      if (W > 520 || [0, 1, 2, 4, 6, -2, -6].includes(v) || Math.abs(v) === 6) el("svg:text", { x: X(v), y: y0 - 16, "text-anchor": "middle", class: "lab" }, g, (v < 0 ? "−" : "") + Math.abs(v));
+    }
+    el("svg:text", { x: (X(4) + X(6)) / 2, y: y0 - 44, "text-anchor": "middle" }, g, "← gap 2 →");
+    el("svg:text", { x: (X(0) + X(0.5)) / 2, y: y0 - 44, "text-anchor": "middle" }, g, "gap 0.5");
+    if (blk) blk.x.forEach((v, i) => {
+      const yy = y0 + 40 + (i % 3) * 10;
+      el("svg:circle", { cx: X(v), cy: yy, r: 3.5, fill: tok("--muted") }, g);
+      const q = G.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a);
+      el("svg:line", { x1: X(v), x2: X(q), y1: yy - 4, y2: y0 + 11, stroke: tok("--axis"), "stroke-width": 1 }, g);
+    });
+  };
+  register(host, draw);
+})();
+
+/* ---------- random rounding widget ---------- */
+(function () {
+  const E = [0, 0.5, 1, 1.5, 2, 3, 4, 6], inp = document.getElementById("sr-x"), out = document.getElementById("sr-out"), bar = document.getElementById("sr-bar"), note = document.getElementById("sr-note");
+  const upd = () => {
+    const x = +inp.value; out.textContent = x.toFixed(2);
+    let lo = E[0], hi = E[1]; for (let i = 0; i < E.length - 1; i++) if (x >= E[i] && x <= E[i + 1]) { lo = E[i]; hi = E[i + 1]; break; }
+    const p = hi === lo ? 1 : (x - lo) / (hi - lo);
+    bar.textContent = "";
+    const a = el("div", {}, bar, p < 0.99 ? `${lo} with ${(100 * (1 - p)).toFixed(0)}%` : ""); a.style.flex = String(Math.max(1 - p, 0.0001)); a.style.background = tok("--k-copy");
+    const b = el("div", {}, bar, p > 0.01 ? `${hi} with ${(100 * p).toFixed(0)}%` : ""); b.style.flex = String(Math.max(p, 0.0001)); b.style.background = tok("--ink");
+    note.textContent = `Neighbours ${lo} and ${hi} (gap ${hi - lo}). Average result: ${lo} × ${(1 - p).toFixed(2)} + ${hi} × ${p.toFixed(2)} = ${x.toFixed(2)}. Each single result is off by ${(x - lo).toFixed(2)} or ${(hi - x).toFixed(2)}.`;
+  };
+  inp.addEventListener("input", upd); upd();
+  new MutationObserver(upd).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", upd);
+})();
+
+/* ---------- NS transfer curve ---------- */
+(function () {
+  const host = document.getElementById("ch-ns"), c = DATA.ns.curve;
+  const rugRow = DATA.ns.rows.find(r => r.step === 1000 && r.type === "fc");
+  lineChart(host, {
+    title: "Newton-Schulz, 5 rounds: singular value in → out", sub: "input is a singular value after dividing the matrix by its overall size",
+    series: () => [{ label: "after 5 rounds", color: "--c-m1", points: c.s.map((s, i) => [s, c.f[i]]), noDot: true, noLabel: true },
+                   { label: "perfect orthogonalisation (always 1)", color: "--muted", width: 1, points: [[1e-4, 1], [1, 1]], noDot: true, noLabel: true }],
+    x: { log: true, domain: [1e-4, 1], fmt: v => v >= 1 ? "1" : v.toExponential(0).replace("e-", "e−"), label: "singular value in (log scale)", tipLabel: "in", tipFmt: v => v.toPrecision(2) },
+    y: { domain: [0, 1.3], ticks: [0, 0.25, 0.5, 0.75, 1, 1.25], tip: v => v.toFixed(3) },
+    rug: rugRow ? { values: rugRow.sv_normalised } : null, noEndLabels: true, table: false,
+  });
+})();
+
+/* ---------- flows ---------- */
+(function () {
+  const host = document.getElementById("flows");
+  const F = [
+    ["m2", "m2 · float copy", ["gradient → momentum", "Newton-Schulz → step", "float copy += step", "forward pass uses copy rounded to grid"], null, "Kept: fp32 copy + momentum (8 bytes)"],
+    ["m3", "m3 · no copy", ["gradient → momentum", "Newton-Schulz → step", "w̃ = w + step", "round w̃ to grid at random"], "e is thrown away", "Kept: 4-bit codes + momentum (4.75)"],
+    ["b", "m4b · error before NS", ["gradient → momentum", "Newton-Schulz → step", "w̃ = w + step, round at random"], "e (scaled) added to the momentum, so it goes through Newton-Schulz next step", "Kept: 4-bit codes + momentum (4.75)"],
+    ["c", "m4c · error after NS", ["gradient → momentum", "Newton-Schulz → step", "w̃ = w + step + e_prev, round at random"], "e stored in a 16-bit buffer, added after Newton-Schulz next step", "Kept: 4-bit codes + momentum + buffer (6.75)"],
+    ["a", "m4a · ECO with Adam", ["gradient → two moments", "step = momentum ÷ √(second moment)", "w̃ = w + step, round at random"], "e (scaled per weight) added to the momentum: it passes through unchanged", "Kept: 4-bit codes + two moments (8.75)"],
+    ["m5", "m5 · error spread (section 10)", ["gradient → momentum", "Newton-Schulz → step", "w̃ = w + step", "round one weight at a time, at random"], "e pushed onto the later weights of its block of 16, weighted by how the inputs move together", "Kept: 4-bit codes + momentum + input covariance blocks (5.04)"],
+  ];
+  for (const [k, title, steps, err, kept] of F) {
+    const card = el("div", { class: "flow" }, host), h = el("h4", {}, card), sw = el("span", { class: "swatch" }, h); sw.style.background = `var(${ARM[k].color})`; h.appendChild(document.createTextNode(title));
+    const ol = el("ol", {}, card); steps.forEach(s => el("li", {}, ol, s)); if (err) el("li", { class: "err" }, ol, err);
+    el("div", { class: "kept" }, card, kept);
+  }
+})();
+
+/* ---------- loss curves ---------- */
+(function () {
+  const host = document.getElementById("ch-curves");
+  const groups = { ladder: ["m0", "m1", "m2", "m3"], fixes: ["m2", "m3", "a", "b", "c"], all: ["m0", "m1", "m2", "m3", "a", "b", "c"] };
+  let grp = "all", seed = "mean";
+  lineChart(host, {
+    title: "Validation loss (nats per character)", sub: "evaluated every 250 steps on the same 256 windows",
+    controls: h => {
+      const c = el("div", { class: "controls" }, h);
+      const mk = (opts, cur, set) => { const gp = el("div", { class: "grp", role: "group" }, c); for (const [v, l] of opts) { const b = el("button", { type: "button", "aria-pressed": String(v === cur) }, gp, l); b.addEventListener("click", () => { set(v); REG.find(r => r.host === host).draw(); }); } };
+      mk([["all", "All arms"], ["ladder", "Milestones 0–3"], ["fixes", "The fixes"]], grp, v => grp = v);
+      mk([["mean", "Mean of 3"], ["1", "Seed 1"], ["2", "Seed 2"], ["3", "Seed 3"]], seed, v => seed = v);
+    },
+    series: () => groups[grp].map(k => ({ label: ARM[k].name, color: ARM[k].color, points: (seed === "mean" ? meanCurve(k) : seedCurve(k, +seed)).filter(p => p[0] > 0) })),
+    x: { domain: [250, 2000], ticks: [250, 500, 750, 1000, 1250, 1500, 1750, 2000], label: "training step" },
+    y: { domain: [1.55, 2.5], tip: v => v.toFixed(4), tipAscending: true },
+  });
+})();
+
+/* ---------- per-seed differences ---------- */
+(function () {
+  const host = document.getElementById("ch-diffs");
+  const d = (a, b) => [1, 2, 3].map(s => A[a].seeds[s].final - A[b].seeds[s].final);
+  const rows = [
+    { label: "m1 Muon − m0 AdamW", k: "m1", v: d("m1", "m0"), line: -0.02, side: "pass ←" },
+    { label: "m2 4-bit + copy − m1", k: "m2", v: d("m2", "m1"), line: 0.10, side: "usable ←" },
+    { label: "m3 no copy − m2", k: "m3", v: d("m3", "m2"), line: null },
+    { label: "m4a ECO Adam − m0 AdamW", k: "a", v: d("a", "m0"), line: null },
+    { label: "m4b error before NS − m2", k: "b", v: d("b", "m2"), line: 0.03, side: "pass ←" },
+    { label: "m4c error after NS − m2", k: "c", v: d("c", "m2"), line: 0.03, side: "pass ←" },
+  ];
+  const draw = () => {
+    header(host, { title: "Seed-by-seed differences in final loss", sub: "negative = better than the comparison" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 40, m = { l: narrow ? 10 : 200, r: 16, t: 8, b: 34 };
+    const H = m.t + rows.length * rh + m.b + (narrow ? rows.length * 16 : 0);
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "per-seed differences" }, host);
+    const X = scale(-0.32, 0.3, m.l, W - m.r), g = el("svg:g", {}, svg), tip = tipBox(host);
+    for (const v of [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v === 0 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v).toFixed(1)); }
+    rows.forEach((r, i) => {
+      const yTop = m.t + i * (rh + (narrow ? 16 : 0)), y = yTop + (narrow ? 16 : 0) + rh / 2;
+      el("svg:text", { x: narrow ? m.l : m.l - 12, y: narrow ? yTop + 12 : y + 4, "text-anchor": narrow ? "start" : "end", class: "lab" }, g, r.label);
+      if (r.line != null) { el("svg:line", { x1: X(r.line), x2: X(r.line), y1: y - 13, y2: y + 13, stroke: tok("--ink"), "stroke-width": 1.5 }, g); el("svg:text", { x: X(r.line) - 4, y: y - 15, "text-anchor": "end" }, g, r.side); }
+      const col = tok(ARM[r.k].color);
+      el("svg:line", { x1: X(Math.min(...r.v)), x2: X(Math.max(...r.v)), y1: y, y2: y, stroke: col, "stroke-width": 2, opacity: 0.5 }, g);
+      r.v.forEach((v, s) => {
+        el("svg:circle", { cx: X(v), cy: y, r: 5, fill: col, stroke: tok("--surface"), "stroke-width": 2 }, g);
+        const hit = el("svg:circle", { cx: X(v), cy: y, r: 12, fill: "transparent", tabindex: "0" }, svg);
+        const on = () => { tipRows(tip, r.label, [{ value: sgn(v, 4), label: "seed " + (s + 1), color: col }]); const rr = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, rr.left - hr.left + X(v) * rr.width / W, rr.top - hr.top + y * rr.height / H); };
+        hit.addEventListener("pointerenter", on); hit.addEventListener("focus", on); hit.addEventListener("pointerleave", () => tip.hidden = true); hit.addEventListener("blur", () => tip.hidden = true);
+      });
+    });
+    numbers(host, ["comparison", "seed 1", "seed 2", "seed 3", "line"], rows.map(r => [r.label, ...r.v.map(v => sgn(v, 4)), r.line == null ? "measure only" : sgn(r.line, 2)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- sweep ---------- */
+lineChart(document.getElementById("ch-sweep"), {
+  title: "Muon learning rate, seed 1", sub: "validation loss",
+  series: () => [["0.01", "--r3"], ["0.02", "--r2"], ["0.04", "--r1"]].map(([lr, c]) => ({ label: "lr " + lr, color: c, points: DATA.sweep[lr].filter(p => p[0] > 0) })),
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { domain: [1.55, 2.3], tip: v => v.toFixed(4), tipAscending: true },
+});
+
+/* ---------- step / gap ---------- */
+lineChart(document.getElementById("ch-stepgap"), {
+  title: "Median |step| ÷ grid gap", sub: "seed 1, all 16 matrices; log scale",
+  series: () => [["m3", "m3"], ["muon_post", "c"], ["eco_adam", "a"]].map(([mode, k]) => ({ label: ARM[k].name, color: ARM[k].color, points: probes(mode).filter(p => p.step >= 25).map(p => [p.step, p.all.step_over_gap]) })),
+  x: { domain: [0, 2000], label: "training step" }, y: { log: true, domain: [5e-4, 0.2], ticks: [0.001, 0.01, 0.1], fmt: v => (100 * v) + "%", tip: v => (100 * v).toFixed(2) + "%" },
+  hlines: [],
+});
+
+/* ---------- tracking ---------- */
+lineChart(document.getElementById("ch-track"), {
+  title: "Cosine between asked-for and stored change, per 100-step window", sub: "seed 1, average of 16 matrices",
+  series: () => [["m2", "m2"], ["m3", "m3"], ["muon_post", "c"]].map(([mode, k]) => ({ label: ARM[k].name, color: ARM[k].color, points: wins(mode).map(w => [w.step, w.all.cos]) })),
+  x: { domain: [100, 2000], label: "training step (end of window)" }, y: { domain: [0, 1.02], ticks: [0, 0.25, 0.5, 0.75, 1], tip: v => v.toFixed(3) },
+});
+
+/* ---------- flips ---------- */
+lineChart(document.getElementById("ch-flips"), {
+  title: "Share of 4-bit codes changed per step", sub: "seed 1, every 25 steps",
+  series: () => [["m2", "m2"], ["m3", "m3"], ["muon_post", "c"], ["eco_adam", "a"]].map(([mode, k]) => ({ label: ARM[k].name + (k === "m2" ? " (forward)" : ""), endLabel: ARM[k].name, color: ARM[k].color, points: probes(mode).filter(p => p.step >= 25).map(p => [p.step, p.all.flip_frac]) })),
+  x: { domain: [0, 2000], label: "training step" }, y: { domain: [0, 0.36], ticks: [0, 0.1, 0.2, 0.3], fmt: v => (100 * v).toFixed(0) + "%", tip: v => (100 * v).toFixed(1) + "%" },
+});
+
+/* ---------- gap to m2 over training ---------- */
+lineChart(document.getElementById("ch-gap"), {
+  title: "Loss behind milestone 2 during training", sub: "mean over seeds 1–3",
+  series: () => ["m3", "b", "c"].map(k => { const mc = meanCurve(k), r = meanCurve("m2"); return { label: ARM[k].name, color: ARM[k].color, points: mc.map((p, i) => [p[0], p[1] - r[i][1]]).filter(p => p[0] > 0) }; }),
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { domain: [-0.02, 0.3], tip: v => sgn(v, 4) },
+  hlines: [{ y: 0.03, label: "+0.03 (the pass line, judged at step 2000)" }, { y: 0, label: "" }],
+});
+
+/* ---------- survival per type ---------- */
+lineChart(document.getElementById("ch-surv"), {
+  title: "Cosine between injected and surviving error", sub: "arm (b), seed 1, layer average per matrix type",
+  series: () => [
+    ...["qkv", "fc", "fc_out"].map(t => ({ label: t, color: "--k-copy", width: 1.5, points: probes("muon_pre").filter(p => p.step >= 25).map(p => [p.step, p[t].surv_cos]) })),
+    { label: "proj (square)", color: "--c-b", points: probes("muon_pre").filter(p => p.step >= 25).map(p => [p.step, p.proj.surv_cos]) },
+    { label: "all 16 matrices", color: "--c-m1", strong: true, points: probes("muon_pre").filter(p => p.step >= 25).map(p => [p.step, p.all.surv_cos]) },
+  ],
+  x: { domain: [0, 2000], label: "training step" }, y: { domain: [0.3, 1], ticks: [0.4, 0.6, 0.8, 1], tip: v => v.toFixed(3) },
+});
+
+/* ---------- decomposition bars ---------- */
+(function () {
+  const host = document.getElementById("ch-decomp"), rows = DATA.ns.rows.filter(r => r.step === 1000);
+  const keys = [["stretch", "stretch (deleted)", "--c-b"], ["rotate", "rotate (kept, rescaled)", "--k-copy"], ["outside", "outside (kept, rescaled)", "--k-mom"]];
+  const draw = () => {
+    header(host, { title: "Share of the error's energy in each part", sub: "layer 1, step 1000, arm (b) seed 1" });
+    legend(host, keys.map(k => ({ label: k[1], color: tok(k[2]) })), true);
+    const W = Math.max(280, host.clientWidth - 24), rh = 30, m = { l: 64, r: 12, t: 6, b: 26 }, H = m.t + rows.length * (rh + 10) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "error decomposition" }, host);
+    const X = scale(0, 1, m.l, W - m.r), g = el("svg:g", {}, svg), tip = tipBox(host);
+    for (const v of [0, 0.25, 0.5, 0.75, 1]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok("--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, (100 * v) + "%"); }
+    rows.forEach((r, i) => {
+      const y = m.t + i * (rh + 10); let x0 = 0;
+      el("svg:text", { x: m.l - 8, y: y + rh / 2 + 4, "text-anchor": "end", class: "lab" }, g, r.type);
+      keys.forEach(([k, lab, c]) => {
+        const v = r.share[k]; if (v < 0.002) { return; }
+        const xa = X(x0) + (x0 > 0 ? 1 : 0), w = Math.max(0, X(x0 + v) - X(x0) - (x0 > 0 ? 1 : 0));
+        const rect = el("svg:rect", { x: xa, y, width: w, height: rh, rx: 2, fill: tok(c), tabindex: "0" }, g);
+        if (w > 44) el("svg:text", { x: xa + w / 2, y: y + rh / 2 + 4, "text-anchor": "middle", style: `fill:${k === "outside" ? tok("--ink") : tok("--surface")};font-size:11px` }, g, Math.round(100 * v) + "%");
+        const on = () => { tipRows(tip, r.type + " " + r.shape.join("×"), [{ value: (100 * v).toFixed(1) + "%", label: lab, color: tok(c) }]); const rr = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, rr.left - hr.left + (xa + w / 2) * rr.width / W, rr.top - hr.top + y * rr.height / H); };
+        rect.addEventListener("pointerenter", on); rect.addEventListener("focus", on); rect.addEventListener("pointerleave", () => tip.hidden = true); rect.addEventListener("blur", () => tip.hidden = true);
+        x0 += v;
+      });
+    });
+    numbers(host, ["matrix", "stretch", "rotate", "outside"], rows.map(r => [r.type, ...["stretch", "rotate", "outside"].map(k => (100 * r.share[k]).toFixed(1) + "%")]));
+  };
+  register(host, draw);
+  const tb = document.querySelector("#tbl-cos tbody");
+  for (const r of rows) { const tr = el("tr", {}, tb); el("td", {}, tr, `${r.type} (${r.shape.join("×")})`); [r.cos_even_bound, r.cos_polar, r.cos_ns5, r.random.cos_ns5].forEach(v => el("td", { class: "n" }, tr, fmt(v))); }
+})();
+
+/* ---------- injection growth ---------- */
+lineChart(document.getElementById("ch-inject"), {
+  title: "Size of injected error ÷ size of momentum", sub: "arm (b), mean of seeds 1–3, all 16 matrices",
+  series: () => { const S = Object.values(DATA.survival); const n = S[0].length; return [{ label: ARM.b.name, color: ARM.b.color, points: Array.from({ length: n }, (_, i) => [i * 100, S.reduce((t, s) => t + s[i].inject_over_m, 0) / S.length]).filter(p => p[0] >= 100) }]; },
+  x: { domain: [100, 1900], label: "training step" }, y: { domain: [0, 0.6], ticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], tip: v => v.toFixed(3) }, noEndLabels: true,
+});
+
+/* ---------- adam control ---------- */
+lineChart(document.getElementById("ch-adam"), {
+  title: "AdamW full precision against ECO with Adam at 4 bits", sub: "validation loss, mean of 3 seeds",
+  series: () => ["m0", "a"].map(k => ({ label: ARM[k].name, color: ARM[k].color, points: meanCurve(k).filter(p => p[0] > 0) })),
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000], label: "training step" }, y: { domain: [1.85, 2.5], tip: v => v.toFixed(4), tipAscending: true },
+});
+
+/* ---------- bytes ---------- */
+(function () {
+  const host = document.getElementById("ch-bytes");
+  const K = { code: ["4-bit codes + scales", "--k-code"], copy: ["fp32 weight / float copy", "--k-copy"], mom: ["momentum (fp32)", "--k-mom"], v: ["Adam second moment (fp32)", "--k-v"], err: ["error buffer (16-bit)", "--k-err"] };
+  const rows = [["m0", { copy: 4, mom: 4, v: 4 }], ["m1", { copy: 4, mom: 4 }], ["m2", { copy: 4, mom: 4 }], ["m3", { code: 0.75, mom: 4 }], ["a", { code: 0.75, mom: 4, v: 4 }], ["b", { code: 0.75, mom: 4 }], ["c", { code: 0.75, mom: 4, err: 2 }]];
+  const draw = () => {
+    header(host, { title: "Bytes per weight, by what they hold", sub: "four big matrices; gradients not counted" });
+    legend(host, Object.values(K).map(([l, c]) => ({ label: l, color: tok(c) })), true);
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 22, m = { l: narrow ? 92 : 150, r: 34, t: 6, b: 26 }, H = m.t + rows.length * (rh + 8) + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "bytes per weight" }, host);
+    const X = scale(0, 12.5, m.l, W - m.r), g = el("svg:g", {}, svg), tip = tipBox(host);
+    for (const v of [0, 2, 4, 6, 8, 10, 12]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok("--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v); }
+    rows.forEach(([k, parts], i) => {
+      const y = m.t + i * (rh + 8); let x0 = 0;
+      el("svg:text", { x: m.l - 8, y: y + rh / 2 + 4, "text-anchor": "end", class: "lab" }, g, narrow ? ARM[k].name.split(" ")[0] : ARM[k].name);
+      for (const [pk, v] of Object.entries(parts)) {
+        const xa = X(x0) + (x0 > 0 ? 1 : 0), w = X(x0 + v) - X(x0) - (x0 > 0 ? 1 : 0);
+        const r = el("svg:rect", { x: xa, y, width: w, height: rh, rx: 2, fill: tok(K[pk][1]), tabindex: "0" }, g);
+        const on = () => { tipRows(tip, ARM[k].name, [{ value: v + " B", label: K[pk][0], color: tok(K[pk][1]) }]); const rr = svg.getBoundingClientRect(), hr = host.getBoundingClientRect(); placeTip(host, tip, rr.left - hr.left + (xa + w / 2) * rr.width / W, rr.top - hr.top + y * rr.height / H); };
+        r.addEventListener("pointerenter", on); r.addEventListener("focus", on); r.addEventListener("pointerleave", () => tip.hidden = true); r.addEventListener("blur", () => tip.hidden = true);
+        x0 += v;
+      }
+      el("svg:text", { x: X(x0) + 6, y: y + rh / 2 + 4, class: "lab-strong" }, g, String(x0));
+    });
+    numbers(host, ["arm", ...Object.values(K).map(k => k[0]), "total"], rows.map(([k, p]) => [ARM[k].name, ...Object.keys(K).map(pk => p[pk] ? String(p[pk]) : ""), String(Object.values(p).reduce((a, b) => a + b, 0))]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- follow-ups: spreading, FP8 scales ---------- */
+const F = DATA.follow;
+(function () {
+  const tb = document.querySelector("#tbl-spread tbody");
+  const names = { block16: "Spread inside each block of 16 (milestone 5's version)", full: "Full GPTQ, whole matrix", lowrank8: "Top 8 input directions + diagonal", next: "Carry the error to the next weight in the row" };
+  const steps = Object.keys(F.probe);
+  for (const k of ["block16", "full", "lowrank8", "next"]) {
+    const tr = el("tr", {}, tb); el("td", {}, tr, names[k]);
+    for (const st of steps) el("td", { class: "n" }, tr, F.probe[st][k].toFixed(2) + "×");
+  }
+  const tr = el("tr", {}, tb); el("td", { style: "color:var(--ink-2)" }, tr, "Plain random rounding: noise ÷ intended output change (median of 16 matrices)");
+  for (const st of steps) el("td", { class: "n", style: "color:var(--ink-2)" }, tr, Math.round((F.probe[st].sr_noise[0] + F.probe[st].sr_noise[1]) / 2) + "");
+})();
+(function () {
+  const tb = document.querySelector("#tbl-fp8 tbody");
+  for (const s of [1, 2, 3]) { const tr = el("tr", {}, tb); el("td", {}, tr, String(s)); el("td", { class: "n" }, tr, fmt(A.m3.seeds[s].final, 4)); el("td", { class: "n" }, tr, fmt(F.fp8.seeds[s].final, 4)); el("td", { class: "n" }, tr, sgn(F.fp8.seeds[s].final - A.m3.seeds[s].final)); }
+  const tr = el("tr", {}, tb); el("td", {}, tr, "mean ± SE"); el("td", { class: "n" }, tr, fmt(A.m3.mean, 4) + " ± " + fmt(A.m3.se, 4)); el("td", { class: "n" }, tr, fmt(F.fp8.mean, 4) + " ± " + fmt(F.fp8.se, 4)); el("td", { class: "n" }, tr, sgn(F.fp8.mean - A.m3.mean));
+})();
+lineChart(document.getElementById("ch-m5"), {
+  title: "Milestone 5 minus milestone 3", sub: "Validation loss difference, mean of 3 seeds. Above 0 means spreading is worse.",
+  series: () => [{ label: ARM.m5.name, color: ARM.m5.color, points: F.m5.seeds[1].curve.map((p, i) => [p[0], [1, 2, 3].reduce((t, s) => t + F.m5.seeds[s].curve[i][1] - A.m3.seeds[s].curve[i][1], 0) / 3]).filter(p => p[0] > 0) }],
+  x: { domain: [250, 2000], ticks: [250, 500, 1000, 1500, 2000] }, y: { domain: [-0.04, 0.11], ticks: [-0.02, 0, 0.02, 0.04, 0.06, 0.08, 0.1], fmt: v => (v > 0 ? "+" : "") + v.toFixed(2), tip: v => sgn(v) },
+  hlines: [{ y: 0, label: "same as m3" }, { y: -0.02, label: "pass line (final step)" }], noEndLabels: true,
+});
+
+/* ---------- follow-up: long runs ---------- */
+(function () {
+  if (!F.long) return;
+  const L = F.long, NAMES = { adamw: ["m0", "AdamW, lr 0.002"], muon: ["m1", "Muon, lr 0.005"], m3: ["m3", "m3 4-bit, no copy, lr 0.005"], eco_adam: ["a", "ECO-Adam 4-bit, lr 0.002"] };
+  const pts = c => Object.entries(c).map(([k, v]) => [+k, v]).sort((a, b) => a[0] - b[0]);
+  lineChart(document.getElementById("ch-long"), {
+    title: "10,000 steps on a T4", sub: "Validation loss, nats per character, mean of 3 seeds.",
+    series: () => Object.keys(NAMES).map(k => ({ label: NAMES[k][1], endLabel: ARM[NAMES[k][0]].name.replace(/^m4a /, ""), color: ARM[NAMES[k][0]].color, points: pts(L.mean[k]) })),
+    x: { domain: [0, 10000], label: "training step" }, y: { domain: [1.45, 2.45], ticks: [1.5, 1.7, 1.9, 2.1, 2.3] },
+    hlines: [{ y: 2.0, label: "2.0" }, { y: 1.8, label: "1.8" }, { y: 1.7, label: "1.7" }],
+  });
+  const tb = document.querySelector("#tbl-long tbody");
+  for (const k of Object.keys(NAMES)) {
+    const fin = Object.values(L.curves[k]).map(c => c[String(Math.max(...Object.keys(c).map(Number)))]);
+    const m = fin.reduce((a, b) => a + b, 0) / fin.length, se = Math.sqrt(fin.reduce((a, b) => a + (b - m) ** 2, 0) / (fin.length - 1) / fin.length);
+    const c = pts(L.mean[k]), hit = lvl => { const p = c.find(q => q[1] <= lvl); return p ? p[0].toLocaleString("en") : "not reached"; };
+    const tr = el("tr", {}, tb), td = el("td", {}, tr), sw = el("span", { class: "swatch" }, td); sw.style.background = `var(${ARM[NAMES[k][0]].color})`; td.appendChild(document.createTextNode(NAMES[k][1]));
+    [fmt(m, 3) + " ± " + fmt(se, 3), hit(2.0), hit(1.8), hit(1.7)].forEach(v => el("td", { class: "n" }, tr, v));
+  }
+  const ans = [
+    "Is the AdamW − Muon gap smaller than the 0.29 at 2000 steps? <strong>Yes, much: +0.034 ± 0.005</strong> (+0.041, +0.025, +0.035 by seed). Most of Muon's lead was speed.",
+    "Is m3 still below AdamW in 3 of 3 seeds? <strong>No, in 0 of 3.</strong> m3 ends 0.12–0.14 <em>above</em> AdamW. It is below AdamW only until about step 3,000.",
+    "Is the m3 − Muon gap larger or smaller than +0.136 at 2000 steps? <strong>Larger: +0.166 ± 0.003.</strong> The cost of having no float copy grows with training length.",
+    "First step at which each arm's mean reaches 2.0, 1.8 and 1.7: see the table. To 1.8, Muon needs 1,500 steps, m3 2,750 and AdamW 3,000. To 1.7, m3 needs 7,250, AdamW 4,750.",
+    "Does ECO-Adam stay within 0.03 of AdamW? <strong>Yes: +0.021 ± 0.004</strong> (all three seeds inside), slightly more than the +0.013 at 2000 steps.",
+  ];
+  const ol = document.getElementById("long-answers");
+  for (const a of ans) { const li = el("li", {}, ol); li.innerHTML = a; }
+  const X = L.all_runs, lrs = ["m3_lr0.005", "m3_lr0.01", "m3_lr0.02"].filter(k => X[k] && X[k]["1"]);
+  const shade = { "m3_lr0.005": "--c-m3", "m3_lr0.01": "--c-m3-2", "m3_lr0.02": "--c-m3-3" };
+  lineChart(document.getElementById("ch-m3lr"), {
+    title: "m3 at three learning rates", sub: "Seed 1, 10,000 steps. Muon at full precision (lr 0.005) for reference.",
+    series: () => [{ label: "Muon, lr 0.005", color: ARM.m1.color, points: pts(X["muon_lr0.005"]["1"]), width: 1.5 },
+      ...lrs.map(k => ({ label: "m3, lr " + k.split("lr")[1], color: shade[k], points: pts(X[k]["1"]) }))],
+    x: { domain: [0, 10000], label: "training step" }, y: { domain: [1.45, 2.45], ticks: [1.5, 1.7, 1.9, 2.1, 2.3] },
+  });
+})();
+
+/* ---------- where table + options ---------- */
+(function () {
+  const tb = document.querySelector("#tbl-where tbody");
+  const rows = [
+    ["A float copy", "m2", A.m2.mean - A.m2.mean, 8, "Works. Tiny moves pile up in the copy."],
+    ["Nowhere: random rounding", "m3", A.m3.mean - A.m2.mean, 4.75, "Right on average, but the noise outgrows the signal as the learning rate falls."],
+    ["Inside the momentum (ECO)", "b", A.b.mean - A.m2.mean, 4.75, "Newton-Schulz deletes the stretch part and bends the rest. Worse than throwing the error away."],
+    ["A separate 16-bit remainder", "c", A.c.mean - A.m2.mean, 6.75, "Nearly passes, but it is a float copy in two pieces."],
+    ["Pushed onto neighbouring weights (section 10)", "m5", F.m5.mean - A.m2.mean, 5.04, "Worse than throwing the error away: it moves near-grid weights to mid-gap, where random rounding is noisiest."],
+  ];
+  for (const [w, k, d, b, t] of rows) { const tr = el("tr", {}, tb); el("td", {}, tr, w); const td = el("td", {}, tr); const s = el("span", { class: "swatch" }, td); s.style.background = `var(${ARM[k].color})`; td.appendChild(document.createTextNode(ARM[k].name)); el("td", { class: "n" }, tr, k === "m2" ? "0" : sgn(d)); el("td", { class: "n" }, tr, String(b)); el("td", {}, tr, t); }
+
+  const O = [
+    ["A", "Check: arm (c) with nearest rounding instead of random", "Should land on milestone 2 (within the 16-bit buffer's error). If it does, it confirms that (c) is a float copy and that its +0.027 comes from random rounding. If it doesn't, our understanding is wrong somewhere.", ["one change from m4c", "about 12 min on this CPU", "pass: within 0.01 of m2, 3 of 3"], "Confidence the result is informative: high"],
+    ["B", "Shrink the remainder: store e in 8 bits, in units of the local grid gap", "The error is never larger than one gap, so 8 bits measured in gaps loses little. 0.75 + 4 + 1 = 5.75 bytes, or 3.75 with a 16-bit momentum. This answers how many bits below the grid Muon really needs.", ["one change from m4c", "about 12 min", "pass: within 0.03 of m2, 3 of 3"], "My guess: likely passes"],
+    ["C", "The same with a 4-bit remainder", "5.25 bytes (3.25 with a 16-bit momentum). Where B and C fall shows the cliff. A late Muon step of 0.1% of a gap needs about 10 bits below the grid to be stored exactly (2⁻¹⁰ ≈ 0.1%), so 4 bits (and even 8) forces random rounding of the remainder too.", ["measure only", "about 12 min"], "My guess: some loss, size unknown"],
+    ["D", "Make the momentum hold the error: inject it through a frozen orthogonaliser", "Muon's step can be written as M·R, where R = (MᵀM)^(−1/2) is the matrix Newton-Schulz builds. Compute R from the momentum before the error is added, hold it fixed, and send the error through it, the way ECO uses Adam's per-weight step size. The error would then pass through linearly instead of being scrambled. This is the new idea a paper would need. Costs one extra matrix product per step and no extra memory.", ["new method", "a day to write and test", "pass: beat m3 by ≥ 0.05, 3 of 3; then aim for m2 + 0.03"], "Untested idea: real risk it fails"],
+    ["E", "Test the noise argument: keep the learning rate higher at the end", "Re-run m2 and m3 with the floor at 50% of the peak instead of 10%. If the m3 − m2 gap shrinks, the problem really is the step getting small next to the gap, and the schedule is a lever.", ["changes the schedule for both", "about 25 min", "measure only"], "Explains, doesn't fix"],
+  ];
+  const host = document.getElementById("options");
+  for (const [id, title, body, tags, conf] of O) {
+    const c = el("div", { class: "opt" }, host), h = el("h4", {}, c); el("span", { class: "mono", style: "color:var(--muted)" }, h, id); h.appendChild(document.createTextNode(title));
+    el("p", {}, c, body); const tg = el("div", { class: "tags" }, c); [...tags, conf].forEach(t => el("span", {}, tg, t));
+  }
+})();
+})();
+</script>

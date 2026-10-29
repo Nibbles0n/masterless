@@ -1,0 +1,9 @@
+{"step": 0, "val_ce": 4.22442, "val_se": 0.00217, "wall_s": 0.3, "val_ce_fp4": 4.2242, "val_se_fp4": 0.00222}
+{"step": 250, "val_ce": 2.27981, "val_se": 0.01285, "wall_s": 22.6, "val_ce_fp4": 2.28322, "val_se_fp4": 0.01292}
+{"step": 500, "val_ce": 2.01547, "val_se": 0.0149, "wall_s": 44.5, "val_ce_fp4": 2.01976, "val_se_fp4": 0.01487}
+{"step": 750, "val_ce": 1.90981, "val_se": 0.01539, "wall_s": 67.2, "val_ce_fp4": 1.91718, "val_se_fp4": 0.0152}
+{"step": 1000, "val_ce": 1.84782, "val_se": 0.01652, "wall_s": 90.8, "val_ce_fp4": 1.85716, "val_se_fp4": 0.01659}
+{"step": 1250, "val_ce": 1.76152, "val_se": 0.01635, "wall_s": 113.8, "val_ce_fp4": 1.77182, "val_se_fp4": 0.01619}
+{"step": 1500, "val_ce": 1.72724, "val_se": 0.01724, "wall_s": 135.4, "val_ce_fp4": 1.74577, "val_se_fp4": 0.01682}
+{"step": 1750, "val_ce": 1.68009, "val_se": 0.01729, "wall_s": 152.1, "val_ce_fp4": 1.69427, "val_se_fp4": 0.01704}
+{"step": 2000, "val_ce": 1.65201, "val_se": 0.01751, "wall_s": 166.6, "val_ce_fp4": 1.67455, "val_se_fp4": 0.0174}

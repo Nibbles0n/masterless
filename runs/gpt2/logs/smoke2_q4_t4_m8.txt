@@ -1,0 +1,7 @@
+{"study": "gpt2", "arm": "q4_t4_m8", "muon_lr": 0.001, "adamw_lr": 0.0001, "seed": 1, "steps": 4, "warmup": 1, "seqs_per_step": 32, "seq_len": 1024, "tokens_per_step": 32768, "eval_windows": 8, "weight_decay": 0.1, "compile": false, "device": "cuda", "gpu": "Tesla T4", "dtype": "fp16-autocast", "torch": "2.11.0+cu130", "hidden_weights": 84934656, "params": 124439808, "state_bytes_per_weight": 2.28125, "val_ce_pretrained": 3.67674, "val_se_pretrained": 0.1996}
+{"step": 0, "val_ce": 3.73957, "val_se": 0.19568, "wall_s": 0.3}
+{"step": 2, "train_loss": 3.5571, "grad_norm": 3.5351, "changed": 0.029049414175528067, "changed4": 0.029049414175528067, "changed8": 0.029049414175528067, "lr_frac": 1.0, "tok_per_s": 10140, "skipped": 0, "mem_gb": 9.04}
+{"step": 2, "val_ce": 3.81518, "val_se": 0.18996, "wall_s": 6.8}
+{"step": 4, "train_loss": 3.5975, "grad_norm": 5.8826, "changed": 0.01988416247897678, "changed4": 0.01988416247897678, "changed8": 0.01988416247897678, "lr_frac": 0.325, "tok_per_s": 10201, "skipped": 0, "mem_gb": 9.04}
+{"step": 4, "val_ce": 3.77057, "val_se": 0.19421, "wall_s": 13.2}
+final val CE 3.7706 +- 0.1942 nats/token after 4 steps, 13.4 s

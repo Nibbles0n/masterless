@@ -1,0 +1,33 @@
+{
+ "milestone": "m0",
+ "preset": "cpu",
+ "opt": "adamw",
+ "seed": 1,
+ "device": "cuda",
+ "dtype": "fp16-autocast",
+ "params": 797056,
+ "torch": "2.11.0+cu130",
+ "config": {
+  "n_layer": 4,
+  "n_head": 4,
+  "n_embd": 128,
+  "block_size": 64,
+  "batch_size": 12,
+  "max_iters": 10000,
+  "dropout": 0.0,
+  "lr": 0.002,
+  "min_lr": 0.0002,
+  "warmup_iters": 100,
+  "weight_decay": 0.1,
+  "beta1": 0.9,
+  "beta2": 0.99,
+  "grad_clip": 1.0,
+  "eval_interval": 250,
+  "eval_windows": 256,
+  "vocab_size": 65
+ },
+ "final_val_ce": 1.5584,
+ "final_val_se": 0.02168,
+ "wall_s": 154.2,
+ "train_tokens": 7680000
+}

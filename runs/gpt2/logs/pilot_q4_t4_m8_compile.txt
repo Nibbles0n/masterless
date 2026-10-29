@@ -1,0 +1,11 @@
+W1026 01:57:19.509000 11592 torch/_inductor/utils.py:1731] [0/0] Not enough SMs to use max_autotune_gemm mode
+{"study": "gpt2", "arm": "q4_t4_m8", "muon_lr": 0.003, "adamw_lr": 0.0001, "seed": 1, "steps": 30, "warmup": 1, "seqs_per_step": 32, "seq_len": 1024, "tokens_per_step": 32768, "eval_windows": 64, "weight_decay": 0.1, "compile": true, "device": "cuda", "gpu": "Tesla T4", "dtype": "fp16-autocast", "torch": "2.11.0+cu130", "hidden_weights": 84934656, "params": 124439808, "state_bytes_per_weight": 2.28125, "val_ce_pretrained": 3.52616, "val_se_pretrained": 0.05173}
+{"step": 0, "val_ce": 3.58423, "val_se": 0.05145, "wall_s": 2.4}
+{"step": 5, "train_loss": 3.5678, "grad_norm": 4.9096, "changed": 0.0242079911408601, "lr_frac": 0.9764, "tok_per_s": 3341, "skipped": 0, "mem_gb": 9.04}
+{"step": 10, "train_loss": 3.4816, "grad_norm": 4.2818, "changed": 0.021605409221884645, "lr_frac": 0.8413, "tok_per_s": 12239, "skipped": 0, "mem_gb": 9.04}
+{"step": 15, "train_loss": 3.4485, "grad_norm": 3.3985, "changed": 0.020495791494110484, "lr_frac": 0.6228, "tok_per_s": 12558, "skipped": 0, "mem_gb": 9.04}
+{"step": 20, "train_loss": 3.4768, "grad_norm": 2.6178, "changed": 0.02085052537329403, "lr_frac": 0.3834, "tok_per_s": 12780, "skipped": 0, "mem_gb": 9.04}
+{"step": 25, "train_loss": 3.4675, "grad_norm": 2.3652, "changed": 0.01867114879466869, "lr_frac": 0.1918, "tok_per_s": 12845, "skipped": 0, "mem_gb": 9.04}
+{"step": 30, "train_loss": 3.4766, "grad_norm": 2.6513, "changed": 0.016750253277060426, "lr_frac": 0.1026, "tok_per_s": 12809, "skipped": 0, "mem_gb": 9.04}
+{"step": 30, "val_ce": 3.53967, "val_se": 0.05138, "wall_s": 116.2}
+final val CE 3.5397 +- 0.0514 nats/token after 30 steps, 116.3 s
