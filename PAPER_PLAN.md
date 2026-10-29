@@ -356,9 +356,10 @@ setups:
 - [x] P4 done (`runs/paper/P4_RESULT.md`): absolute-unit carry +0.0012; random rounding of the weight +0.071 (31% of weights flip per step); Error Diffusion's cap no effect (never binds)
 - [x] P5 pilot (`runs/paper/P5_PILOT.md`): model Qwen3.5-0.8B post-trained (float 54.7%, 4-bit start 48.1%, no healing); seconds per step 32 at 64 questions; generator vLLM; optimizer Muon at 1e-4 after a re-tune (30 steps, float: 70.3% against AdamW 62.2%; the first Muon run, at 1.37e-5, was −5.4 ± 2.5); re-costed to 32 questions per step, about 6 units per run, P5 about 35 units (48 with third seeds). P5 200-step design (`runs/paper/P5_RESULT.md`, guard fired, 4e-5): third seeds ran by the rule; P5a **FAIL** on seeds 1–3 (−3.7, interval −5.2 to −2.2), P5b PASS (+20.4 ± 2.4); measured only: (c) − (b) −2.6 ± 1.6 with LoRA's 16-bit add-on, and LoRA merged and rounded to 4 bits changes no 4-bit value and scores 47.7% (ours +20.9 ± 2.2 above it; the written prediction held). Units used through P5: about 144
 - [x] P6 done: P6a PASS (0.318 of standard); ratio to bf16-SR 0.87 at the peak, 0.95 layer by layer, 0.91 steady state
+- [x] P1e done (`runs/paper/P1_RESULT.md`, change log fifth entry): **PASS**, ECO-AdamW − ours = 0.079, 0.080, 0.080 (± 0.0014) on seeds 1–3; ECO-AdamW 0.084 ± 0.0002 behind the AdamW float copy, ours 0.0040 ± 0.0003 behind it. Reading as written: no byte-matched ECO run needed. 20.2 units (about 10 wasted on an idle session)
 - [ ] Release code, visual report, summary for Luis
 - [ ] Paper draft read by Luis; arXiv
-- [ ] Units spent: __ (target 90, cap 150)
+- [ ] Units spent: about 164 through P1e (target 90, cap 150: over by about 14)
 
 ## 9. Rules carried over from the project
 
@@ -477,3 +478,21 @@ setups:
     the other arms run the same code as before.
   - Not run: ours with a 12-bit carry (P3 found 8 bits enough at a step of 1/18 of a carry unit; P5's step is about
     1/13).
+- **Change, 2026-10-29, fifth entry, the owner's decision after an outside review, before any of these runs started.**
+  No earlier pass line moves.
+  - The review's main objection: ECO works with Adam, so why not ECO with AdamW instead of ours? P1 has no ECO-AdamW
+    arm, and its 4-bit float copy with AdamW (seed 1, 3.2840) is 0.0044 below ours (3.2884).
+  - **New arm `eco_adamw_q4`:** ECO with AdamW as the ECO paper runs it (Algorithm 3 of arXiv 2601.22101; random
+    rounding, which that paper finds works best with ECO; fp32 first and second moments, 8.75 bytes per weight against
+    our 2.78). AdamW 1e-4, betas (0.9, 0.95), weight decay 0.1: the exact settings of P1's AdamW float copy, which is
+    ECO-AdamW's own upper limit. Seeds 1–3, 3,050 steps, everything else as P1. Code: `StackECOAdam` in
+    `p1_paper_gpt2.py` (CPU smoke test: 4 steps, weights stay on the grid).
+  - **Also run:** the 4-bit float copy with AdamW, seeds 2 and 3, so that both AdamW arms have three seeds.
+  - **New pass line P1e:** ours is below ECO-AdamW in each of the 3 seeds, by more than twice the paired standard error
+    over the 256 validation windows.
+  - **Readings, written now:** if P1e passes, ours beats ECO-AdamW even though ECO is given fp32 moments (more than three
+    times our bytes), and no byte-matched 8-bit-moment ECO-AdamW is needed. If it fails, the paper's claim narrows to
+    "the way to train 4-bit weights without a copy when the optimizer is Muon", the abstract says so, and an ECO-AdamW
+    with 8-bit moments becomes the next question. Measured only: ECO-AdamW against its own float copy (AdamW), and
+    ours against the AdamW float copy over 3 seeds.
+  - Not run now: the same arms from scratch (P2 size); proposed to reviewers as an extension first.

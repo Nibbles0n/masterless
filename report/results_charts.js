@@ -1,6 +1,6 @@
 const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
 const sgn = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
-const M = DATA.p5main, S = DATA.p5short, P2 = DATA.p2;
+const M = DATA.p5main, S = DATA.p5short, P2 = DATA.p2, E = DATA.p1e;
 const ARMC = { a: "--c-m2", b: "--c-m3", c: "--c-c" };
 const ARMN = { a: "(a) normal 16-bit", b: "(b) 4-bit frozen + LoRA", c: "(c) ours, 4-bit" };
 
@@ -142,5 +142,47 @@ lineChart(document.getElementById("ch-p2curve"), {
     { label: "ours", color: "--c-c", strong: true, points: P2.curves["ours s1"].map(e => [e.step, e.val_ce]) },
     { label: "4-bit float copy", color: "--c-m2", points: P2.curves["copy s1"].map(e => [e.step, e.val_ce]) },
     { label: "bf16-SR (in bf16)", color: "--c-m5", points: P2.curves["bf16-SR s1"].map(e => [e.step, e.val_ce]) },
+  ],
+});
+
+/* ---------- P1e: ECO-AdamW minus ours, per seed ---------- */
+(function () {
+  const host = document.getElementById("ch-p1egap");
+  const rows = E.rows;
+  const draw = () => {
+    header(host, { title: "ECO-AdamW minus ours, final validation loss", sub: "per seed; bars are 95% intervals over the 256 validation windows; above 0 means ours is better" });
+    const W = Math.max(280, host.clientWidth - 24), rh = 36, m = { l: 70, r: 20, t: 8, b: 34 };
+    const H = m.t + rows.length * rh + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "ECO-AdamW minus ours per seed" }, host);
+    const X = scale(-0.02, 0.1, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [-0.02, 0, 0.02, 0.04, 0.06, 0.08, 0.1]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v === 0 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2)); }
+    rows.forEach((r, i) => {
+      const y = m.t + i * rh + rh / 2, c = tok("--c-c"), h = 1.96 * r.se;
+      el("svg:text", { x: m.l - 10, y: y + 4, "text-anchor": "end" }, g, "seed " + r.seed);
+      el("svg:line", { x1: X(r.ours_below_by - h), x2: X(r.ours_below_by + h), y1: y, y2: y, stroke: c, "stroke-width": 2, "stroke-linecap": "round" }, g);
+      el("svg:circle", { cx: X(r.ours_below_by), cy: y, r: 6, fill: c, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      hover(host, svg, W, H, { x: 0, y: y - rh / 2, width: W, height: rh }, () => [
+        { value: fmt(r.eco, 4), label: "ECO-AdamW", color: tok("--c-b") },
+        { value: fmt(r.ours, 4), label: "ours", color: c },
+        { value: sgn(r.ours_below_by, 4) + " ± " + fmt(h, 4), label: "gap, 95% interval" }], "seed " + r.seed, X(r.ours_below_by), y);
+    });
+    numbers(host, ["seed", "ECO-AdamW", "ours", "gap", "95% interval"], rows.map(r => ["seed " + r.seed, fmt(r.eco, 4), fmt(r.ours, 4), sgn(r.ours_below_by, 4), "± " + fmt(1.96 * r.se, 4)]));
+  };
+  register(host, draw);
+})();
+
+/* ---------- P1e: validation loss curves, seed 1 ---------- */
+lineChart(document.getElementById("ch-p1ecurve"), {
+  title: "Validation loss during training, GPT-2 small, seed 1",
+  sub: "all 4-bit arms start at 3.462 (the pretrained model rounded to 4 bits); evaluated every 100 steps",
+  height: 300,
+  x: { ticks: [0, 500, 1000, 1500, 2000, 2500, 3000], domain: [0, 3050], label: "step" },
+  y: { domain: [3.27, 3.47], ticks: [3.28, 3.32, 3.36, 3.4, 3.44], fmt: v => v.toFixed(2), tip: v => fmt(v, 4), tipAscending: true },
+  series: () => [
+    { label: "ours (Muon)", color: "--c-c", strong: true, points: E.curves.ours },
+    { label: "float copy, AdamW", color: "--c-m2", points: E.curves.copy_adamw },
+    { label: "float copy, Muon", color: "--c-m5", points: E.curves.copy_muon },
+    { label: "ECO-AdamW", color: "--c-b", points: E.curves.eco_adamw },
+    { label: "ECO-Muon", color: "--c-m3", points: E.curves.eco_muon },
   ],
 });

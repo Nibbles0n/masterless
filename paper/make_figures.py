@@ -122,7 +122,8 @@ def fig_m():
 
 P1_ARMS = [("muon_float", "float Muon"), ("q4_float_copy", "4-bit + float copy"), ("q4_t8_m8", "ours (ticker)"),
            ("q4_kahan_m8", "Kahan (fp32 carry)"), ("bf16_sr_m8", "bf16-SR"), ("q4_sr_m8", "naive"),
-           ("eco_muon_q4", "ECO-Muon"), ("q4_float_copy_adamw", "4-bit + float copy, AdamW")]
+           ("eco_muon_q4", "ECO-Muon"), ("q4_float_copy_adamw", "4-bit + float copy, AdamW"),
+           ("eco_adamw_q4", "ECO-AdamW")]
 
 
 def fig_p1():
@@ -130,7 +131,8 @@ def fig_p1():
     if not os.path.exists(path):
         return placeholder("p1_curves.pdf", "P1: GPT-2 124M validation loss")
     curves = json.load(open(path))["curves"]
-    key = {"q4_float_copy_adamw": "q4_float_copy_adamw_lr0.0001_s1", "eco_muon_q4": "eco_muon_q4_lr0.001_s1_nsfp32"}
+    key = {"q4_float_copy_adamw": "q4_float_copy_adamw_lr0.0001_s1", "eco_muon_q4": "eco_muon_q4_lr0.001_s1_nsfp32",
+           "eco_adamw_q4": "eco_adamw_q4_lr0.0001_s1"}
     fig, ax = plt.subplots(figsize=(3.3, 2.3), constrained_layout=True)
     for i, (arm, name) in enumerate(P1_ARMS):
         ev = curves.get(key.get(arm, f"{arm}_lr0.001_s1"))

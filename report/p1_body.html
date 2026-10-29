@@ -18,7 +18,7 @@
   <ol>
     <li><b>The headline holds.</b> Ours ends at 3.2888 on average, the 4-bit float copy at 3.2875. The gap, 0.0013, is a twentieth of the 0.03 we allowed ourselves before the runs, and about 1.3 times the evaluation noise.</li>
     <li><b>The 8-bit carry loses almost nothing against an exact one.</b> Kahan summation keeps the leftover in 32 bits (5.78 bytes). Ours keeps it in 8 bits and lands 0.0012 behind.</li>
-    <li><b>The cheap alternatives fail.</b> Random rounding with no carry (naive) ends at 3.448, worse than where it started (3.403). Training in bf16 with random rounding is fine as a 16-bit model, but rounding it to 4 bits at the end costs 0.046. ECO's rule for feeding the rounding error back, moved over to Muon, ends 0.037 behind ours: it freezes the 4-bit weights.</li>
+    <li><b>The cheap alternatives fail.</b> Random rounding with no carry (naive) ends at 3.448, worse than the original GPT-2 (3.403) and only a little better than its 4-bit start (3.462). Training in bf16 with random rounding is fine as a 16-bit model, but rounding it to 4 bits at the end costs 0.046. ECO's rule for feeding the rounding error back, moved over to Muon, ends 0.037 behind ours: it freezes the 4-bit weights.</li>
     <li><b>Training in 4 bits beats training in float and rounding at the end</b>, by 0.042.</li>
   </ol>
 </section>

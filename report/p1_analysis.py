@@ -103,8 +103,28 @@ meas["share of weights changing per step"] = {a: changed_share(a, 1) for a in ("
 meas["share of weights changing per step"]["eco_muon_q4"] = changed_share("eco_muon_q4", 1, tag="_nsfp32")
 meas["start (pretrained GPT-2, rounded to 4 bits)"] = ours[1]["val_ce_start"]
 out["measured"] = meas
+# P1e (change log, fifth entry): ours below ECO-AdamW in each of 3 seeds, by more than twice the paired standard error
+if all(os.path.exists(os.path.join(D, f"eco_adamw_q4_lr0.0001_s{s}.json")) for s in (1, 2, 3)):
+    eco = {s: load("eco_adamw_q4", s, lr="0.0001") for s in (1, 2, 3)}
+    cpa = {s: load("q4_float_copy_adamw", s, lr="0.0001") for s in (1, 2, 3)}
+    p1e = []
+    for s in (1, 2, 3):
+        if eco[s]["diverged"]:
+            p1e.append(dict(seed=s, diverged=True, ok=True))
+            continue
+        m, se = paired(win(eco[s]), win(ours[s]))
+        p1e.append(dict(seed=s, eco=eco[s]["final_val_ce"], ours=ours[s]["final_val_ce"], ours_below_by=m, se=se,
+                        ok=m > 2 * se))
+    out["pass"]["P1e"] = dict(rows=p1e, result=all(r["ok"] for r in p1e))
+    for name, arm in (("ECO-AdamW", eco), ("ours", ours)):
+        g = [paired(win(arm[s]), win(cpa[s]))[0] for s in (1, 2, 3)]
+        meas[f"{name} minus 4-bit float copy + AdamW (3 seeds)"] = dict(
+            per_seed=g, mean=float(np.mean(g)), se_over_seeds=float(np.std(g, ddof=1) / np.sqrt(3)))
+    meas["4-bit float copy + AdamW, 3 seeds"] = [cpa[s]["final_val_ce"] for s in (1, 2, 3)]
+    meas["share of weights changing per step"]["eco_adamw_q4"] = changed_share("eco_adamw_q4", 1, lr="0.0001")
 out["bytes_per_weight"] = {"q4_t8_m8": 2.78, "q4_float_copy": 8, "bf16_sr_m8": 3.03, "q4_kahan_m8": 5.78,
-                           "muon_float": 8, "q4_float_copy_adamw": 12, "q4_sr_m8": 1.78, "eco_muon_q4": 1.78}
+                           "muon_float": 8, "q4_float_copy_adamw": 12, "q4_sr_m8": 1.78, "eco_muon_q4": 1.78,
+                           "eco_adamw_q4": 8.75}
 out["curves"] = {os.path.basename(f)[:-5]: json.load(open(f))["evals"] for f in sorted(glob.glob(os.path.join(D, "*.json")))}
 
 with open(os.path.join(HERE, "runs", "paper", "P1_summary.json"), "w") as f:

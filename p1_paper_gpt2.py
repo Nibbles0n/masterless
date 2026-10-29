@@ -19,6 +19,8 @@ Arms (bytes per weight of the block matrices: weights + optimizer state, gradien
   eco_muon_q4           ECO with Muon: as q4_sr_m8, the rounding error fed into the momentum before
                         Newton-Schulz (m4_eco.py's muon_pre rule), 8-bit momentum                            1.78
   bf16_sr_m8            bf16 weights, no copy, each step rounded at random to bf16, 8-bit momentum           3.03
+  eco_adamw_q4          ECO with AdamW, as the ECO paper runs it (Algorithm 3 of arXiv 2601.22101): 4-bit weights
+                        rounded at random, the rounding error fed into the first moment, fp32 moments         8.75
 P4 ablations, each q4_t8_m8 with one thing changed:
   q4_t8_m8_abs          the carry in absolute units: k/(2L) of the block's largest gap (2 x scale), not of its own gap
   q4_t8_m8_srw          the new weight rounded at random instead of to nearest; the carry then spans a whole gap
@@ -251,11 +253,13 @@ def arm_config(arm):
         "q4_sr_m8": dict(opt="muon", store="sr4", mom="int8", fake4=False, bytes=0.5 + 0.25 + 1 + 4 / MBLOCK),
         "eco_muon_q4": dict(opt="muon", store="eco", mom="int8", fake4=False, bytes=0.5 + 0.25 + 1 + 4 / MBLOCK),
         "bf16_sr_m8": dict(opt="muon", store="bf16sr", mom="int8", fake4=False, bytes=2 + 1 + 4 / MBLOCK),
+        "eco_adamw_q4": dict(opt="eco_adamw", store="eco", mom="fp32", fake4=False, bytes=0.5 + 0.25 + 8),
     }[arm]
 
 
 ARMS = ("muon_float", "adamw_float", "q4_float_copy", "q4_float_copy_adamw", "q4_t4_m8", "q4_t6_m8", "q4_t8_m8",
-        "q4_t12_m8", "q4_t16_m8", "q4_t8_m8_abs", "q4_t8_m8_srw", "q4_t8_m8_cap", "q4_kahan_m8", "q4_kahan_m32", "q4_sr_m8", "eco_muon_q4", "bf16_sr_m8")
+        "q4_t12_m8", "q4_t16_m8", "q4_t8_m8_abs", "q4_t8_m8_srw", "q4_t8_m8_cap", "q4_kahan_m8", "q4_kahan_m32", "q4_sr_m8", "eco_muon_q4", "bf16_sr_m8",
+        "eco_adamw_q4")
 
 
 # ---------------------------------------------------------------- model (GPT-2, block matrices stacked by shape)
@@ -412,6 +416,39 @@ class StackMuon(torch.optim.Optimizer):
         return out
 
 
+class StackECOAdam(StackMuon):
+    """AdamW on the stacked block matrices with 4-bit weights and no float copy, ECO's rule for Adam (Algorithm 3 of
+    arXiv 2601.22101, as m4_eco.py): the target is rounded at random onto the 4-bit grid and the rounding error goes
+    into the first moment, scaled by Adam's per-weight step. fp32 moments, as in the ECO paper."""
+
+    def __init__(self, params, lr, cfg, weight_decay, betas=(0.9, 0.95), eps=1e-8):
+        torch.optim.Optimizer.__init__(self, params, dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay))
+        self.cfg, self.check, self.var = cfg, False, ""
+        self.viol, self.count_changes, self.changed4, self.total = None, False, 0, 0
+
+    @torch.no_grad()
+    def step(self):
+        group = self.param_groups[0]
+        lr, (b1, b2), eps, wd = group["lr"], group["betas"], group["eps"], group["weight_decay"]
+        for p in group["params"]:
+            st = self.state[p]
+            if "m" not in st:
+                st.update(t=0, m=torch.zeros_like(p), v=torch.zeros_like(p))
+            st["t"] += 1
+            t, m, v = st["t"], st["m"], st["v"]
+            m.lerp_(p.grad, 1 - b1)
+            v.mul_(b2).addcmul_(p.grad, p.grad, value=1 - b2)
+            denom = (v / (1 - b2 ** t)).sqrt() + eps
+            w_tilde = p * (1 - lr * wd) - lr * (m / (1 - b1 ** t)) / denom
+            c4 = code4(p) if self.count_changes else None
+            w_hat = quantize_sr4(w_tilde)
+            m.add_((1 - b1 ** t) / max(lr, 1e-30) * (1 - 1 / b1) * denom * (w_tilde - w_hat))
+            p.copy_(w_hat)
+            if c4 is not None:
+                self.changed4 += (code4(p) != c4).sum().item()
+                self.total += p.numel()
+
+
 def build_optimizers(model, cfg, muon_lr, adamw_lr, weight_decay, ns_dtype, check, compile=True):
     hidden = list(model.W.values())
     decay = [model.wte.weight, model.wpe.weight]
@@ -420,6 +457,8 @@ def build_optimizers(model, cfg, muon_lr, adamw_lr, weight_decay, ns_dtype, chec
     out = []
     if cfg["opt"] == "adamw":
         decay = decay + hidden
+    elif cfg["opt"] == "eco_adamw":
+        out.append((StackECOAdam(hidden, adamw_lr, cfg, weight_decay), adamw_lr))
     else:
         out.append((StackMuon(hidden, muon_lr, cfg, ns_dtype, check=check, compile=compile), muon_lr))
     groups = [{"params": decay, "weight_decay": weight_decay}, {"params": rest, "weight_decay": 0.0}]
@@ -541,7 +580,7 @@ def main():
     model.fake4 = cfg["fake4"]
 
     os.makedirs(args.out, exist_ok=True)
-    lr_tag = args.adamw_lr if cfg["opt"] == "adamw" else args.muon_lr
+    lr_tag = args.adamw_lr if cfg["opt"] in ("adamw", "eco_adamw") else args.muon_lr
     stem = os.path.join(args.out, f"{args.arm}_lr{lr_tag:g}_s{args.seed}{args.tag}")
     log = open(stem + ".jsonl", "w")
     n_hidden = sum(p.numel() for p in hidden)
