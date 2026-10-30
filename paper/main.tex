@@ -1,23 +1,25 @@
 \documentclass[11pt]{article}
 % Build:  python paper/make_figures.py && cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main
 % Rule (PAPER_PLAN.md): no number appears in this text unless runs/paper/<step>_RESULT.md (or, for the appendix,
-% runs/<study>/RESULT.md) holds it. Everything else is \todo{}.
+% runs/<study>/RESULT.md) holds it.
 
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 
-\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newtheorem{proposition}{Proposition}
 \newcommand{\NS}{\operatorname{NS}}
 \newcommand{\RTN}{\operatorname{RTN}}
 \newcommand{\SR}{\operatorname{SR}}
+\newcommand{\polar}{\operatorname{polar}}
 \newcommand{\norm}[1]{\lVert #1 \rVert}
 
 \title{Masterless Muon: Training 4-bit Weights Without a Full-Precision Copy}
@@ -29,76 +31,82 @@
 
 % ======================================================================================================================
 \begin{abstract}
-Low-bit training normally keeps a full-precision copy of every weight. ECO removes the copy by feeding each step's
-rounding error back into the optimizer's momentum. We show that this fails for Muon: Muon orthogonalises its momentum,
-so its update has a nearly fixed size, and an error fed into the momentum loses its size and part of its direction on
-the way to the weights. We propose the \emph{ticker}: each weight is stored only as a 4-bit value, and an 8-bit carry,
-measured in units of that weight's own grid gap, holds the part of each step that has not yet moved it (about 2.8
-bytes per weight with 8-bit momentum). The weights being trained are the 4-bit weights that are served. On GPT-2
-small (continued training) the ticker ends within 0.0013 of training with a float copy, and from scratch (45M
-parameters) within 0.013. Training in bf16 and rounding to nearest afterwards is 0.04 and 1.16 worse. Rounding with
-GPTQ instead, the bf16 model is still 0.012 worse in continued training but ties the ticker from scratch
-($+0.003 \pm 0.002$), so from scratch our claim is only against rounding to nearest. ECO in its own
-setting, with AdamW and fp32 moments (8.75 bytes per weight), ends 0.08 behind the ticker on GPT-2 small in each of 3
-seeds. In full-parameter RL of Qwen3.5-0.8B on GSM8K with every decoder weight in 4 bits, ours
-ends 3.7 points behind full-precision training and fails our pre-registered line of $-4$; most of the gap is the 6.5
-points lost by rounding the model to 4 bits before training. Every pass line was registered before its runs, and we
-report the ones that failed.
+Low-bit training normally keeps a full-precision master copy of every weight, because a single optimizer step is far
+smaller than the spacing of a 4-bit grid. ECO removes the copy by feeding each step's rounding error back into the
+optimizer's momentum. We show that this does not work for Muon. Muon orthogonalises its momentum, so its update has
+a nearly fixed size and an error added to the momentum is reshaped on the way to the weights. On GPT-2 small, at the
+injection size ECO prescribes, about 5\% of the error arrives and the update loses the gradient's direction. We
+propose the \emph{ticker}, which keeps the error beside each weight instead, as an 8-bit carry measured in units of
+that weight's own grid spacing. The weights are 4-bit values throughout training, and the training state costs 2.78
+bytes per weight. In continued training of GPT-2 small, the ticker ends 0.0013 (mean of 3 seeds) above training the
+same 4-bit model with a float copy and 0.08 below ECO run with AdamW, at a third of ECO's memory. Training in bf16
+and rounding afterwards ends 0.04 worse with round-to-nearest and 0.01 worse with GPTQ. Trained from scratch at 45M
+parameters, the ticker stays within 0.013 of the float copy, but there bf16 training followed by GPTQ matches it. In
+full-parameter reinforcement learning of Qwen3.5-0.8B on GSM8K, every weight learns while stored in 4 bits and test
+accuracy rises by 20 points, yet the final model is 3.7 points behind bf16 training and misses the threshold we set in
+advance, mostly because rounding the starting model to nearest costs 6.5 points (3.5 with GPTQ). Every experiment
+and threshold was registered before it ran.
 \end{abstract}
 
 % ======================================================================================================================
 \section{Introduction}
 
-Training a model whose weights are 4-bit numbers almost always means training a different, full-precision model.
-The standard recipe keeps an fp32 (or bf16) \emph{master copy} of each weight; the optimizer adds its small update
-to the copy, and the 4-bit weights used in the forward pass are re-rounded from it at every step. The copy is needed
-because a single step is usually far smaller than the distance between neighbouring 4-bit values: rounded on its own,
-the step would vanish. The cost is that the model being trained is not the model being served. In reinforcement
-learning (RL) this shows up directly: the 4-bit generator that writes answers and the full-precision trainer that
-scores them are different weights, and the mismatch has to be corrected for \citep{yao2025offpolicy,liu2025flashrl}.
+Hardware and serving systems increasingly use 4-bit weights \citep{nvidia2025nvfp4,rouhani2023mx}, but training a
+model whose weights are 4-bit numbers almost always means training a different, full-precision model. The standard
+recipe keeps an fp32 or bf16 \emph{master copy} of each weight. The optimizer adds its update to the copy, and the
+4-bit weights used in the forward pass are re-rounded from it at every step. The copy is needed because a typical
+update is far smaller than the distance between neighbouring 4-bit values, so rounding it on its own would erase it.
+The price is memory and a subtler mismatch, because the model being trained is not the model being served. In reinforcement
+learning (RL) the mismatch becomes visible, because a quantized generator writes the answers that a full-precision
+trainer then scores, and the difference has to be corrected for \citep{yao2025offpolicy,liu2025flashrl}.
 
-\paragraph{Error feedback and why it does not carry over to Muon.} ECO \citep{nikdan2026eco} removes the master copy
-for SGD with momentum and for Adam: after each step, the rounding error is added into the momentum, scaled so that
-the optimizer re-applies it over the following steps. This works because both optimizers are \emph{linear} in the
-momentum (Adam is linear once its second moment is fixed), so an error put into the momentum comes out in the weights
-unchanged. Muon \citep{jordan2024muon,liu2025moonlight} is not linear in its momentum. It replaces the momentum by an
-approximately orthogonal matrix with the same singular vectors (Newton--Schulz iteration), so its update has a nearly
-fixed size whatever the momentum's size. We show, with a measurement on pretrained GPT-2 that needs no training
-(Section~\ref{sec:mechanism}), that an error fed into Muon's momentum loses its size and part of its direction on the
-way to the weights.
+ECO \citep{nikdan2026eco} removes the master copy for SGD with momentum and for Adam. After each step, the rounding
+error is added into the momentum with a scale chosen so that the optimizer re-applies it over the following steps.
+This works because both optimizers are linear in the momentum (Adam once its second moment is fixed), so an error
+placed in the momentum reappears unchanged in the weights. Muon \citep{jordan2024muon,liu2025moonlight}, now a common
+choice for the matrices of language models, is not linear in its momentum. It replaces the momentum by an
+approximately orthogonal matrix with the same singular vectors, which gives its update a nearly fixed size whatever
+the size of the momentum. Section~\ref{sec:mechanism} derives what this does to an injected error and measures it on
+GPT-2 small. The error loses part of its energy, is redistributed across singular directions, and at the sizes ECO
+uses it overwrites the gradient.
 
-\paragraph{The ticker.} Instead of routing the error through the optimizer, we keep it beside each weight. Each weight
-stores a 4-bit value and a small integer \emph{carry}: the part of the weight's intended position that the 4-bit grid
-cannot show yet, in units of the gap to the next grid value on that side. Each step adds the update to weight plus
-carry, rounds to the nearest grid value, and keeps the rest as the new carry, rounded at random to $b$ bits. With an
-exact (fp32) carry this is Kahan's compensated summation \citep{kahan1965} on 4-bit weights, and it is mathematically
-the same as training with a float copy. The question is how few bits the carry can have.
+We therefore keep the error beside each weight. Each weight stores a 4-bit value and a small integer \emph{carry},
+the part of the weight's intended position that the grid cannot yet show, counted in units of the gap to the
+neighbouring grid value. Each step adds the update to the weight and its carry, rounds the sum to the nearest grid
+value, and stores what is left as the new carry. With an exact carry this is Kahan's compensated summation
+\citep{kahan1965} applied to 4-bit weights, and it reproduces training with a float copy exactly. The practical
+question is how few bits the carry can have. The same idea, a few-bit residual buffer per weight, was proposed days
+before this work for binary networks under the name Error Diffusion \citep{bonin2026errordiffusion}; the ticker is its
+multi-level form for 4-bit grids with block scales.
+
+With an 8-bit carry and 8-bit momentum, the ticker trains GPT-2 small to within about a thousandth of a nat of a
+float copy, well ahead of ECO and of naive stochastic rounding, and a 45M-parameter model from scratch to within about
+a hundredth. Against the strongest
+alternative we found, training in bf16 with stochastic rounding and rounding to 4 bits at the end, the result depends
+on the setting. The ticker is ahead in continued training even when the final rounding uses GPTQ
+\citep{frantar2023gptq}, while from scratch GPTQ closes the gap. In RL on a 0.8B model the ticker trains every weight
+in 4 bits and improves the 4-bit model by twenty points, but does not fully recover what rounding the starting model
+cost.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item \textbf{The mechanism.} Muon's orthogonalised update has a nearly fixed size, so (i) an error fed into its
-        momentum does not reach the weights intact, which is why ECO fails with Muon, and (ii) the per-step travel of
-        each weight is predictable, which makes a noise model for low-bit carries simple
+  \item An analysis of why momentum-based error feedback fails when the update is orthogonalised
+        (Proposition~\ref{prop:polar}), and a measurement on GPT-2 small that needs no training
         (Section~\ref{sec:mechanism}).
-  \item \textbf{The ticker}: 4-bit weights, an 8-bit carry in units of the weight's own gap, and 8-bit momentum,
-        about 2.6--2.8 bytes per weight (Section~\ref{sec:method}). It is within 0.0013 (continued training of GPT-2
-        small) and 0.013 (45M from scratch) of training with a float copy, within 0.0012 of an exact fp32 carry, and
-        beats bf16 weights with random rounding once both are rounded to nearest on the 4-bit grid, by 0.04--0.05 and
-        by 1.13. With GPTQ \citep{frantar2023gptq} in place of rounding to nearest, the bf16 model is still 0.012
-        behind in continued training, but from scratch it is level with the ticker ($+0.003 \pm 0.002$, one seed).
-        ECO run as its paper does, with AdamW, random rounding and fp32 moments (8.75 bytes per weight),
-        ends 0.080 behind it on GPT-2 small in each of 3 seeds.
-  \item \textbf{A noise model} for the smallest carry that works at a given learning rate
-        (Section~\ref{sec:noise}). It \emph{fails} its pre-registered tests on a grid of 4 carry widths and 4
-        learning rates; the damage depends on the carry width, not the learning rate, and 8 bits was always enough.
-  \item \textbf{Full-parameter RL on 4-bit weights}, with one copy of the weights, on Qwen3.5-0.8B and GSM8K. Ours ends
-        3.7 points behind full-precision training and fails its pre-registered line ($-4$); most of the gap is the
-        cost of rounding the starting model to 4 bits. A 16-bit LoRA add-on on the same 4-bit model ends 2.6 points
-        above ours but changes no 4-bit weight: what it learns is stored only in the add-on.
-  \item \textbf{Memory, measured}, against the strongest baseline we know (bf16 weights with random rounding), which
-        ours beats by only 5--13\% (0.87--0.95 of its peak); against the standard setup it is 0.32. The pitch
-        of this paper is native 4-bit weights, not memory.
+  \item The ticker: 4-bit weights trained without a master copy, at 2.6--2.8 bytes per weight of training state,
+        evaluated against float copies, ECO with Muon and with AdamW, stochastic rounding, and post-training rounding
+        with GPTQ (Sections~\ref{sec:method} and~\ref{sec:p1}--\ref{sec:p2}).
+  \item A pre-registered test of a noise model for the carry width. The model fails both tests; the logged flip rates
+        point to a different mechanism, which we describe (Sections~\ref{sec:noise} and~\ref{sec:p3}).
+  \item Full-parameter RL with every decoder weight stored in 4 bits, compared with full-precision training and with
+        a frozen 4-bit model plus LoRA, and a measurement of training memory with packed storage
+        (Sections~\ref{sec:p5}--\ref{sec:p6}).
 \end{enumerate}
+
+Every experiment, its seeds and its success criterion were written into a dated plan before the experiment ran.
+Table~\ref{tab:criteria} lists the criteria and their outcomes, and Appendix~\ref{app:changes} lists every change made
+to the plan and when. The code, the plan and the log of every run are public
+(\url{https://github.com/Nibbles0n/masterless}).
 
 % ======================================================================================================================
 \section{Method}\label{sec:method}
@@ -110,49 +118,52 @@ the signed E2M1 value set
 \[
   x \in \{0, \pm 0.5, \pm 1, \pm 1.5, \pm 2, \pm 3, \pm 4, \pm 6\},
 \]
-as in NVFP4 \citep{nvidia2025nvfp4} (MXFP4 \citep{rouhani2023mx} uses the same values with a power-of-two scale per
-32 weights). $\RTN(\cdot)$ rounds to the nearest grid value. For a grid value $x$ we write $g_+(x)$ and $g_-(x)$ for
-the gaps to the next value up and down (0.5, 1 or 2 times $s$; beyond $\pm 6$ we use 2). In our experiments the
-scale is kept in fp32; NVFP4 stores it in FP8 (E4M3) with one fp32 scale per tensor, which saves 0.19 bytes per
-weight. Only the matrices inside the transformer blocks are stored this way and trained by Muon; embeddings, norms
-and biases stay in floating point and are trained by AdamW, as is usual for Muon.
+as in NVFP4 \citep{nvidia2025nvfp4}; MXFP4 \citep{rouhani2023mx} uses the same values with a power-of-two scale per
+32 weights. $\RTN(\cdot)$ rounds to the nearest grid value. For a grid value $x$ we write $g_+(x)$ and $g_-(x)$ for
+the gaps to the next value up and down, which are 0.5, 1 or 2 times $s$ (beyond $\pm 6$ we use 2). We keep the scale
+in fp32 during training; NVFP4 stores it in FP8 (E4M3) with one fp32 scale per tensor, which saves 0.19 bytes per
+weight. Only the matrices inside the transformer blocks are stored this way and trained by Muon. Embeddings, norms and
+biases stay in floating point and are trained by AdamW, as is usual for Muon.
 
 \subsection{The ticker}
 Let $\hat w$ be a weight's stored 4-bit value, $c$ its carry, $\eta$ the learning rate and $\Delta$ the optimizer's
 update for this step. One step is
 \begin{align}
-  \tilde w &= \hat w + c - \eta \Delta && \text{(where the weight should be)} \label{eq:target}\\
-  \hat w' &= \RTN(\tilde w) && \text{(nearest 4-bit value; block scale recomputed)}\\
-  r &= \tilde w - \hat w' && \text{(what the grid cannot show yet)}\\
-  k' &= \SR\!\left(2L \, \frac{r}{g_{\pm}(\hat w')}\right) \in \{-L,\dots,L\} && \text{(the new carry, as an integer)}\\
+  \tilde w &= \hat w + c - \eta \Delta && \text{(target position)} \label{eq:target}\\
+  \hat w' &= \RTN_{s'}(\tilde w), \quad s' = \max_{i\in\text{block}} |\tilde w_i| / 6 && \text{(nearest value on the new grid)} \label{eq:round}\\
+  r &= \tilde w - \hat w' && \text{(remainder)}\\
+  k' &= \SR\!\left(2L \, \frac{r}{g_{\pm}(\hat w')}\right) \in \{-L,\dots,L\} && \text{(new carry, an integer)}\\
   c' &= \frac{k'}{2L}\, g_{\pm}(\hat w') && \text{(the value it stands for)}
 \end{align}
 where $g_\pm$ is the gap on the side of $r$'s sign, $L = 2^{b-1}-1$ for a $b$-bit carry, and $\SR$ rounds to one of
-the two neighbouring integers at random, with probabilities that make it unbiased. Because $\hat w'$ is the
-\emph{nearest} grid value, $|r| \le g_\pm/2$, so $|k'| \le L$ and the carry never clips. A weight ``ticks'' to the next
-grid value when its carry passes half a gap. The carry is relative to the weight's own gap, so a small weight (fine
-gaps) and a large weight (coarse gaps) both get $2L$ levels of resolution. At $b=8$ the resolution is $1/254$ of a gap.
+the two neighbouring integers at random, with probabilities that make it unbiased. The old carry $c$ is decoded with
+the old scale and gaps. The new scale $s'$ is computed from the 16 targets of the block before rounding, and every
+weight of the block is rounded to the grid of $s'$ and has its remainder measured against that grid, so a change of
+scale is absorbed into the 16 new carries rather than rescaling them separately. The block's largest target equals
+$6s'$ exactly, so the fp32 scale holds it without error and its carry is zero.
 
-\paragraph{Relation to compensated summation.} With $c$ kept exactly in fp32, $\hat w + c$ equals the float-copy
-weight at every step, given the same updates: the method is Kahan summation \citep{kahan1965} with a 4-bit main term.
-The ticker quantizes the compensation term, in units that follow the main term's local resolution. Its only error
-relative to a float copy is the random rounding of the carry (and of the momentum); Section~\ref{sec:noise} sizes it.
-Error Diffusion \citep{bonin2026errordiffusion} uses the same idea for binary weights: a few-bit residual buffer per
-weight, updated with stochastic rounding, that flips the weight when it crosses a threshold. The ticker is the
-multi-level form of that buffer (Section~\ref{sec:related}).
+Because $\hat w'$ is the nearest grid value, $|r| \le g_\pm/2$, so $|k'| \le L$ and the carry never overflows. A
+weight moves to the next grid value (``ticks'') when its carry passes half a gap. Since the carry is measured relative
+to the weight's own gap, small weights (fine gaps) and large weights (coarse gaps) get the same $2L$ levels of
+resolution; at $b=8$ the resolution is $1/254$ of a gap.
+
+With $c$ kept exactly in fp32, $\hat w + c$ equals the float-copy weight at every step for the same sequence of
+updates, which is Kahan summation \citep{kahan1965} with a 4-bit main term. The ticker quantizes the compensation term
+in units that follow the main term's local resolution, so its only departure from a float copy is the random rounding
+of the carry, and of the momentum (below).
 
 \subsection{8-bit momentum}
 Muon's momentum is stored as 8-bit integers ($-127\dots127$) with one fp32 scale per 128 weights of a row, rounded at
 random after each update. Newton--Schulz runs on the dequantized Nesterov momentum.
 
-\subsection{Bytes per weight}
-Table~\ref{tab:bytes} counts the training state of the block matrices (weights plus optimizer state; gradients and
-activations are the same for all methods and not counted).
+\subsection{Memory}
+Table~\ref{tab:bytes} counts the training state of the block matrices: weights plus optimizer state. Gradients and
+activations are the same for all methods and are not counted.
 
 \begin{table}[t]
 \centering
 \caption{Training state per weight of the Muon-trained matrices. Scales: one fp32 scale per 16 weights (0.25 bytes per
-weight) or, in brackets, NVFP4-style FP8 scales (0.0625). Momentum scale: one fp32 scale per 128 (0.03).}
+weight) or, in brackets, NVFP4-style FP8 scales (0.0625). Momentum scale: one fp32 scale per 128 weights (0.03).}
 \label{tab:bytes}
 \small
 \begin{tabular}{lll}
@@ -164,99 +175,111 @@ ECO-AdamW & 4-bit + scale + two fp32 moments & 8.75 \\
 4-bit + float copy, Muon & fp32 copy + fp32 momentum & 8 \\
 Kahan (exact carry) & 4-bit + scale + fp32 carry + 8-bit mom. & 5.78 \\
 bf16-SR & bf16 weight + 8-bit momentum & 3.03 \\
-\textbf{ours, 8-bit carry} & 4-bit + scale + 8-bit carry + 8-bit mom. & \textbf{2.78} (2.59) \\
+\textbf{ticker, 8-bit carry} & 4-bit + scale + 8-bit carry + 8-bit mom. & \textbf{2.78} (2.59) \\
 naive / ECO-Muon & 4-bit + scale + 8-bit mom. & 1.78 (1.59) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 % ======================================================================================================================
-\section{The mechanism: Muon's update has a fixed size}\label{sec:mechanism}
+\section{Why error feedback fails with Muon}\label{sec:mechanism}
 
-\subsection{Muon}
+\subsection{Muon's update has a nearly fixed size}
 For a matrix $W$ with gradient $G_t$, Muon \citep{jordan2024muon} keeps a momentum $B_t = \beta B_{t-1} + (1-\beta) G_t$
 and orthogonalises the Nesterov combination $U_t = (1-\beta)G_t + \beta B_t$:
 \[
   W \leftarrow W - \eta\, \alpha\, \NS(U_t), \qquad \alpha = \sqrt{\max(1, m/n)} ,
 \]
-where $\NS$ is five steps of a quintic Newton--Schulz iteration, $X \leftarrow aX + (bA + cA^2)X$ with $A = XX^\top$,
+where $\NS$ is five steps of the quintic Newton--Schulz iteration $X \leftarrow aX + (bA + cA^2)X$ with $A = XX^\top$,
 $(a,b,c) = (3.4445, -4.7750, 2.0315)$, started from $X = U/\norm{U}_F$. If $U = P\Sigma Q^\top$ is a singular value
-decomposition, $\NS(U) = P f(\Sigma/\norm{U}_F) Q^\top$ for a fixed odd polynomial $f$ that maps every singular value
-that is not tiny into roughly $[0.7, 1.2]$. Two facts follow.
+decomposition, then $\NS(U) = P f(\Sigma/\norm{U}_F) Q^\top$ for a fixed odd polynomial $f$ that maps every singular
+value that is not tiny into roughly $[0.7, 1.2]$. $\NS$ thus approximates the polar factor $\polar(U) = PQ^\top$.
 
-\paragraph{Fact 1: the step size is nearly fixed.} $\NS(cU) = \NS(U)$ for every $c>0$, and
-$\norm{\NS(U)}_F \approx \bar f \sqrt{\min(m,n)}$ with $\bar f$ the root-mean-square of $f$ over the singular values.
-So each step moves the matrix by $\eta\alpha\bar f\sqrt{\min(m,n)}$ in Frobenius norm, or
-$\eta\alpha\bar f/\sqrt{\max(m,n)}$ per weight (root-mean-square), whatever the size of the gradient. On GPT-2 we
+Two properties follow. First, $\NS(cU) = \NS(U)$ for every $c>0$. Second,
+$\norm{\NS(U)}_F \approx \bar f \sqrt{\min(m,n)}$, where $\bar f$ is the root-mean-square of $f$ over the singular
+values, so each step moves the matrix by $\eta\alpha\bar f\sqrt{\min(m,n)}$ in Frobenius norm, or by
+$\eta\alpha\bar f/\sqrt{\max(m,n)}$ per weight (root-mean-square), whatever the size of the gradient. On GPT-2 small we
 measure $\bar f = 0.905$ (standard deviation 0.066, range 0.69--0.99) over 48 matrices and 40 steps, while the
-momentum's own RMS varies by a factor of 49 (Figure~\ref{fig:m}c); multiplying the momentum by $10^{3}$ or $10^{-3}$
-changes the update by less than 0.02\%.
+momentum's own root-mean-square varies by a factor of 49 (Figure~\ref{fig:m}c). Multiplying the momentum by $10^{3}$
+or $10^{-3}$ changes the update by less than 0.02\%.
 
-\paragraph{Fact 2: an error added to the momentum does not pass through.} ECO \citep{nikdan2026eco} adds
-$\alpha_{\text{ECO}}\, e$ to the momentum, with $e$ the rounding error of the last step and
-$\alpha_{\text{ECO}} = \eta^{-1}(1-\beta^{-1})$ for SGD with momentum (and the same times Adam's per-weight step size for
-Adam). The coefficient is negative, since $\beta < 1$; the next step subtracts $\eta$ times the momentum, so the error
-comes back with the right sign. For an optimizer whose update is a linear function of the momentum, this puts exactly $(1-\beta)e$ into the next
-step and $e$ into the sum of all later steps, so the weight ends up where the float copy would have put it. Muon's
-update is not linear in the momentum. To first order, for a small error $\delta$ added to $U$ (take $m \le n$), the
-change in the exact orthogonal factor $PQ^\top$ is
+\subsection{What happens to an injected error}
+ECO adds $\alpha_{\text{ECO}}\, e$ to the momentum, where $e$ is the rounding error of the last step and
+$\alpha_{\text{ECO}} = \eta^{-1}(1-\beta^{-1})$ for SGD with momentum; for Adam the same coefficient is multiplied by
+Adam's per-weight step size. The coefficient is negative because $\beta < 1$, and the next step subtracts $\eta$ times
+the momentum, so the error returns with the correct sign. For an optimizer whose update is linear in the momentum,
+this places $(1-\beta)e$ into the next step and $e$ into the sum of all later steps, which returns the weight to where
+a float copy would have put it. For Muon the response is governed by the derivative of the polar factor.
+
+\begin{proposition}[First-order response of the polar factor]\label{prop:polar}
+Let $U\in\mathbb{R}^{m\times n}$ with $m\le n$ have full rank and thin singular value decomposition
+$U=P\Sigma Q^\top$, where $P$ is $m\times m$ orthogonal, $Q^\top Q = I_m$ and
+$\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_m)$ with $\sigma_i>0$. For a perturbation $\delta$ let
+$\tilde\delta = P^\top\delta Q$. Then
 \begin{equation}\label{eq:polar}
-  d(PQ^\top) = P\, K\, Q^\top + P\,\Sigma^{-1} P^\top \delta\,(I - QQ^\top), \qquad
-  K_{ij} = \frac{\tilde\delta_{ij} - \tilde\delta_{ji}}{\sigma_i + \sigma_j}, \quad \tilde\delta = P^\top \delta Q .
+  \polar(U+\delta) = PQ^\top + P K Q^\top + P\Sigma^{-1}P^\top\delta\,(I - QQ^\top) + O(\norm{\delta}^2), \qquad
+  K_{ij} = \frac{\tilde\delta_{ij} - \tilde\delta_{ji}}{\sigma_i + \sigma_j} .
 \end{equation}
-Compared with passing $\delta$ through at the update's average gain $\kappa = \norm{\NS(U)}_F/\norm{U}_F$, three
-things happen:
+In particular, the symmetric part of $\tilde\delta$ has no first-order effect, and the antisymmetric part is divided
+by $\sigma_i+\sigma_j$.
+\end{proposition}
+
+The proof is in Appendix~\ref{app:proof}; the formula is a form of the standard perturbation result for the polar
+decomposition \citep[Ch.~8]{higham2008functions}. Compared with passing $\delta$ through at the update's average gain
+$\kappa = \norm{\NS(U)}_F/\norm{U}_F$, as a linear optimizer would, it implies three distortions.
 \begin{enumerate}
-  \item \textbf{The symmetric part of $\tilde\delta$ is discarded.} It only changes the singular values, and
-        orthogonalisation sets them all to about 1. On GPT-2 this is 22\% of the energy of the actual 4-bit rounding
-        error (7--50\% by matrix).
-  \item \textbf{The rest is reweighted by $\sigma_{\text{rms}}/\sigma_i$.} Directions with small singular values are
-        amplified and the few large ones, where the gradient's signal lives, are damped. Momentum spectra are
-        heavy-tailed, so the delivered correction points somewhere else than the error. Newton--Schulz caps the
-        amplification: its slope at zero is $a^5 \approx 485$ on the normalised input, which is at most about
-        $485/(\bar f\sqrt{\min(m,n)}) \approx 19$ times $\kappa$ for GPT-2's $768$-wide matrices.
-  \item \textbf{Large errors saturate.} By scale invariance $\NS(U+\delta) \to \NS(\delta)$ as
-        $\norm{\delta}/\norm{U} \to \infty$, so $\norm{\NS(U+\delta) - \NS(U)}_F \le 2\bar f\sqrt{\min(m,n)}$: the
-        delivered change is bounded, and the share of the intended correction that arrives falls like
+  \item \textbf{Part of the error is erased.} The symmetric part of $\tilde\delta$ would only change the singular
+        values, which orthogonalisation sets to about 1. For the actual 4-bit rounding error of GPT-2 small this part
+        holds 22\% of the energy (7--50\% by matrix).
+  \item \textbf{The rest is reweighted.} Relative to $\kappa$, each component is scaled by about
+        $\sigma_{\text{rms}}/\sigma$ for the singular values involved, so directions with small singular values are
+        amplified and the few large ones, which carry most of the gradient signal, are damped. Momentum spectra are
+        heavy-tailed, so the delivered correction points away from the error. Newton--Schulz bounds the amplification:
+        the slope of $f$ at zero is $a^5 \approx 485$ on the normalised input, at most about
+        $485/(\bar f\sqrt{\min(m,n)}) \approx 19$ times $\kappa$ for the 768-wide matrices of GPT-2 small.
+  \item \textbf{Large errors saturate.} Because $\NS$ is scale-invariant, $\NS(U+\delta) \to \NS(\delta)$ as
+        $\norm{\delta}/\norm{U} \to \infty$, so the change in the update is bounded by about
+        $2\bar f\sqrt{\min(m,n)}$, and the share of the intended correction that arrives falls like
         $\norm{U}/\norm{\delta}$.
 \end{enumerate}
-No choice of the injection scale fixes this: a small injection is bent and amplified, a large one is bent and
-truncated, and in between the gradient's own direction is overwritten.
+No single injection scale avoids all three. A small injection is bent and amplified, a large one is bent and
+truncated, and in between it competes with the gradient for the direction of the update.
 
-\subsection{Measurement on GPT-2 (no training)}\label{sec:m}
-We take pretrained GPT-2 small \citep{radford2019gpt2}, compute real gradients of its 48 block matrices on FineWeb windows, and build Muon's
-Nesterov momentum over 40 steps (2 windows of 1,024 tokens each). We then add into $U$ an error whose
-direction is each matrix's actual 4-bit rounding leftover $W - \RTN(W)$, at sizes from 0.01 to 10 times $\norm{U}$,
-and compare the change in the update with the error (Figure~\ref{fig:m}, Table~\ref{tab:m}). For SGD with momentum
-the error passes through exactly. Adam with ECO's per-weight rule also passes it through exactly, because ECO
-multiplies the error by the same per-weight factor that Adam divides by; injected without that factor, Adam rescales
-it weight by weight (cosine 0.80). For Muon, the cosine between the delivered and the intended
-correction is 0.65--0.77 at every size (single matrices 0.48--0.91), and the share of the intended correction that
-arrives along the error falls from 7.6 at size 0.01 (small errors are amplified) through 0.90 at size 1 to 0.093 at
-size 10. At the size ECO's rule gives for this error at learning rate $10^{-3}$ (22 times the momentum on average),
-4.6\% of the intended correction arrives, and the update keeps a cosine of only 0.015 with the error-free update: the
-gradient's direction is gone. Even an error one tenth the size of the momentum turns the update by about $40^\circ$
-(cosine 0.76 with the error-free update). A random error direction behaves the same way, so this is a
-property of Newton--Schulz, not of the 4-bit leftover. An earlier training-time measurement on a small character-level
-model found the same cosine, about 0.69, and showed ECO-Muon training ending worse than no error feedback at all
+\subsection{Measurement on GPT-2 small}\label{sec:m}
+We take pretrained GPT-2 small \citep{radford2019gpt2}, compute real gradients of its 48 block matrices on FineWeb
+\citep{penedo2024fineweb} windows, and build Muon's Nesterov momentum over 40 steps (2 windows of 1,024 tokens each).
+We then add to $U$ an error whose direction is each matrix's actual 4-bit rounding remainder $W - \RTN(W)$, at sizes
+from 0.01 to 10 times $\norm{U}$, and compare the change in the update with the error (Figure~\ref{fig:m},
+Table~\ref{tab:m}). For SGD with momentum the error passes through exactly. Adam with ECO's per-weight rule also passes
+it through exactly, because ECO multiplies the error by the same per-weight factor that Adam divides by; injected
+without that factor, Adam rescales it weight by weight (cosine 0.80).
+
+For Muon, the cosine between the delivered and the intended correction is 0.65--0.77 at every size (0.48--0.91 for
+single matrices). The share of the intended correction that arrives along the error falls from 7.6 at size 0.01,
+where small errors are amplified, through 0.90 at size 1 to 0.093 at size 10. At the size ECO's rule gives for this
+error at learning rate $10^{-3}$, 22 times the momentum on average, 4.6\% of the intended correction arrives, and the
+update keeps a cosine of only 0.015 with the error-free update. Even an error one tenth the size of the momentum turns
+the update by about $40^\circ$ (cosine 0.76 with the error-free update). A random error direction behaves the same
+way, so the effect comes from Newton--Schulz itself. An earlier training-time measurement on a small character-level
+model found the same cosine, about 0.69, and ECO with Muon there ended worse than no error feedback at all
 (Appendix~\ref{app:toy}).
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/m_ns_survival.pdf}
-\caption{Error fed into the momentum, pretrained GPT-2 small, 48 block matrices (mean $\pm$ standard error over
+\caption{Error added to the momentum, pretrained GPT-2 small, 48 block matrices (mean $\pm$ standard error over
 matrices). (a) Cosine between the change in the update and the injected error. (b) Share of the intended correction
 that arrives along the error ($=$ cosine $\times$ size ratio; 1 means it passes through intact); the grey band is the
-size ECO's rule gives at learning rates $3\cdot10^{-3}$ to $10^{-4}$. (c) Muon's step size: the RMS singular value of
-$\NS(U)$ against the RMS of the momentum $U$, for every matrix and step.}
+size ECO's rule gives at learning rates $3\cdot10^{-3}$ to $10^{-4}$. (c) Muon's step size: the root-mean-square
+singular value of $\NS(U)$ against the root-mean-square of the momentum $U$, for every matrix and step.}
 \label{fig:m}
 \end{figure}
 
 \begin{table}[t]
 \centering
-\caption{Survival of an error added to the momentum (actual 4-bit rounding leftover as direction). Mean over the 48
-block matrices of GPT-2 small, momentum built over 40 steps (\texttt{runs/paper/M\_RESULT.md}). Share arriving: the
-part of the change along the error, as a share of the error passed through at the optimizer's average gain.}
+\caption{Survival of an error added to the momentum, with the actual 4-bit rounding remainder as direction. Mean over
+the 48 block matrices of GPT-2 small, momentum built over 40 steps. Share arriving: the part of the change along the
+error, as a share of the error passed through at the optimizer's average gain.}
 \label{tab:m}
 \begin{tabular}{lccc}
 \toprule
@@ -274,89 +297,120 @@ Muon, ECO's size at $\eta = 10^{-3}$ ($22\times$) & 0.65 & 0.071 & 0.046 \\
 \end{table}
 
 % ======================================================================================================================
-\section{A noise model for the carry}\label{sec:noise}
+\section{A noise model for the carry width}\label{sec:noise}
 
-The ticker differs from a float copy only through random rounding of the carry (and of the momentum, which we leave
-out here). Each step rounds the carry to a multiple of $u_b = g/(2L) \approx g/2^b$, where $g$ is the weight's gap.
-Stochastic rounding is unbiased, and its error on one step has variance $p(1-p)u_b^2 \le u_b^2/4$. Fresh random bits
-are drawn at every step, so the errors are independent and after $T$ steps they add up to a random drift of standard
-deviation at most
+Before the main experiments we registered a simple model for how many carry bits are needed. The ticker differs from
+a float copy only through the random rounding of the carry (and of the momentum, which the model ignores). Each step
+rounds the carry to a multiple of $u_b = g/(2L) \approx g/2^b$, where $g$ is the weight's gap. Stochastic rounding is
+unbiased, and its error on one step has variance $p(1-p)u_b^2 \le u_b^2/4$. Fresh random bits are drawn at every
+step, so the errors are independent, and after $T$ steps they add up to a drift with standard deviation at most
 \[
   D_b(T) = \frac{u_b}{2}\sqrt{T} \approx \frac{g}{2^b}\cdot\frac{\sqrt{T}}{2} .
 \]
-Meanwhile Muon moves each weight by about $\eta\, \alpha\bar f/\sqrt{\max(m,n)} =: \eta\, \bar u$ per step (Fact 1).
-If the weight keeps moving in one direction its intended travel is $\eta\bar u T$, and the ratio
+Muon moves each weight by about $\eta\, \alpha\bar f/\sqrt{\max(m,n)} =: \eta\, \bar u$ per step
+(Section~\ref{sec:mechanism}). If the weight keeps moving in one direction, its intended travel is $\eta\bar u T$, and
+the ratio
 \[
   \rho = \frac{D_b(T)}{\eta\,\bar u\,T} = \frac{g}{2^{b+1}\,\eta\,\bar u\,\sqrt{T}}
 \]
-measures how much of that travel is noise. A carry of $b$ bits is enough when $\rho$ is below a threshold $\rho^*$,
-which we fit on two learning rates and test on two others (Section~\ref{sec:p3}).
+measures how much of that travel is noise. The model says a carry of $b$ bits is enough when $\rho$ is below a
+threshold $\rho^*$, which we fit on two learning rates and test on two others (Section~\ref{sec:p3}).
 
-\paragraph{Assumptions, stated honestly.}
-(i) Rounding errors at different steps are independent; this holds for the random bits, but the weight's position
-also feeds back into the gradient. (ii) Travel is linear in $T$. If the update's sign flips from step to step, the
-travel grows more slowly (like $\sqrt{T}$ for a pure random walk), and $\rho$ underestimates the damage. (iii) The gap
-$g$ is fixed; in reality it changes when a weight moves to another grid cell or the block's largest weight changes the
-scale. (iv) The momentum's 8-bit rounding noise is ignored. (v) The model predicts a per-weight noise level, not the
-loss: mapping $\rho$ to a loss gap assumes the damage grows with $\rho$ (P3a tests only the ranking). The model is
-cleaner for Muon than for Adam because Fact 1 makes $\bar u$ a constant of the matrix shape; under Adam the per-weight
-step $|\hat m|/\sqrt{\hat v}$ varies with each weight's gradient signal-to-noise ratio.
+The model rests on five assumptions. (i) Rounding errors at different steps are independent; this holds for the
+random bits, but the weight's position also feeds back into the gradient. (ii) Travel is linear in $T$; if the
+update's sign flips from step to step, travel grows more slowly and $\rho$ underestimates the damage. (iii) The gap
+$g$ is fixed, whereas in practice it changes when a weight moves to another grid cell or the block's scale changes.
+(iv) The momentum's 8-bit rounding noise is ignored. (v) Damage to the loss grows with $\rho$; the model itself
+predicts only a per-weight noise level. The model suits Muon better than Adam, because the fixed step size makes
+$\bar u$ a constant of the matrix shape, whereas Adam's per-weight step $|\hat m|/\sqrt{\hat v}$ varies with each
+weight's gradient signal-to-noise ratio.
 
 % ======================================================================================================================
 \section{Experiments}\label{sec:experiments}
 
-All pass lines were written before the runs (\texttt{PAPER\_PLAN.md}, revision 3) and are reported whether or not
-they hold. Within a table all arms run on the same GPU type and number format. Seeds: 3 for close arms, 1 for arms
-expected to be far apart; a 1-seed gap counts only if it exceeds 10 times the largest seed standard deviation of the
-same table. Every loss carries a paired standard error over 256 fixed validation windows of 1,024 tokens.
-
-\subsection{P1: GPT-2 small, continued training (headline)}\label{sec:p1}
-Pretrained GPT-2 small \citep{radford2019gpt2}, 100M FineWeb \citep{penedo2024fineweb} tokens (3,050 steps of
-$32\times1024$ tokens), Muon at $10^{-3}$ on the 48 block matrices and AdamW at $10^{-4}$ on the rest, 5\% warm-up
-then cosine to 10\%. One A100, fp16 with loss scaling, TF32 off, deterministic. Arms: ours (8-bit carry, 8-bit
-momentum), 4-bit with a float copy and Muon, bf16 weights with random rounding and 8-bit momentum (bf16-SR), Kahan
-(ours with an exact fp32 carry), float Muon, 4-bit with a float copy and AdamW, naive (4-bit weights rounded at random,
-no carry), ECO-Muon (ECO's injection into Muon's momentum) and ECO-AdamW (ECO as its paper runs it, see below).
-Table~\ref{tab:p1} gives the final losses; all five pass lines hold. After the runs, the float Muon and bf16-SR
-models (seed 1) and the pretrained start were also rounded to the 4-bit grid with GPTQ \citep{frantar2023gptq}, the
-standard careful rounding after training, with its prediction and reading written before those runs
-(Appendix~\ref{app:changes}). GPTQ rounds one column at a time and shifts each column's error onto the columns not yet
-rounded, using 128 calibration windows from the training data; our version uses the same 4-bit values and per-16
-block scales as every 4-bit arm, with each block's scale set from the already error-shifted weights.
+\paragraph{Protocol.} The experiments are labelled P1--P6 as in the registered plan. Within a table, all methods run
+on the same GPU type and number format. We ran 3 seeds where methods were expected to be close and 1 seed where they
+were expected to be far apart; a single-seed difference counts only if it exceeds 10 times the largest seed standard
+deviation in the same table. Language-model losses are validation cross-entropy in nats per token on 256 fixed
+FineWeb windows of 1,024 tokens. A $\pm$ after a loss difference is the paired standard error over those 256 windows,
+which captures evaluation noise for a fixed model; seed-to-seed variation is reported separately as a standard
+deviation over seeds. RL intervals are 95\% intervals from the paired standard error over the 1,319 test questions,
+with each question's 0/1 result averaged over seeds. Hardware, run times and total compute, including runs that were
+discarded, are in Appendix~\ref{app:compute}.
 
 \begin{table}[t]
 \centering
-\caption{P1: final validation loss, GPT-2 small, 100M tokens. $\pm$: paired standard error over 256 windows
-(evaluation noise). Seed standard deviation (largest 3-seed arm) 0.0033, so a 1-seed gap counts only above 0.033.}
+\caption{Criteria registered before each experiment and their outcomes. Differences are in validation loss (lower is
+better) unless stated; RL differences are in GSM8K test accuracy points.}
+\label{tab:criteria}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.075\linewidth}>{\raggedright\arraybackslash}p{0.395\linewidth}>{\raggedright\arraybackslash}p{0.32\linewidth}l@{}}
+\toprule
+& criterion & result & outcome \\
+\midrule
+P1a & ticker $\le$ float copy (Muon) $+0.03$, each seed & $+0.0011, +0.0006, +0.0023$ \newline ($\pm 0.0005$) & met \\
+P1b & ticker at least 0.02 below naive rounding and below ECO-Muon, beyond the single-seed rule & 0.160 and 0.037
+($\pm 0.002$); rule 0.033 & met \\
+P1c & ticker below bf16-SR rounded to nearest, each seed & $0.046, 0.049, 0.043$ ($\pm 0.001$) & met \\
+P1d & ticker within 0.01 of the exact fp32 carry & $+0.0012 \pm 0.0005$ & met \\
+P1e & ticker below ECO-AdamW by more than 2 s.e., each seed & $0.079, 0.080, 0.080$ \newline ($\pm 0.0014$) & met \\
+P2a & ticker $\le$ float copy $+0.03$, each seed & $+0.0049, +0.0128, +0.0101$ \newline ($\pm 0.0019$) & met \\
+P2c & ticker (mean) below bf16-SR rounded to nearest by more than 2 seed s.d. & 1.132 (2 s.d. $= 0.013$) & met \\
+GPTQ & every bf16 or float model rounded with GPTQ above the ticker by more than 2 s.e.; otherwise the claim narrows
+& P1: $+0.0091$, $+0.0122$ ($\pm 0.0007$); P2: $+0.0028 \pm 0.0021$ & not met \\
+P3a & rank correlation between $\rho$ and the measured gap $\ge 0.8$ & 0.795 & not met \\
+P3b & threshold fitted on two learning rates predicts the smallest working carry within one level on the other two
+& predicts 12 bits at $10^{-4}$, where 6 bits worked & not met \\
+P3c & noise model's predicted carry used for RL & 8 bits used instead & not tested \\
+P5a & lower end of the 95\% interval of ticker $-$ full precision above $-4$ points & $-3.7$, $[-5.2, -2.2]$ & not met \\
+P5b & ticker gains at least 5 points over its 4-bit start, interval above 0 & $+20.4$, $[+18.0, +22.9]$ & met \\
+P6a & ticker's peak memory $\le 0.35\times$ the standard setup's & 0.318 & met \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{P1: continued training of GPT-2 small}\label{sec:p1}
+\paragraph{Setup.} Pretrained GPT-2 small \citep{radford2019gpt2} is trained on 100M FineWeb tokens (3,050 steps of
+$32\times1024$ tokens), with Muon at $10^{-3}$ on the 48 block matrices and AdamW at $10^{-4}$ on the remaining
+parameters, 5\% warm-up and cosine decay to 10\%, on one A100 in fp16 with loss scaling, TF32 off and deterministic
+kernels. We compare the ticker (8-bit carry, 8-bit momentum) with: 4-bit weights trained from a float copy, with Muon
+and with AdamW; Kahan, the ticker with an exact fp32 carry; bf16 weights with stochastic rounding and 8-bit momentum
+(bf16-SR), scored both in bf16 and rounded to 4 bits after training; float Muon, scored in fp32 and rounded; naive
+4-bit training, which rounds the weights at random with no carry; ECO-Muon, ECO's injection into Muon's momentum; and
+ECO-AdamW, ECO as its paper runs it. After these runs, we also rounded the float Muon and bf16-SR models (seed 1) and
+the pretrained starting point to 4 bits with GPTQ \citep{frantar2023gptq}, with predictions registered before the
+GPTQ runs. GPTQ rounds one column at a time and shifts each column's error onto the columns not yet rounded, using
+second-order statistics from 128 calibration windows of training data. Our implementation uses the same 4-bit values
+and per-16 block scales as every 4-bit method, with each block's scale set from the already-corrected weights.
+
+\begin{table}[t]
+\centering
+\caption{P1: final validation loss, GPT-2 small after 100M tokens. The paired standard error of a difference between
+two models is about 0.0005--0.0014 (Table~\ref{tab:criteria}). The largest seed standard deviation among the 3-seed
+methods is 0.0033.}
 \label{tab:p1}
 \small
 \begin{tabular}{lcccc}
 \toprule
-arm & bytes/weight & seed 1 & seed 2 & seed 3 \\
+method & bytes/weight & seed 1 & seed 2 & seed 3 \\
 \midrule
-\textbf{ours} & 2.78 & 3.2884 & 3.2892 & 3.2889 \\
+\textbf{ticker} & 2.78 & 3.2884 & 3.2892 & 3.2889 \\
 4-bit + float copy, Muon & 8 & 3.2873 & 3.2886 & 3.2866 \\
-bf16-SR, rounded to 4 bits & 3.03 & 3.3346 & 3.3387 & 3.3322 \\
-bf16-SR, scored in bf16 & 3.03 & 3.2690 & 3.2720 & 3.2695 \\
-Kahan (fp32 carry) & 5.78 & 3.2872 & & \\
-float Muon & 8 & 3.2670 & & \\
-float Muon, rounded to 4 bits & 8 & 3.3303 & & \\
-float Muon, GPTQ to 4 bits & 8 & 3.2975 & & \\
-bf16-SR, GPTQ to 4 bits & 3.03 & 3.3006 & & \\
 4-bit + float copy, AdamW & 12 & 3.2840 & 3.2859 & 3.2846 \\
-ECO-AdamW (random rounding) & 8.75 & 3.3679 & 3.3693 & 3.3687 \\
-naive (random rounding, no carry) & 1.78 & 3.4483 & & \\
+Kahan (fp32 carry) & 5.78 & 3.2872 & & \\
+bf16-SR, scored in bf16 & 3.03 & 3.2690 & 3.2720 & 3.2695 \\
+bf16-SR, rounded to nearest & 3.03 & 3.3346 & 3.3387 & 3.3322 \\
+bf16-SR, rounded with GPTQ & 3.03 & 3.3006 & & \\
+float Muon, scored in fp32 & 8 & 3.2670 & & \\
+float Muon, rounded to nearest & 8 & 3.3303 & & \\
+float Muon, rounded with GPTQ & 8 & 3.2975 & & \\
+ECO-AdamW (stochastic rounding) & 8.75 & 3.3679 & 3.3693 & 3.3687 \\
 ECO-Muon (Newton--Schulz in fp32) & 1.78 & 3.3253 & & \\
-start: pretrained (float) & & 3.4025 & & \\
-start: pretrained, rounded to 4 bits & & 3.4620 & & \\
-start: pretrained, GPTQ to 4 bits & & 3.4285 & & \\
+naive (stochastic rounding, no carry) & 1.78 & 3.4483 & & \\
 \midrule
-\multicolumn{5}{l}{P1a: ours $-$ float copy $= +0.0011, +0.0006, +0.0023$ ($\pm 0.0005$); line $+0.03$ \hfill PASS}\\
-\multicolumn{5}{l}{P1b: naive $-$ ours $= 0.160$, ECO-Muon $-$ ours $= 0.037$ ($\pm 0.002$); line $0.02$ and $0.033$ \hfill PASS}\\
-\multicolumn{5}{l}{P1c: bf16-SR rounded $-$ ours $= 0.046, 0.049, 0.043$ ($\pm 0.001$) \hfill PASS}\\
-\multicolumn{5}{l}{P1d: ours $-$ Kahan $= +0.0012 \pm 0.0005$; line $0.01$ \hfill PASS}\\
-\multicolumn{5}{l}{P1e: ECO-AdamW $-$ ours $= 0.079, 0.080, 0.080$ ($\pm 0.0014$); line $2\times$ s.e. \hfill PASS}\\
-\multicolumn{5}{l}{GPTQ: float Muon $-$ ours $= 0.009$, bf16-SR $-$ ours $= 0.012$ ($\pm 0.0007$, seed 1) \hfill measured}\\
+start: pretrained, in fp32 & & 3.4025 & & \\
+start: rounded to nearest & & 3.4620 & & \\
+start: rounded with GPTQ & & 3.4285 & & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -364,59 +418,56 @@ start: pretrained, GPTQ to 4 bits & & 3.4285 & & \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.48\linewidth]{figures/p1_curves.pdf}
-\caption{P1: validation loss of every arm, seed 1. Ours, Kahan and the 4-bit float copy overlap; naive rounding gets
-worse after the first steps; ECO-Muon and ECO-AdamW stall.}
+\caption{P1: validation loss during training, seed 1. The ticker, Kahan and the 4-bit float copy overlap; naive
+rounding gets worse after the first steps; ECO-Muon and ECO-AdamW stall.}
 \label{fig:p1}
 \end{figure}
 
-\paragraph{What it shows.} With 2.78 bytes per weight, ours ends 0.0013 (mean of 3 seeds) behind training the same
-4-bit model with an 8-byte float copy, and 0.0012 behind an exact fp32 carry, so the 8-bit carry loses almost nothing.
-Training in 4 bits beats training in higher precision and rounding to nearest at the end: bf16-SR is the best model
-while it is scored in bf16, but rounded to nearest 4-bit values it is 0.043--0.049 worse than ours, and float Muon rounded to 4 bits is 0.042
-worse. GPTQ recovers about half of what rounding to nearest loses (52\% for both trained models, 56\% for the
-pretrained start), and both GPTQ models are still behind ours, by $0.0091 \pm 0.0007$ (float Muon) and
-$0.0122 \pm 0.0007$ (bf16-SR). The price of 4-bit weights themselves (ours against float Muon in fp32) is $+0.021$, the same as for the float
-copy ($+0.020$). ECO-Muon does better than naive rounding but freezes the 4-bit weights: only 0.0004\% of them change
-per step (ours: 0.14\%), falling to zero by the end. The injected error dominates the momentum, so each step mostly
-points back towards undoing the last rounding (Section~\ref{sec:mechanism}). Its first run, with Newton--Schulz in
-fp16 like every other arm, overflowed by step 10, because the injected error makes the momentum far larger than usual;
-the run in Table~\ref{tab:p1} repeats it with Newton--Schulz in fp32, which can only help it.
+\paragraph{Results.} At 2.78 bytes per weight the ticker ends 0.0013 above the 8-byte float copy (mean of 3 seeds),
+and 0.0012 above an exact fp32 carry, so an 8-bit carry loses almost nothing (Table~\ref{tab:p1}). The cost of 4-bit
+weights themselves, measured against float Muon, is $+0.021$ for the ticker and $+0.020$ for the float copy. bf16-SR
+is the best model while it stays in bf16, but rounded to nearest 4-bit values it ends 0.043--0.049 behind the ticker,
+and float Muon rounded the same way ends 0.042 behind. GPTQ recovers about half of what rounding to nearest loses (52\%
+for both trained models, 56\% for the pretrained start), and both GPTQ models remain behind the ticker, by
+$0.0091 \pm 0.0007$ (float Muon) and $0.0122 \pm 0.0007$ (bf16-SR).
 
-\paragraph{ECO in its own setting (P1e).} ECO-Muon is our adaptation; the ECO paper gives SGD and Adam. P1e runs its
-Adam version \citep[Algorithm 3]{nikdan2026eco}: the same 4-bit grid, random rounding (which the ECO paper finds works best),
-the rounding error injected into Adam's first moment, both moments in fp32, and the learning rate, betas and weight
-decay of the AdamW float copy, untuned for ECO. This arm and its pass line were added after an outside review and
-before the runs (Appendix~\ref{app:changes}). ECO-AdamW ends 0.080 behind ours in every seed, and 0.084 behind the
-float copy trained with the same AdamW; ours is 0.0040 behind that float copy at 2.78 bytes per weight against 12. It
-drops to 3.359 in the first 300 steps and then stays flat while the float copy keeps improving. Its weights are not
-frozen: 1.6\% of its 4-bit values change per step (ours: 0.14\%). A likely reading, not measured: each AdamW step is
-much smaller than a 4-bit gap, so random rounding adds noise of about a gap at every step, and the injection returns
-only a $(1-\beta_1)$ share of each step's error to the weights; the ticker keeps all of it.
+ECO-Muon improves on naive rounding but freezes the 4-bit weights: only 0.0004\% of them change per step, against
+0.14\% for the ticker, and the rate falls to zero by the end of training. The injected error dominates the momentum, so
+each step mostly points back towards undoing the last rounding (Section~\ref{sec:mechanism}). Its first run, with
+Newton--Schulz in fp16 like every other method, overflowed by step 10 because the injected error makes the momentum
+far larger than usual. The run in Table~\ref{tab:p1} repeats it with Newton--Schulz in fp32, which can only help it.
 
-\subsection{P2: from scratch, 45M parameters}\label{sec:p2}
-A GPT-2-style model with 6 layers of width 512 (45.2M parameters) is trained from random weights on 0.9B FineWeb
-tokens (27,466 steps of $32\times1024$, about 20 tokens per parameter). The Muon learning rate (0.04, with AdamW at
-$4\cdot10^{-3}$) was picked from three by short runs of the float copy, the same rate for every arm. Ours and the 4-bit
-float copy run 3 seeds, bf16-SR one.
+\paragraph{ECO in its own setting.} ECO-Muon is our adaptation, since the ECO paper gives SGD and Adam only. P1e
+therefore runs its Adam version \citep[Algorithm 3]{nikdan2026eco}: the same 4-bit grid, stochastic rounding, which
+the ECO paper finds works best, the rounding error injected into Adam's first moment, both moments in fp32, and the
+learning rate, betas and weight decay of the AdamW float copy, not tuned for ECO. This comparison was added after an
+outside review and registered before it ran (Appendix~\ref{app:changes}). ECO-AdamW ends 0.080 behind the ticker in
+every seed and 0.084 behind the float copy trained with the same AdamW, against 0.0040 for the ticker at 2.78 bytes per
+weight instead of 12. It drops to 3.359 in the first 300 steps and then stays flat while the float copy keeps
+improving. Its weights are not frozen: 1.6\% of its 4-bit values change per step. We did not test why it stalls. A
+plausible cause is that each AdamW step is much smaller than a 4-bit gap, so stochastic rounding adds noise of about a
+gap at every step, while the injection returns only a $(1-\beta_1)$ share of each step's error to the weights.
+
+\subsection{P2: training from scratch}\label{sec:p2}
+\paragraph{Setup.} A GPT-2-style model with 6 layers of width 512 (45.2M parameters) is trained from random weights on
+0.9B FineWeb tokens (27,466 steps of $32\times1024$ tokens, about 20 tokens per parameter). The Muon learning rate,
+0.04 with AdamW at $4\cdot10^{-3}$, was chosen from three values by short runs of the float copy and used for every
+method. The ticker and the float copy ran 3 seeds and bf16-SR one; the bf16-SR model was also rounded with GPTQ.
 
 \begin{table}[t]
 \centering
-\caption{P2: final validation loss, 45M model from scratch, 0.9B tokens.}
+\caption{P2: final validation loss, 45M model trained from scratch on 0.9B tokens.}
 \label{tab:p2}
 \small
 \begin{tabular}{lccccc}
 \toprule
-arm & bytes/weight & seed 1 & seed 2 & seed 3 & mean $\pm$ seed s.d. \\
+method & bytes/weight & seed 1 & seed 2 & seed 3 & mean $\pm$ seed s.d. \\
 \midrule
-\textbf{ours} & 2.78 & 3.9127 & 3.9262 & 3.9196 & $3.9195 \pm 0.0067$ \\
+\textbf{ticker} & 2.78 & 3.9127 & 3.9262 & 3.9196 & $3.9195 \pm 0.0067$ \\
 4-bit + float copy, Muon & 8 & 3.9078 & 3.9133 & 3.9095 & $3.9102 \pm 0.0028$ \\
 bf16-SR, scored in bf16 & 3.03 & 3.8894 & & & \\
-bf16-SR, rounded to 4 bits & 3.03 & 5.0515 & & & \\
-bf16-SR, GPTQ to 4 bits & 3.03 & 3.9155 & & & \\
-\midrule
-\multicolumn{6}{l}{P2a: ours $-$ float copy $= +0.0049, +0.0128, +0.0101$ ($\pm 0.0019$); line $+0.03$ \hfill PASS}\\
-\multicolumn{6}{l}{P2c: bf16-SR rounded $-$ ours $= 1.132$; line $2\times 0.0067$ \hfill PASS}\\
-\multicolumn{6}{l}{GPTQ: bf16-SR with GPTQ $-$ ours $= +0.0028 \pm 0.0021$ (seed 1); reading $2\times$ s.e. \hfill not resolved}\\
+bf16-SR, rounded to nearest & 3.03 & 5.0515 & & & \\
+bf16-SR, rounded with GPTQ & 3.03 & 3.9155 & & & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -424,33 +475,32 @@ bf16-SR, GPTQ to 4 bits & 3.03 & 3.9155 & & & \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/p2_curves.pdf}
-\caption{P2: (a) validation loss from step 2,000, seed 1; (b) ours minus the float copy at the end, per seed.}
+\caption{P2: (a) validation loss from step 2,000, seed 1; (b) ticker minus float copy at the end of training, per
+seed.}
 \label{fig:p2}
 \end{figure}
 
-\paragraph{What it shows.} From scratch the gap to the float copy is larger than in continued training (mean
-$+0.009$ against $+0.0013$) and resolved on every seed, but well inside the line, and the carry never overflowed.
-Ours also varies more from seed to seed (0.0067 against 0.0028): the random rounding of the carry adds a little
-seed noise. Rounded to nearest, bf16-SR, the best model in bf16 (3.889), loses 1.16. GPTQ recovers 98\% of that
-loss: the GPTQ model scores 3.9155, $0.0028 \pm 0.0021$ above ours on seed 1, which does not exceed twice its
-standard error, and it lies inside the spread of our three seeds (3.913--3.926). From scratch, then, training in
-bf16 with random rounding and rounding the result with GPTQ is as good as the ticker on this model, at 3.03 bytes
-per weight against 2.78, and our claim against training in higher precision holds only against rounding to nearest.
-Why GPTQ recovers almost all of the loss here and about half in continued training is not tested. The chosen
-learning rate is the top of its grid, so a larger
-one might be better for every arm.
+\paragraph{Results.} From scratch, the gap to the float copy is larger than in continued training (mean $+0.009$
+against $+0.0013$) and is resolved in every seed, but it stays well inside the registered margin, and the carry never
+overflowed. The ticker also varies more between seeds (standard deviation 0.0067 against 0.0028), which we attribute
+to the random rounding of the carry. bf16-SR is again the best model in bf16 (3.889), and rounding it to nearest costs
+1.16. GPTQ recovers 98\% of that loss, and the GPTQ model scores 3.9155, $0.0028 \pm 0.0021$ above the ticker's seed 1,
+which is less than twice its standard error, and inside the range of the ticker's three seeds (3.913--3.926). By the
+reading registered before the GPTQ runs, the claim that 4-bit training beats training in higher precision and
+rounding afterwards therefore holds here only against rounding to nearest. At this scale, bf16-SR followed by GPTQ
+produces an equally good 4-bit model for 3.03 bytes per weight instead of 2.78. We did not test why GPTQ recovers
+nearly everything here and only about half in continued training. The learning rate is the largest of the three
+tried, so a larger one might help every method.
 
-\subsection{P3: the noise model}\label{sec:p3}
-Continued training of GPT-2 small for 10M tokens (305 steps, same schedule shape), at Muon learning rates
-$\{10^{-4}, 3\cdot10^{-4}, 10^{-3}, 3\cdot10^{-3}\}$, with carries of $\{4,6,8,12\}$ bits and the float copy at each
-rate (20 runs, seed 1). Table~\ref{tab:p3} gives each cell's gap to the float copy and Figure~\ref{fig:p3} plots it
-against $\rho$. \textbf{Both pass lines fail.} The rank correlation between $\rho$ and the gap is 0.795 (P3a, line
-0.8). The threshold fitted on the two middle rates, $\rho^* = 1.01$, separates working from failing cells there without
-error, but on the held-out rates it predicts 12 bits at $10^{-4}$, where 6 bits already worked (P3b: two levels off).
+\subsection{P3: carry width and learning rate}\label{sec:p3}
+\paragraph{Setup.} GPT-2 small is trained for 10M tokens (305 steps, same schedule shape) at Muon learning rates
+$\{10^{-4}, 3\cdot10^{-4}, 10^{-3}, 3\cdot10^{-3}\}$, with carries of $\{4,6,8,12\}$ bits and a float copy at each
+rate: 20 runs, seed 1. Table~\ref{tab:p3} gives each run's gap to the float copy, and Figure~\ref{fig:p3} plots the gap
+against $\rho$.
 
 \begin{table}[t]
 \centering
-\caption{P3: ours minus the float copy at the same learning rate, 10M tokens, seed 1 ($\pm$: paired standard error).}
+\caption{P3: ticker minus float copy at the same learning rate, 10M tokens, seed 1 ($\pm$: paired standard error).}
 \label{tab:p3}
 \small
 \begin{tabular}{lcccc}
@@ -465,6 +515,25 @@ carry bits & $10^{-4}$ & $3\cdot10^{-4}$ & $10^{-3}$ & $3\cdot10^{-3}$ \\
 \end{tabular}
 \end{table}
 
+\begin{table}[t]
+\centering
+\caption{P3: share of 4-bit values that change at each step (\%), mean over the logged steps of the second half of
+training. Computed after the registered analysis, from quantities logged during the runs.}
+\label{tab:p3flip}
+\small
+\begin{tabular}{lcccc}
+\toprule
+& $10^{-4}$ & $3\cdot10^{-4}$ & $10^{-3}$ & $3\cdot10^{-3}$ \\
+\midrule
+4-bit carry & 1.57 & 1.62 & 1.61 & 1.63 \\
+6-bit carry & 0.35 & 0.36 & 0.39 & 0.43 \\
+8-bit carry & 0.088 & 0.095 & 0.111 & 0.150 \\
+12-bit carry & 0.008 & 0.012 & 0.028 & 0.076 \\
+float copy & 0.003 & 0.010 & 0.034 & 0.101 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.5\linewidth]{figures/p3_noise_model.pdf}
@@ -473,17 +542,32 @@ within 2 errors of zero). Dashed: the fitted threshold $\rho^*$.}
 \label{fig:p3}
 \end{figure}
 
-\paragraph{Why it fails, and what holds instead.} The damage depends on the carry width and hardly on the learning
-rate: 4 bits costs about 0.045 at every rate, 6 bits 0.002--0.004, and 8 and 12 bits nothing measurable. The model
-assumes each step adds a fixed amount of rounding noise, so small learning rates, which need many small steps, should
-suffer most. They do not. Random rounding of a small change adds noise in proportion to that change (its variance is
-about $u_b\,|\text{step}|$, not $u_b^2/4$), so the noise shrinks with the step. The carry width alone ranks the cells
-with a correlation of 0.92; this is a reading after the data, not a tested claim. In practice an 8-bit carry was
-enough at every learning rate we tried, and the RL experiments use it. Before any RL result, the failed model
-predicted a 12-bit carry for P5; that prediction was recorded and not tested.
+\paragraph{Results.} The noise model fails both registered tests. The rank correlation between $\rho$ and the gap is
+0.795, just below the required 0.8. The threshold fitted on the two middle rates, $\rho^* = 1.01$, separates working
+from failing runs there without error, but on the held-out rates it predicts that 12 bits are needed at $10^{-4}$,
+where 6 bits already suffice, two levels off. The damage depends on the carry width and hardly on the learning rate:
+a 4-bit carry costs about 0.045 at every rate, a 6-bit carry 0.002--0.004, and 8 and 12 bits nothing measurable. Ranked by carry width
+alone, the runs correlate with the gap at 0.92, a measure chosen after seeing the data. The
+model predicts the opposite trend, since smaller learning rates need more steps per unit of travel and should
+accumulate more noise.
+
+The flip rates logged during the same runs suggest why (Table~\ref{tab:p3flip}). With a float copy the share of
+4-bit values that change per step grows thirty-fold from the smallest to the largest learning rate, as expected when
+weights tick at a speed set by the step size. With a 4-bit carry it is 1.6\% at every rate, and at the smaller rates each two
+extra carry bits divide it by about four. After a weight ticks, its remainder is close to half a gap, so its carry sits next to
+the rounding boundary. There, the random rounding of the carry moves the target by up to one carry unit ($1/14$ of a
+gap at 4 bits), which is much larger than one Muon step at any of these learning rates, so the weight flips back and
+forth at random instead of following the gradient. The number of weights near the boundary scales with the carry unit,
+which matches the factor of four per two bits, and the jitter does not depend on the step size, which matches the flat
+damage at 4 bits. This reading was formed after seeing the data and has not been tested separately; the noise model's
+small-step correction (variance about $u_b\,|\eta\bar u|$ instead of $u_b^2/4$) still predicts a dependence on the
+learning rate and does not explain the flat rows either. An 8-bit carry was sufficient at every learning rate we
+tried, and the RL experiments use it; the noise model's prediction of a 12-bit carry for RL was recorded but not
+tested.
 
 \subsection{P4: ablations}\label{sec:p4}
-Starting from ours, one thing is changed at a time (GPT-2 small, 25M tokens, seed 1; looks, not pass lines).
+Starting from the ticker, we changed one design choice at a time (GPT-2 small, 25M tokens, seed 1; these runs had no
+registered criteria).
 
 \begin{table}[t]
 \centering
@@ -492,53 +576,56 @@ Starting from ours, one thing is changed at a time (GPT-2 small, 25M tokens, see
 \small
 \begin{tabular}{lccc}
 \toprule
-run & final loss & minus ours & changing per step \\
+run & final loss & minus ticker & changing per step \\
 \midrule
-ours & 3.3047 & & 0.133\% \\
+ticker & 3.3047 & & 0.133\% \\
 carry in absolute units (block's largest gap) & 3.3059 & $+0.0012 \pm 0.0005$ & 0.101\% \\
-weight rounded at random, not to nearest & 3.3759 & $+0.0713 \pm 0.0012$ & 31.2\% \\
+weight rounded stochastically instead of to nearest & 3.3759 & $+0.0713 \pm 0.0012$ & 31.2\% \\
 Error Diffusion's cap (0.25 gap per step) & 3.3043 & $-0.0004 \pm 0.0004$ & 0.133\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Rounding the weight to nearest matters most: with random rounding a third of the weights flip every step and the
-loss is 0.071 worse. Measuring the carry in units of each weight's own gap helps a little (0.0012). Error Diffusion's
-per-step cap never binds at this learning rate, since Muon's steps are far below a quarter of a gap.
+Rounding the weight to nearest matters most. With stochastic rounding a third of the weights flip at every step and
+the loss is 0.071 worse. Measuring the carry in units of each weight's own gap helps a little (0.0012). Error
+Diffusion's cap on the step never binds at this learning rate, because Muon's steps are far below a quarter of a gap.
 
 \subsection{P5: full-parameter RL in 4 bits}\label{sec:p5}
-\paragraph{Setup.} Qwen3.5-0.8B (post-trained, non-thinking mode), GSM8K \citep{cobbe2021gsm8k}, GRPO
-\citep{shao2024deepseekmath} with 8 answers to each of 32 questions per step, reward 1 if the final number is right,
-200 steps, no KL term, one update per step. Answers are written by vLLM in the same process, with the trained
-weights copied in (in bf16) after every step. The exam is the 1,319 test questions, greedy, at the start and the end.
-Three arms:
-(a) full-parameter training in bf16 with an fp32 copy, Muon on the decoder matrices;
-(b) the 4-bit model frozen, with LoRA \citep{hu2022lora} of rank 32 on every decoder matrix, trained with AdamW at
-$10^{-5}$ (QeRL-style \citep{huang2025qerl});
-(c) ours: every decoder matrix stored in 4 bits with an 8-bit carry, Muon.
-(b) and (c) start from the same round-to-nearest 4-bit model. Muon's learning rate was $10^{-4}$ with a guard written
-in advance; the guard fired ((a)'s training reward peaked near step 35 and collapsed, and its exam score fell from
-54.7\% to 36.6\%), so as written every run uses $4\cdot10^{-5}$.
+\paragraph{Setup.} We train Qwen3.5-0.8B (post-trained, non-thinking mode) on GSM8K \citep{cobbe2021gsm8k} with GRPO
+\citep{shao2024deepseekmath}: 8 sampled answers for each of 32 questions per step, reward 1 if the final number is
+correct, 200 steps, no KL term, one update per step. Answers are generated by vLLM \citep{kwon2023vllm} in the same
+process, with the trained weights copied in as bf16 after every step. Accuracy is measured on the 1,319 test questions
+with greedy decoding, at the start and at the end. We compare three setups.
+(a) Full-parameter training with bf16 weights and an fp32 copy, Muon on the decoder matrices. Generator and trainer
+both use 16-bit weights, so this setup has no quantization mismatch and serves as the full-precision reference.
+(b) The 4-bit model frozen, with LoRA \citep{hu2022lora} of rank 32 on every decoder matrix, trained with AdamW at
+$10^{-5}$, as in QeRL \citep{huang2025qerl}.
+(c) The ticker: every decoder matrix stored in 4 bits with an 8-bit carry, trained with Muon.
+Setups (b) and (c) start from the same model rounded to nearest. The registered Muon learning rate was $10^{-4}$, with
+a fallback rule fixed in advance: if the training reward of (a) seed 1, averaged over 20 steps, ended more
+than 0.04 below its peak, every run would use $4\cdot10^{-5}$ instead. At $10^{-4}$ the reward of (a) peaked near step 35 and then
+collapsed, and its test accuracy fell from 54.7\% to 36.6\%, so all runs reported here use $4\cdot10^{-5}$. The rule
+used training reward only. A third seed of (a) and (c) was added by a rule fixed before any run.
 
 \begin{table}[t]
 \centering
-\caption{P5: GSM8K test accuracy (\%), Qwen3.5-0.8B, 200 RL steps. Intervals: 95\%, each question's result
-averaged over seeds and paired across arms.}
+\caption{P5: GSM8K test accuracy (\%), Qwen3.5-0.8B, 200 RL steps. Gains are 95\% intervals from each question's result
+averaged over seeds and paired across setups.}
 \label{tab:p5}
 \small
 \begin{tabular}{lcccc}
 \toprule
-arm & weights as scored & start & end (per seed) & gain \\
+setup & weights as scored & start & end (per seed) & gain \\
 \midrule
 (a) bf16 + fp32 copy & bf16 & 54.7 & 72.9, 71.1, 72.9 & $+17.6 \pm 2.4$ \\
-(b) 4-bit frozen + LoRA & 4-bit + bf16 add-on & 48.1 & 70.6, 70.2, 72.8 & $+23.1 \pm 2.5$ \\
+(b) 4-bit frozen + LoRA & 4-bit + bf16 adapter & 48.1 & 70.6, 70.2, 72.8 & $+23.1 \pm 2.5$ \\
 (b) merged, rounded to 4 bits & 4-bit & 48.1 & --, 47.6, 47.8 & $-0.4 \pm 2.0$ \\
-\textbf{(c) ours} & \textbf{4-bit} & 48.1 & 69.7, 67.7, 68.4 & $+20.4 \pm 2.4$ \\
+\textbf{(c) ticker} & \textbf{4-bit} & 48.1 & 69.7, 67.7, 68.4 & $+20.4 \pm 2.4$ \\
 \midrule
-\multicolumn{5}{l}{P5a: (c) $-$ (a) $= -3.7$, interval $[-5.2, -2.2]$; line: lower end above $-4$ \hfill FAIL}\\
-\multicolumn{5}{l}{P5b: (c) gain $= +20.4$, interval $[+18.0, +22.9]$; line: $\ge 5$, above 0 \hfill PASS}\\
-\multicolumn{5}{l}{measured: (c) $-$ (b) $= -2.6 \pm 1.6$; (c) $-$ (b) rounded to 4 bits $= +20.9 \pm 2.2$}\\
-\multicolumn{5}{l}{measured: 4-bit start $-$ float start $= -6.5 \pm 2.8$}\\
+\multicolumn{5}{l}{(c) $-$ (a) $= -3.7$, interval $[-5.2, -2.2]$; (c) $-$ (b) $= -2.6 \pm 1.6$;
+(c) $-$ (b) rounded $= +20.9 \pm 2.2$}\\
+\multicolumn{5}{l}{4-bit start $-$ bf16 start $= -6.5 \pm 2.8$}\\
+\multicolumn{5}{l}{start rounded with GPTQ instead (no RL run): 51.2; GPTQ start $-$ bf16 start $= -3.5 \pm 2.7$}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -547,37 +634,42 @@ arm & weights as scored & start & end (per seed) & gain \\
 \centering
 \includegraphics[width=\linewidth]{figures/p5_rl.pdf}
 \caption{P5: (a) training reward, 20-step running mean, every run; (b) GSM8K test accuracy at the start and after 200
-steps, one line per seed; $\times$: (b) with its add-on merged and rounded to 4 bits (seeds 2--3).}
+steps, one line per seed; $\times$: (b) with its adapter merged and rounded to 4 bits (seeds 2--3).}
 \label{fig:p5}
 \end{figure}
 
-\paragraph{What it shows.} Ours ends 3.7 points behind full-precision training and fails P5a. Most of that gap is
-the 4-bit start: rounding the model costs 6.5 points before any training. Ours gains 20.4 points against 17.6 for (a),
-but a model recovering from rounding has an easier start than one improving from a higher score, so this does not show
-that ours learns better. Every weight does learn while stored in 4 bits: 0.11\% of the 4-bit values change per step.
-The generator and the trainer compute with the same numbers: both round each 4-bit value times its fp32 block scale to
-bf16 in the same way (with FP8 block scales, as in the release, that product is exact in bf16). The remaining gap
-between their token probabilities (mean 0.0033 for ours, 0.0030 for (a)) comes from the two programs' arithmetic, not
-from rounding. Against LoRA, ours learns faster early (Appendix~\ref{app:p5short}), and LoRA ends 2.6 points ahead
-after 200 steps
-(interval $[-4.2, -1.0]$ for ours minus LoRA). The comparison is not like for like: (b) is scored with its add-on in
-16 bits, as QLoRA-style methods are served, while ours is scored with 4-bit weights only. To measure what LoRA's gain
-is worth as a 4-bit model, at the end of (b)'s seeds 2 and 3 we merged the add-on into the 4-bit weights and rounded
-to the same grid, block scales recomputed. Before these runs we wrote down the prediction that most weights would
-round back to their start and the model would score near its 48.1\% start. It held more strongly than written: the
-add-on averages 0.5\% of the gap between neighbouring 4-bit values, \emph{no} 4-bit value changes, and the rounded
-model scores 47.7\%, $23.8 \pm 2.3$ points below the same model with its add-on and $20.9 \pm 2.2$ below ours. This is a statement
-about where the learning is stored, not a comparison of how LoRA is used: QLoRA-style models are served with the
-add-on, not merged and rounded. LoRA's gain is real but held in 16 bits; ours is held in the 4-bit weights. Peak GPU memory in
-these runs is set by the generator's reserved share and the activations (27--30 GB for (a) and (c), 24 GB for (b),
-which needs no gradients or optimizer state for the frozen weights); the 4-bit values are held in fp32 tensors here,
-so P6, not P5, measures the method's memory.
+\paragraph{Results.} The ticker ends 3.7 points behind full-precision training, so the lower end of the interval,
+$-5.2$, misses the registered threshold of $-4$ (Table~\ref{tab:p5}). Most of the gap is present before training, since
+rounding the model to 4 bits costs 6.5 points. That cost depends on how the start is rounded. Rounded with GPTQ
+instead, calibrated on 128 GSM8K training solutions, the starting model scores 51.2\%, $3.0 \pm 2.8$ points above round
+to nearest and $3.5 \pm 2.7$ below bf16; we measured this after the RL runs and did not run RL from it. The ticker then
+gains 20.4 points against 17.6 for (a), although a
+model recovering from rounding has an easier start than one improving from a higher score, so this does not show that
+it learns faster. Every weight learns while stored in 4 bits, with 0.11\% of the 4-bit values changing per step.
 
-\subsection{P6: memory, measured}\label{sec:p6}
-\texttt{p6\_memory.py} uses the release optimizer with real packed storage (two 4-bit codes per byte, FP8 block
-scales, int8 carry, int8 momentum), applies the update to each matrix during the backward pass and frees its gradient
-at once, and checkpoints activations. It measures one full-parameter training step of Qwen3.5-0.8B (752M parameters,
-of which 498M in the decoder matrices) on a T4 with a batch of $2\times1024$ tokens.
+Generator and trainer compute with the same numbers. Both convert each 4-bit value times its fp32 block scale to bf16
+in the same way; with FP8 block scales, as in the released optimizer, that product is exact in bf16. The remaining
+difference between their token probabilities (mean 0.0033 for the ticker, 0.0030 for (a)) comes from the two
+programs' arithmetic, and is as small as in the full-precision setup.
+
+LoRA learns more slowly at first (Appendix~\ref{app:p5short}) but ends 2.6 points ahead of the ticker after 200 steps
+(interval $[-4.2, -1.0]$ for ticker minus LoRA). The two are scored differently: (b) keeps its adapter in 16 bits, as
+QLoRA-style models are served, while the ticker is scored with 4-bit weights only. To see how much of LoRA's gain
+survives in a pure 4-bit model, at the end of (b)'s seeds 2 and 3 we merged the adapter into the 4-bit weights and
+rounded to the same grid, recomputing the block scales. We registered the prediction that most weights would round
+back to their start and the model would score near its 48.1\% start. In fact the adapter averages 0.5\% of the gap
+between neighbouring 4-bit values, \emph{no} 4-bit value changes, and the rounded model scores 47.7\%,
+$23.8 \pm 2.3$ points below the same model with its adapter and $20.9 \pm 2.2$ below the ticker. This measures where
+the learning is stored, since QLoRA-style models are served with their adapter. LoRA's gain is real but held in 16
+bits, while the ticker's is held in the 4-bit weights. Peak GPU memory in these runs is set by the generator's reserved
+share and the activations (27--30 GB for (a) and (c), 24 GB for (b), which needs no gradients or optimizer state for
+its frozen weights). The 4-bit values are held in fp32 tensors here, so P6 rather than P5 measures the method's memory.
+
+\subsection{P6: training memory}\label{sec:p6}
+\paragraph{Setup.} We measure one full-parameter training step of Qwen3.5-0.8B (752M parameters, 498M of them in the
+decoder matrices) on a T4 with a batch of $2\times1024$ tokens, using the released optimizer with packed storage: two
+4-bit codes per byte, FP8 block scales, an int8 carry and int8 momentum. The update is applied to each matrix during
+the backward pass and its gradient freed at once, and activations are checkpointed.
 
 \begin{table}[t]
 \centering
@@ -592,7 +684,7 @@ bf16 + AdamW with fp32 copy (standard) & 11.74 & 9.83 & 1.00 \\
 float Muon & 10.33 & 6.56 & 0.88 \\
 bf16-SR, 8-bit momentum & 4.31 & 2.40 & 0.37 \\
 bf16-SR, updated layer by layer & 3.96 & 2.40 & 0.34 \\
-\textbf{ours} & \textbf{3.74} & \textbf{2.18} & \textbf{0.318} \\
+\textbf{ticker} & \textbf{3.74} & \textbf{2.18} & \textbf{0.318} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -604,35 +696,62 @@ bf16-SR, updated layer by layer & 3.96 & 2.40 & 0.34 \\
 \label{fig:p6}
 \end{figure}
 
-Ours peaks at 0.318 of the standard setup (P6a, line 0.35: PASS). Against bf16-SR the saving is small: 0.87 of its
-peak, 0.95 against bf16-SR with the same layer-by-layer update, and 0.91 in steady state. The decoder matrices alone
-shrink by $2.59/3.03 = 0.86$, but the embedding is a third of this model and is stored the same way in both. The update
-adds 4.8\,s to a 13.5\,s step in plain, unfused PyTorch. As a demonstration, a full-parameter step of Qwen3.5-2B fits
-on the T4 at 8.34\,GiB in our format, where the standard setup runs out of memory.
+\paragraph{Results.} The ticker peaks at 0.318 of the standard setup (Table~\ref{tab:p6}). Against bf16-SR the saving
+is small: 0.87 of its peak, 0.95 against bf16-SR with the same layer-by-layer update, and 0.91 in steady state. The
+decoder matrices alone shrink by $2.59/3.03 = 0.86$, but the embedding is a third of this model and is stored the same
+way in both. In plain, unfused PyTorch the update adds 4.8\,s to a 13.5\,s step. A full-parameter step of Qwen3.5-2B
+also fits on the T4, at 8.34\,GiB, where the standard setup runs out of memory.
+
+% ======================================================================================================================
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{When the ticker helps.} The clearest result is negative for error feedback through the momentum. With
+Muon, an injected error is erased in part, redistributed, or allowed to overwrite the gradient, and ECO-Muon freezes
+the weights. Keeping the error per weight avoids the optimizer altogether, and an 8-bit carry is enough to match a
+float copy in every setting we tried. Against training in higher precision and rounding afterwards, the advantage
+depends on how much the final rounding loses. In continued training of a pretrained model, rounding after training
+loses 0.04 with round-to-nearest and still about 0.01 with GPTQ, and the ticker avoids that loss by training on the
+grid. From scratch at 45M parameters, GPTQ recovers almost the whole rounding loss, and bf16-SR followed by GPTQ
+matches the ticker for about 9\% more training state. We do not know which property of the two settings decides this;
+model size, training length and the starting point all differ between P1 and P2.
+
+\paragraph{What native 4-bit weights buy.} The ticker reduces peak memory by only 5--13\% against bf16-SR. Its main
+practical difference is that the trained weights are the 4-bit weights. In RL this means that the
+generator and the trainer use the same values without a correction for mismatch, and that what the model learns is
+stored in the 4-bit weights rather than in a 16-bit adapter that would vanish if merged and rounded. The cost is the
+starting point. Rounding Qwen3.5-0.8B to nearest costs 6.5 points, and 200 steps recover about two fifths of that
+relative to full-precision training. A better initial rounding, such as GPTQ, or a short phase of ordinary training
+before RL, might close the remaining gap; neither was tested.
+
+\paragraph{Carry width.} The registered noise model was wrong in a useful way. On our reading of the flip rates, the
+damage of a narrow carry comes from weights that sit next to a rounding boundary after a tick and are flipped back
+and forth by the carry's own random rounding, a mechanism the model leaves out. This suggests that the
+required width is set by the ratio between the carry unit and the step size near the boundary, and that schemes which
+keep weights away from the boundary after a tick could use fewer bits.
 
 % ======================================================================================================================
 \section{Related work}\label{sec:related}
 
 \paragraph{Training without master weights.} ECO \citep{nikdan2026eco} removes the master copy for SGD with momentum
-and Adam by injecting the rounding error into the momentum; it proves exact equivalence to master weights for SGD with
-momentum under an exact (memory-costly) rule and gives a noise-floor bound for the memory-free rule. We show why the
-same injection fails for Muon (Section~\ref{sec:mechanism}). \emph{Error Diffusion} \citep{bonin2026errordiffusion},
-which appeared days before this work, replaces the latent weight of a binary network with a 2--8-bit residual buffer
-updated by stochastic rounding, flips a weight when the buffer crosses a threshold, and reports that the method works
-best when the buffer grid has a level exactly at that threshold; it trains binary language models of up to about 19M
-binary parameters. Our ticker is the multi-level form of that buffer: the threshold becomes half the gap to the
-neighbouring 4-bit value on each side, and the buffer is measured in units of that gap. The parts that are new here
-are Muon and the explanation of why error feedback through its momentum fails, 4-bit (E2M1) grids with per-block
-scales, GPT-2-scale experiments, the noise model, and full-parameter RL. Bop \citep{helwegen2019bop} argued earlier
-that binary networks need no latent weights at all and trains them with a momentum-threshold rule.
+and for Adam by injecting the rounding error into the momentum. It proves exact equivalence to master weights for SGD
+with momentum under an exact but memory-costly rule and gives a noise-floor bound for the memory-free rule. We show
+why the same injection fails for Muon. Error Diffusion \citep{bonin2026errordiffusion}, which appeared days before
+this work, replaces the latent weight of a binary network with a 2--8-bit residual buffer updated by stochastic
+rounding, flips a weight when the buffer crosses a threshold, and reports that the method works best when the buffer
+grid has a level exactly at that threshold; it trains binary language models of up to about 19M binary parameters.
+The ticker is the multi-level form of that buffer: the threshold becomes half the gap to the neighbouring 4-bit value
+on each side, and the buffer is measured in units of that gap. What is new here is the analysis of Muon and of why
+error feedback through its momentum fails, 4-bit E2M1 grids with block scales, experiments at GPT-2 scale, the study of
+carry width, and full-parameter RL. Earlier, Bop \citep{helwegen2019bop} argued that binary networks need no latent
+weights at all and trained them with a momentum-threshold rule.
 
 \paragraph{Compensated summation and stochastic rounding.} Kahan summation \citep{kahan1965} carries the low-order
 part lost in each addition. \citet{zamirai2020bf16} show that pure bf16 training matches fp32 if weight updates use
 stochastic rounding or Kahan summation, and Collage \citep{yu2024collage} represents weights as several low-precision
 components to avoid fp32 copies. Stochastic rounding for deep learning goes back at least to
-\citet{gupta2015limited}; \citet{croci2022sr} survey its theory and uses. Our bf16-SR baseline and our naive 4-bit
-baseline are of this kind. The ticker differs by keeping the compensation term per weight, in few bits, and in units
-of the main term's own local resolution.
+\citet{gupta2015limited}; \citet{croci2022sr} survey its theory and uses. Our bf16-SR and naive 4-bit baselines are of
+this kind. The ticker differs by keeping the compensation term per weight, in few bits, and in units of the main
+term's own local resolution.
 
 \paragraph{Error feedback in compressed optimization.} Carrying a compression error forward to later steps is the
 core of 1-bit SGD \citep{seide2014onebit} and of error-feedback methods for sign and compressed gradients
@@ -640,76 +759,84 @@ core of 1-bit SGD \citep{seide2014onebit} and of error-feedback methods for sign
 the weights.
 
 \paragraph{Muon and low-bit Muon.} Muon \citep{jordan2024muon} orthogonalises the momentum of each matrix with a
-Newton--Schulz iteration; \citet{liu2025moonlight} scale it to large language models. MuonQ \citep{su2026muonq} and
-4-bit Muon with GRASP \citep{wu2026grasp} shrink Muon's \emph{optimizer state} to 4 bits, both noting that
+Newton--Schulz iteration, and \citet{liu2025moonlight} scale it to large language models. MuonQ \citep{su2026muonq}
+and 4-bit Muon with GRASP \citep{wu2026grasp} shrink Muon's \emph{optimizer state} to 4 bits, both noting that
 orthogonalisation amplifies quantization error in the momentum (GRASP locates it in the top singular subspace); they
-keep full-precision weights. Our measurement is the weight-side counterpart: error deliberately fed into the momentum
+keep full-precision weights. Our analysis is the weight-side counterpart: an error deliberately fed into the momentum
 does not come out intact.
 
-\paragraph{4-bit training.} NVFP4 \citep{nvidia2025nvfp4} and the microscaling formats \citep{rouhani2023mx} define the
-4-bit values and block scales we use. Full-Stack FP4 \citep{ding2026fullstackfp4} pretrains with 4-bit projections,
-optimizer states and attention but keeps bf16 master weights. FlashOptim \citep{gonzalezortiz2026flashoptim} reduces
-optimizer memory and splits the master weight into lower-precision parts with a bound on the resulting error, so a
-bf16-level master weight still exists.
+\paragraph{4-bit training and post-training quantization.} NVFP4 \citep{nvidia2025nvfp4} and the microscaling formats
+\citep{rouhani2023mx} define the 4-bit values and block scales we use. Full-Stack FP4 \citep{ding2026fullstackfp4}
+pretrains with 4-bit projections, optimizer states and attention but keeps bf16 master weights. FlashOptim
+\citep{gonzalezortiz2026flashoptim} reduces optimizer memory and splits the master weight into lower-precision parts
+with a bound on the resulting error, so a bf16-level master weight still exists. GPTQ \citep{frantar2023gptq} rounds a
+trained model to low precision column by column, compensating each column's error with second-order information; we
+use it as the strongest form of rounding after training.
 
 \paragraph{RL with quantized weights.} QLoRA \citep{dettmers2023qlora} fine-tunes a frozen 4-bit model through a
-16-bit low-rank add-on \citep{hu2022lora}; QeRL \citep{huang2025qerl} applies this to RL with an NVFP4 model, and our
-arm (b) follows it. The trained model is then the 4-bit base plus a 16-bit add-on: QeRL's own evaluation attaches
-the adapter to the NVFP4 model in vLLM, or merges it into a 16-bit model. Merging the add-on into the 4-bit weights
-and rounding again can erase the adaptation, because the nearest grid point is usually the base itself;
-Scale-QLoRA \citep{li2026scaleqlora} reports losses of up to 39 points and avoids them by training only the block
-scales and freezing every 4-bit code. Ours goes the other way: every 4-bit code may change, and the trained model is
-the 4-bit model, with no add-on to merge. In our LoRA arm the merge-and-round loss is total: no 4-bit value changes and the whole 23.8-point gain is lost (Section~\ref{sec:p5}).
-FlashRL \citep{liu2025flashrl} generates rollouts with a quantized copy and corrects the
-mismatch with the trainer by truncated importance sampling \citep{yao2025offpolicy}. With the ticker, the trainer and
-the generator compute with the same bf16 values of the 4-bit weights, so there is no rounding mismatch between them
-(other arithmetic differences remain).
+16-bit low-rank adapter \citep{hu2022lora}, and QeRL \citep{huang2025qerl} applies this to RL with an NVFP4 model; our
+setup (b) follows it. The trained model is then the 4-bit base plus a 16-bit adapter: QeRL's own evaluation attaches
+the adapter to the NVFP4 model in vLLM, or merges it into a 16-bit model. Merging the adapter into the 4-bit weights
+and rounding again can erase the adaptation, because the nearest grid point is usually the base itself. Scale-QLoRA
+\citep{li2026scaleqlora} reports losses of up to 39 points from this and avoids them by training only the block
+scales, freezing every 4-bit code. The ticker goes the other way: every 4-bit code may change, and the trained model
+is the 4-bit model, with no adapter to merge. In our LoRA setup the loss from merging and rounding is total, with no
+4-bit value changing and the whole 23.8-point gain lost (Section~\ref{sec:p5}). FlashRL \citep{liu2025flashrl}
+generates rollouts with a quantized copy and corrects the mismatch with the trainer by truncated importance sampling
+\citep{yao2025offpolicy}. With the ticker, trainer and generator use the same bf16 values of the 4-bit weights, so
+there is no rounding mismatch between them, though other arithmetic differences remain.
 
 % ======================================================================================================================
 \section{Limitations}\label{sec:limitations}
 \begin{itemize}
-  \item \textbf{Scale.} The largest training runs are GPT-2 small (124M, continued training) and a 45M model from
-        scratch; RL uses Qwen3.5-0.8B. Behaviour at billions of parameters is not tested.
-  \item \textbf{Memory.} Against bf16 weights with random rounding and 8-bit momentum, ours saves only 5--13\% at
-        the peak. Against a frozen 4-bit model with LoRA it uses more training memory, since every weight needs a
-        gradient and a carry. The case for the method is native 4-bit weights trained in full, not memory.
-  \item \textbf{RL.} One model (0.8B), one task, 200 steps, three seeds. Ours ends 3.7 points behind bf16 training and
-        fails its pre-registered line; whether the gap keeps closing with longer training, or with a short healing run
-        before RL, is not tested. LoRA's learning rate was not tuned. The generator holds a bf16 copy of the 4-bit values.
+  \item \textbf{Scale.} The largest training runs are GPT-2 small (124M parameters, continued training) and a 45M
+        model from scratch; RL uses Qwen3.5-0.8B. Behaviour at billions of parameters is not tested.
+  \item \textbf{Memory.} Against bf16 weights with stochastic rounding and 8-bit momentum, the ticker saves only
+        5--13\% at the peak. Against a frozen 4-bit model with LoRA it uses more training memory, since every weight
+        needs a gradient and a carry.
+  \item \textbf{RL.} One model, one task, 200 steps, three seeds. Whether the gap to full precision keeps closing with
+        longer training, with a better initial rounding (a GPTQ start begins 3.0 points higher, but RL from it was not
+run), or with a short phase of ordinary training before RL is not
+        tested. LoRA's learning rate was not tuned. The generator holds a bf16 copy of the 4-bit values.
+  \item \textbf{GPTQ.} One configuration (natural column order, 1\% damping, 128 calibration windows, no search over
+        scales), applied to one seed of each baseline and to P5's starting model. A stronger post-training method may do better; from scratch the
+        plain version already matches the ticker.
   \item \textbf{Simulation.} Training runs keep the 4-bit values in fp32 tensors and do not pack codes; only P6
-        measures real packed storage. Block scales are fp32 in training; FP8 scales are counted, not trained with
-        (a small character-level test found them to cost little; Appendix~\ref{app:toy}).
-  \item \textbf{GPTQ.} One GPTQ configuration (natural column order, 1\% damping, 128 calibration windows, no search
-        over scales), applied to one seed of each baseline. Stronger post-training rounding may do better; from
-        scratch the plain version already ties the ticker.
-  \item \textbf{The mechanism measurement} uses one model, one optimizer state built over a short window of steps,
-        and one error direction (the rounding leftover of the pretrained weights) plus a random control; it does not
-        follow the error through many steps of training.
-  \item \textbf{The noise model} failed both of its tests (Section~\ref{sec:p3}); the alternative reading (noise in
-        proportion to the step) was made after seeing the data and is not tested.
-  \item \textbf{Only weights} are 4-bit. Activations and gradients stay in 16/32 bits; embeddings, norms and biases are
-        not quantized.
+        measures packed storage. Block scales are fp32 during training; FP8 scales are counted but not trained with
+        (a small character-level test found them to cost little; Appendix~\ref{app:toy}). The update is not fused into
+        a kernel.
+  \item \textbf{Mechanism.} The measurement uses one model, an optimizer state built over a short window, and one
+        error direction (the rounding remainder of the pretrained weights) plus a random control; it does not follow
+        the error through many steps of training.
+  \item \textbf{Carry width.} The registered noise model failed both tests, and the explanation offered for the flip
+        rates was formed after seeing the data.
+  \item \textbf{Only weights} are 4-bit. Activations and gradients stay in 16 or 32 bits, and embeddings, norms and
+        biases are not quantized.
 \end{itemize}
 
 % ======================================================================================================================
 \section{Conclusion}\label{sec:conclusion}
-Error feedback through the momentum, which removes the full-precision copy for SGD and Adam, does not work for Muon,
-because Muon's orthogonalised update has a nearly fixed size. Keeping the error beside each weight instead, as a carry
-of 8 bits in units of the weight's own grid gap, trains 4-bit weights with no copy at about 2.8 bytes per weight and
-ends within 0.0013 (continued training) and 0.013 (from scratch) of training with a copy; ECO with AdamW, at three times the memory, ends 0.08 behind it.
-Training in bf16 and rounding with GPTQ is 0.012 behind the ticker in continued training but level with it from
-scratch. In RL the
-method trains every weight of a 0.8B model in 4 bits, but ends 3.7 points behind full-precision training, mostly
-because of the cost of rounding the starting model. The open questions are scale, longer RL runs, and whether a short
-healing run before RL closes the remaining gap.
+Error feedback through the momentum removes the full-precision copy for SGD and Adam, but not for Muon, whose
+orthogonalised update reshapes or overwrites an injected error. Keeping the error beside each weight, as an 8-bit
+carry in units of the weight's own grid spacing, trains 4-bit weights without a copy at under three bytes per weight
+and matches a float copy within about a hundredth of a nat, in continued training and from scratch; in continued
+training it is well ahead of ECO.
+Whether it also beats training in higher precision and rounding afterwards depends on the setting: it does in
+continued training, even against GPTQ, but not from scratch at 45M parameters. In RL the ticker trains every weight of
+a 0.8B model in 4 bits and keeps what it learns in those weights, but the model it starts from has already lost
+accuracy to rounding. The open questions are scale, the starting point for RL, and how few carry bits a design that
+avoids boundary jitter could use.
 
-\paragraph{Code and data.} The optimizer (with packed 4-bit storage), every experiment script, the pre-registration
-with its dated change log, and the log of every run in this paper are at
-\url{https://github.com/Nibbles0n/masterless}.
+\paragraph{Code and data.} The optimizer with packed 4-bit storage, every experiment script, the registered plan with
+its dated changes, and the log of every run in this paper are at \url{https://github.com/Nibbles0n/masterless}.
 
-\paragraph{Use of AI tools.} The experiment code, the analysis scripts and drafts of this text were written with
-substantial help from an AI coding assistant (Claude, by Anthropic), working under the author's direction. The author
-set the questions and pass lines, checked the results, and is responsible for all content.
+\paragraph{Broader impact.} This work makes training and fine-tuning in low precision cheaper, which lowers the cost
+of adapting models for good and for harmful uses alike. It introduces no new data or models with specific risks.
+
+\paragraph{Use of AI tools.} The experiment code, the analysis scripts and this text were written with substantial
+help from an AI coding assistant (Claude, by Anthropic), working under the author's direction, and a draft was
+reviewed with another AI model (Gemini, by Google). The author chose the questions and the registered criteria,
+checked the results, and is responsible for all content.
 
 % ======================================================================================================================
 \bibliographystyle{plainnat}
@@ -717,41 +844,62 @@ set the questions and pass lines, checked the results, and is responsible for al
 
 \appendix
 % ======================================================================================================================
+\section{Proof of Proposition~\ref{prop:polar}}\label{app:proof}
+Write $U = HO$ with $H = (UU^\top)^{1/2} = P\Sigma P^\top$ symmetric positive definite and $O = \polar(U) = PQ^\top$,
+so $OO^\top = I_m$. Both factors are smooth functions of $U$ near a full-rank point. Differentiating
+$U = HO$ and $OO^\top = I$ gives
+\[
+  \delta = dH\,O + H\,dO, \qquad dO\,O^\top + O\,dO^\top = 0 .
+\]
+Let $\Omega = P^\top dO\, Q$ and $S = P^\top dH\, P$, which is symmetric. Since $O^\top P = Q$, the second equation
+gives $P^\top dO\,O^\top P + P^\top O\,dO^\top P = \Omega + \Omega^\top = 0$, so $\Omega$ is antisymmetric. Multiplying the
+first equation by $P^\top$ on the left and $Q$ on the right, and using $OQ = P$,
+\[
+  \tilde\delta = S + \Sigma\,\Omega .
+\]
+Its transpose is $\tilde\delta^\top = S - \Omega\Sigma$, and subtracting the two gives
+$\tilde\delta - \tilde\delta^\top = \Sigma\Omega + \Omega\Sigma$, that is
+$\Omega_{ij}(\sigma_i + \sigma_j) = \tilde\delta_{ij} - \tilde\delta_{ji}$, so $\Omega = K$. The symmetric part of
+$\tilde\delta$ enters only $S$. For the part of $dO$ outside the row space of $U$, note $O(I - QQ^\top) = 0$, so
+multiplying the first equation by $(I - QQ^\top)$ on the right gives $\delta(I - QQ^\top) = H\,dO\,(I - QQ^\top)$, that
+is $dO\,(I - QQ^\top) = P\Sigma^{-1}P^\top\delta(I - QQ^\top)$. Finally
+$dO = dO\,QQ^\top + dO\,(I - QQ^\top) = PKQ^\top + P\Sigma^{-1}P^\top\delta(I-QQ^\top)$, which is
+Equation~\eqref{eq:polar}. \qed
+
+% ======================================================================================================================
 \section{Earlier small-scale results}\label{app:toy}
 These runs led to the method. They use a character-level GPT on Shakespeare (4 layers, width 128, 0.8M parameters,
 2,000 steps; loss in nats per character, mean $\pm$ standard error over 3 seeds) and are not evidence for any main
-claim. Numbers are from \texttt{runs/m1}--\texttt{m4}, \texttt{runs/m7}, \texttt{runs/ticker} and
-\texttt{runs/twobit} (\texttt{RESULT.md} in each).
+claim. The numbers are in the repository under \texttt{runs/m1}--\texttt{m4}, \texttt{runs/m7}, \texttt{runs/ticker}
+and \texttt{runs/twobit}.
 
-\paragraph{Muon breaks ECO (milestones 1--4, CPU).} Float Muon reached $1.6278 \pm 0.0032$ and AdamW
-$1.9150 \pm 0.0034$. 4-bit weights with a float copy (Muon) reached $1.6463 \pm 0.0019$; without a copy, with random
-rounding, $1.7636 \pm 0.0044$. ECO with Adam reached $1.9283 \pm 0.0039$, close to its own float AdamW, as the ECO paper
-reports. ECO's injection adapted to Muon (error into the momentum before Newton--Schulz) reached $1.8981 \pm 0.0057$,
-\emph{worse} than no feedback at all. Measured during training, the change Newton--Schulz made in response to the
-injected error had a cosine of about 0.69 with the error (all steps, each of 3 seeds: 0.691, 0.692, 0.692), and the
-error grew from 0.15 to 0.50 of the momentum's size as the learning rate decayed. Adding the error after
-Newton--Schulz instead, from a 2-byte buffer, reached $1.6733 \pm 0.0043$.
+\paragraph{Muon and ECO.} Float Muon reached $1.6278 \pm 0.0032$ and AdamW $1.9150 \pm 0.0034$. 4-bit weights with a
+float copy and Muon reached $1.6463 \pm 0.0019$, and without a copy, with stochastic rounding, $1.7636 \pm 0.0044$. ECO
+with Adam reached $1.9283 \pm 0.0039$, close to its own float AdamW, as the ECO paper reports. ECO's injection adapted
+to Muon, with the error added to the momentum before Newton--Schulz, reached $1.8981 \pm 0.0057$, \emph{worse} than no
+feedback at all. Measured during training, the change Newton--Schulz made in response to the injected error had a
+cosine of about 0.69 with the error (0.691, 0.692 and 0.692 for the 3 seeds), and the error grew from 0.15 to 0.50 of
+the momentum's size as the learning rate decayed. Adding the error after Newton--Schulz instead, from a 2-byte buffer,
+reached $1.6733 \pm 0.0043$.
 
-\paragraph{The ticker (side study T, Colab T4, fp16).} With a 4-bit carry (2.28 bytes per weight) the ticker reached
-$1.6501 \pm 0.0045$, against $1.6458 \pm 0.0035$ for 4-bit with a float copy (8 bytes), and beat a 4-bit buffer with
-random rounding of the weight ($1.7120 \pm 0.0019$) and FP8 training rounded to 4 bits afterwards
-($1.6717 \pm 0.0043$) in every seed.
+\paragraph{The ticker.} On a T4 in fp16, a 4-bit carry (2.28 bytes per weight) reached $1.6501 \pm 0.0045$, against
+$1.6458 \pm 0.0035$ for 4-bit with a float copy (8 bytes), and beat both a 4-bit buffer with stochastic rounding of the
+weight ($1.7120 \pm 0.0019$) and FP8 training rounded to 4 bits afterwards ($1.6717 \pm 0.0043$) in every seed.
 
-\paragraph{2-bit weights (side study 2B).} With 2-bit weights an 8-bit carry reached $1.7476 \pm 0.0059$ against
-$1.7253 \pm 0.0015$ for a float copy with Muon; a 4-bit carry reached $1.8027 \pm 0.0040$.
+\paragraph{2-bit weights.} With 2-bit weights an 8-bit carry reached $1.7476 \pm 0.0059$ against $1.7253 \pm 0.0015$
+for a float copy with Muon, and a 4-bit carry reached $1.8027 \pm 0.0040$.
 
-\paragraph{A first GPT-2 run with a 4-bit carry (side study G, seed 1, T4, fp16).} Continued training of GPT-2 small
-for 100M tokens with a 4-bit carry ended $+0.0465 \pm 0.0010$ above 4-bit with a float copy, missing a 0.03 line. The
-cause was a flaw of the 4-bit carry: after a tick the leftover is about half a gap, the carry's largest value, so
-weights park on the rounding line and flip with the sign of each update; 1.6--1.9\% of the 4-bit values changed at
-every step regardless of the learning rate. In a probe with random gradients, an 8-bit carry removed the effect. This
-is why the main experiments use an 8-bit carry.
+\paragraph{A first GPT-2 run with a 4-bit carry.} Continued training of GPT-2 small for 100M tokens with a 4-bit carry
+(seed 1, T4, fp16) ended $+0.0465 \pm 0.0010$ above 4-bit with a float copy, outside a 0.03 margin. Between 1.6\% and
+1.9\% of the 4-bit values changed at every step regardless of the learning rate, the same flip rate later measured in
+P3 (Table~\ref{tab:p3flip}). In a probe with random gradients, an 8-bit carry removed the effect, which is why the main
+experiments use an 8-bit carry.
 
 % ======================================================================================================================
-\section{Changes to the pre-registered plan}\label{app:changes}
-The plan, its pass lines and every change are in \texttt{PAPER\_PLAN.md}, dated, in the repository. No pass line was
-moved after a result it judges was seen. Table~\ref{tab:changes} lists every change that touches what was run or how it
-is judged.
+\section{Changes to the registered plan}\label{app:changes}
+The plan, its criteria and every change are dated in \texttt{PAPER\_PLAN.md} in the repository. No criterion was
+changed after a result it judges was seen. Table~\ref{tab:changes} lists every change that affects what was run or how
+it is judged.
 
 \begin{table}[h]
 \centering
@@ -763,36 +911,39 @@ is judged.
 date & change & when, and why \\
 \midrule
 10-28, rev.~2--3 & P5a: ``mean of 2 seeds at least (a) $-2$ points'' became ``lower end of the 95\% interval of
-(c) $-$ (a) above $-4$''; P5 re-scoped; P6 cut to 1.5B; bf16-SR baseline added & before any run; outside feedback \\
-10-28, rev.~3 & RL model Qwen2.5-0.5B-Instruct became Qwen3.5-0.8B, and P6's model became Qwen3.5-0.8B on a T4;
-rule for P5's third seeds added; 2-bit arms and 124M from scratch dropped & before any run; the owner's request and
+(c) $-$ (a) above $-4$''; P5 re-scoped; P6 reduced to 1.5B; bf16-SR baseline added & before any run; outside
+feedback \\
+10-28, rev.~3 & RL model Qwen2.5-0.5B-Instruct replaced by Qwen3.5-0.8B, and P6's model by Qwen3.5-0.8B on a T4;
+rule for P5's third seeds added; 2-bit runs and 124M from scratch dropped & before any run; the author's decision and
 compute \\
-10-28 & three details made precise by the code (Kahan arm's bytes 5.78, not 4.78; the G0 checks) & before any P0--P6
-run \\
-10-28 & RL carry: 8 bits, not the 12 bits the noise model predicted (P3c); P3c is therefore not tested & after P3,
+10-28 & three details made precise by the code (Kahan's bytes 5.78 rather than 4.78; the correctness checks) & before
+any P0--P6 run \\
+10-28 & RL carry: 8 bits rather than the 12 bits the noise model predicted (P3c), so P3c is not tested & after P3,
 before P5; the noise model had failed both tests \\
-10-29 & questions per RL step 64 became 32, by the plan's own pilot re-costing rule; optimizer Muon (plan's rule);
-learning rate $10^{-4}$ with a guard written in advance & after the pilot, before P5 \\
+10-29 & questions per RL step reduced from 64 to 32 by the plan's own pilot re-costing rule; optimizer Muon (plan's
+rule); learning rate $10^{-4}$ with a fallback rule set in advance & after the pilot, before P5 \\
 10-29 & P5 switched to a 30-step design to save compute, then back to the 200-step design of rev.~3; the 30-step design
-was completed and is reported (Appendix~\ref{app:p5short}) & one 30-step result of (c) was read before the switch back
-(disclosed) \\
-10-29 & the learning-rate guard fired at $10^{-4}$, so every 200-step run uses $4\cdot10^{-5}$, as written & the guard
-read training reward only \\
-10-29 & third seeds of (a) and (c), by the rule; LoRA seeds 2--3 and LoRA merged and rounded to 4 bits (measured only,
-prediction written) & after seeds 1--2, before these runs \\
-10-29 & ECO with AdamW added to P1 with a new pass line, P1e & after an outside review, before these runs \\
+was completed and is reported (Appendix~\ref{app:p5short}) & one 30-step result of (c) was seen before the switch
+back \\
+10-29 & the fallback rule triggered at $10^{-4}$, so every 200-step run uses $4\cdot10^{-5}$ & the rule used training
+reward only \\
+10-29 & third seeds of (a) and (c), by the rule; LoRA seeds 2--3, and LoRA merged and rounded to 4 bits (measured,
+with a registered prediction) & after seeds 1--2, before these runs \\
+10-29 & ECO with AdamW added to P1 with a new criterion, P1e & after an outside review, before these runs \\
 10-29 & GPTQ applied to the pretrained start, to float Muon and bf16-SR of P1 and to bf16-SR of P2 (seed 1 each),
-with a prediction and a reading: if any GPTQ model is not above ours by twice the paired s.e., the claim narrows to
-rounding to nearest & after P1e, before these runs; the owner's decision \\
+with a prediction and a rule: if any GPTQ model is not above the ticker by twice the paired s.e., the claim narrows to
+rounding to nearest & after P1e, before these runs; the author's decision \\
+10-30 & P5's starting model rounded with GPTQ and scored, without RL, with a prediction (about half of the 6.5 points
+recovered) & after P5; the author's decision \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 % ======================================================================================================================
 \section{The 30-step RL design}\label{app:p5short}
-For a time the plan judged P5 on a shorter design: 30 steps $\times$ 64 questions $\times$ 8 answers, Muon $10^{-4}$.
-It was completed after the switch back to 200 steps and is reported here in full; it is not used for any verdict.
-Arm (a) seed 1 of this design was the best of three learning rates on the test set, which favours (a).
+For a time the plan judged P5 on a shorter design: 30 steps, 64 questions per step, 8 answers each, Muon at $10^{-4}$.
+It was completed after the switch back to 200 steps and is reported here in full, but it is not used for any
+criterion. Setup (a) seed 1 of this design was the best of three learning rates on the test set, which favours (a).
 
 \begin{table}[h]
 \centering
@@ -801,17 +952,41 @@ Arm (a) seed 1 of this design was the best of three learning rates on the test s
 \small
 \begin{tabular}{lcc}
 \toprule
-arm & start & end (per seed) \\
+setup & start & end (per seed) \\
 \midrule
 (a) bf16 + fp32 copy & 54.7 & 70.3, 71.9 \\
 (b) 4-bit frozen + LoRA & 48.1 & 52.4 \\
-(c) ours & 48.1 & 62.5, 66.6 \\
+(c) ticker & 48.1 & 62.5, 66.6 \\
 \midrule
-\multicolumn{3}{l}{(c) $-$ (a) $= -6.60$, interval $[-8.53, -4.66]$ (as a P5a line: would fail)}\\
+\multicolumn{3}{l}{(c) $-$ (a) $= -6.60$, interval $[-8.53, -4.66]$}\\
 \multicolumn{3}{l}{(c) gain $= +16.38$, interval $[+13.74, +19.01]$; (a) gain $= +16.45 \pm 2.48$}\\
 \multicolumn{3}{l}{(c) $-$ (b) $= +12.13 \pm 2.54$}\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+% ======================================================================================================================
+\section{Compute and reproducibility}\label{app:compute}
+\paragraph{Hardware.} P1--P5 and the GPTQ runs used one NVIDIA A100-SXM4-40GB on Google Colab, with several runs
+sharing the GPU at once; the mechanism measurement (Section~\ref{sec:m}) and P6 used one Tesla T4; the small-scale
+studies of Appendix~\ref{app:toy} used a 6-core CPU and a T4. Software: PyTorch 2.11 and transformers 5.20.2; RL
+generation used vLLM.
+
+\paragraph{Run times} (wall clock while sharing the GPU). P1: about 13 minutes per run (median of 20). P2: about 3
+hours per run. P3: about 1 minute per run; P4: about 3 minutes. P5: 50--65 minutes per 200-step run. GPTQ: about 1
+minute per model after retraining, 4 minutes for Qwen3.5-0.8B. The mechanism measurement took under a minute on the T4.
+
+\paragraph{Total.} The paper's experiments used about 176 Colab compute units, against 90 planned. This includes
+runs that are not reported in the main tables: the ECO-Muon run that overflowed in fp16, the RL run at learning rate
+$10^{-4}$ that triggered the fallback rule, the RL pilot, the 30-step design, the retraining of three models for GPTQ,
+and about 10 units lost to a session that stayed idle after its runs had finished.
+
+\paragraph{Reproducing.} Every run is deterministic given its seed on the same GPU type and software versions:
+retraining the float Muon and bf16-SR models of P1 and P2 for GPTQ reproduced the logged losses exactly. The
+repository lists the command for every run.
+
+\section{Licences}\label{app:licences}
+GPT-2 small (MIT licence), FineWeb (ODC-By 1.0), GSM8K (MIT), Qwen3.5-0.8B (Apache 2.0) and vLLM (Apache 2.0) were
+used under their licences, in their versions on the Hugging Face Hub and PyPI in October 2026.
 
 \end{document}

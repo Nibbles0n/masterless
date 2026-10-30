@@ -1,5 +1,10 @@
 # Does the draft read as AI-written? (check of `paper/main.tex`, 2026-10-29)
 
+**Update 2026-10-30:** the draft was rewritten against this list ("ticker" for "ours", field terms for our private
+words, colons from 166 to about 30, one "X, not Y" left, each headline number stated once in the results, no announced
+honesty), and against the NeurIPS paper checklist (compute, licences, error bars, proof, broader impact). The list
+below is kept as the reference for later edits.
+
 Short answer: it avoids the well-known tells (no "delve", "crucial", "landscape", "it is worth noting", no lists of
 three adjectives, few dashes). It has a different set of tells that a careful reader would notice. Most come from how
 the draft was produced: written fast from our plan and result notes, in one voice, with the same sentence shapes

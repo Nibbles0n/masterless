@@ -362,7 +362,9 @@ setups:
 - [x] GPTQ round done (change log sixth entry; `runs/paper/P1_RESULT.md`, `runs/paper/P2_RESULT.md`): P1 GPTQ models
   above ours by 0.0091 and 0.0122 (± 0.0007), as predicted; **P2 GPTQ − ours = +0.0028 ± 0.0021, not resolved**, so the
   claim narrows from scratch to "beats rounding to nearest", as written. 9.5 units
-- [ ] Units spent: about 174 through GPTQ (target 90, cap 150: over by about 24)
+- [x] GPTQ start for P5 done (change log seventh entry; `runs/paper/P5_RESULT.md`): 51.2% against 48.1% round to nearest
+  and 54.7% float (+3.0 ± 2.8 points, 47% of the drop recovered; predicted about half). No RL run from it. 1.8 units
+- [ ] Units spent: about 176 through the GPTQ start (target 90, cap 150: over by about 26)
 
 ## 9. Rules carried over from the project
 
@@ -524,3 +526,19 @@ setups:
     tables. If every GPTQ model stays above ours, the claim stands against GPTQ too, and the GPTQ rows are added to the
     P1 and P2 tables. Either way the numbers are reported.
   - Not run: GPTQ variants (column reordering, scale search), other calibration sizes.
+- **Change, 2026-10-30, seventh entry, the owner's decision ("Measure GPTQ start ... I think we just need it as a
+  datapoint"), before the run.** No pass line moves; no criterion is added; no RL is run.
+  - The question: every 4-bit P5 run starts from Qwen3.5-0.8B rounded to nearest (48.1% on the test questions, against
+    54.7% in float). How much of that drop does GPTQ recover at the start?
+  - **As run:** script `gptq_qwen.py`. Our exact format on the same 186 decoder matrices the P5 4-bit runs round; GPTQ
+    as in the sixth entry (1% damping, natural column order, scale set when GPTQ reaches each block), layer by layer,
+    the matrices of one layer from the same inputs. Calibration: 128 GSM8K train questions with their reference
+    solutions in the RL chat format (seed 1234): in-domain, so GPTQ's best case here. Scored with `p5_rl.py`'s
+    evaluation (vLLM, bf16, greedy, all 1,319 test questions, 1,024 new tokens) on one A100-40GB, as P5. The same run
+    scores the float model and round to nearest, which must reproduce 54.7% and 48.1% within 0.5 points, or the number
+    is not reported until the difference is found.
+  - **Prediction, written now:** the GPTQ start lies between the two, recovering about half of the 6.5-point drop
+    (about 51%).
+  - **Reading, written now:** reported as a datapoint in the P5 section and the limitations: the ticker's gain over its
+    own start (P5b) is measured from round to nearest, and a GPTQ start would begin higher by the measured amount.
+    Whether RL from a GPTQ start keeps that lead is not tested.

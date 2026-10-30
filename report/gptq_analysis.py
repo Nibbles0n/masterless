@@ -1,5 +1,5 @@
-"""GPTQ round (PAPER_PLAN.md, sixth change-log entry): GPTQ against round to nearest and against ours, from
-runs/paper/GPTQ/*.json. Writes runs/paper/GPTQ_summary.json. Run: python report/gptq_analysis.py
+"""GPTQ round (PAPER_PLAN.md, sixth and seventh change-log entries): GPTQ against round to nearest and against ours,
+from runs/paper/GPTQ/*.json; and the GPTQ start of P5 (GSM8K accuracy). Writes runs/paper/GPTQ_summary.json. Run: python report/gptq_analysis.py
 """
 import json
 import os
@@ -41,6 +41,14 @@ for name, study in (("pretrained", None), ("p1_muon_float_s1", "P1"), ("p1_bf16_
         row["gptq_minus_ours"] = dict(mean=m, se=se, ours=ours[study]["final_val_ce"],
                                       gptq_above_ours_by_2se=m > 2 * se)
     out[name] = row
+
+q = os.path.join(R, "GPTQ", "qwen_start.json")  # P5's starting model (seventh change-log entry): accuracy, no RL
+if os.path.exists(q):
+    g = json.load(open(q))
+    out["qwen_start"] = dict(float=g["float"]["acc"], rtn=g["rtn"]["acc"], gptq=g["gptq"]["acc"], on_grid=g["on_grid"],
+                             reproduced=g["reproduced"], gptq_minus_rtn=g["gptq_minus_rtn"],
+                             float_minus_gptq=g["float_minus_gptq"],
+                             share_of_rounding_loss_recovered=g["share_of_rounding_loss_recovered"])
 
 if any("gptq_minus_ours" in r for r in out.values()):
     rows = [r for r in out.values() if "gptq_minus_ours" in r]

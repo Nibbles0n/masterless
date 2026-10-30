@@ -124,3 +124,24 @@ Runs: (a) 70.3%, 71.9%; (c) 62.5%, 66.6%; (b) 52.4%.
 - P3c's 12-bit carry prediction (P5 runs the 8-bit carry, see the change log).
 
 Compute: this round (third seeds, LoRA seeds 2–3) used 23.6 Colab units; about 144 in all against the 150 cap.
+
+## After the runs: a GPTQ start (2026-10-30, change log seventh entry)
+
+A measurement only, no RL. `gptq_qwen.py` rounds the same 186 decoder matrices to the same 4-bit format with GPTQ
+(calibrated on 128 GSM8K training questions with their reference solutions, in the RL chat format) and scores the model
+with P5's evaluation on one A100 (vLLM, bf16, greedy, all 1,319 test questions). The same run re-scored the float model
+and round to nearest, and both reproduced the logged numbers exactly. Result file: `runs/paper/GPTQ/qwen_start.json`.
+
+| starting model | test accuracy | share of answers cut off at 1,024 tokens |
+|---|---|---|
+| bf16 (float) | 54.7% | 8.5% |
+| 4-bit, GPTQ | **51.2%** | 9.9% |
+| 4-bit, round to nearest (every P5 4-bit run) | 48.1% | 17.4% |
+
+- GPTQ − round to nearest: **+3.0 ± 2.8 points** (95% interval, paired over questions); bf16 − GPTQ: 3.5 ± 2.7.
+- GPTQ recovers 47% of the 6.5 points that rounding to nearest costs; the prediction written before the run was "about
+  half". Rounded to nearest, the model also runs into the length limit almost twice as often (17.4% against 9.9%).
+- What it means for P5: the ticker's 20.4-point gain (P5b) is measured from the round-to-nearest start. A GPTQ start
+  would begin 3 points higher. Whether RL from it keeps that lead, and whether the ticker would then meet P5a, is not
+  tested.
+- Cost: 1.8 Colab units (A100, about 12 minutes including a 4-minute GPTQ).

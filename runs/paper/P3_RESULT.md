@@ -72,3 +72,22 @@ is not tested. See the change log in `PAPER_PLAN.md`.
 - Carry bits between 6 and 8, or above 12.
 - Longer runs: drift grows with steps, so a carry that is enough at 305 steps may not be at 3,050. P1's 8-bit carry did
   hold for 3,050 steps.
+
+## After the data: flip rates (2026-10-30)
+
+Not part of the registered analysis. The share of 4-bit values that change at each step (`changed4`, logged during the
+runs), averaged over the logged steps of the second half of training (%):
+
+| | 1e-4 | 3e-4 | 1e-3 | 3e-3 |
+|---|---|---|---|---|
+| 4-bit carry | 1.57 | 1.62 | 1.61 | 1.63 |
+| 6-bit carry | 0.35 | 0.36 | 0.39 | 0.43 |
+| 8-bit carry | 0.088 | 0.095 | 0.111 | 0.150 |
+| 12-bit carry | 0.008 | 0.012 | 0.028 | 0.076 |
+| float copy | 0.003 | 0.010 | 0.034 | 0.101 |
+
+With a float copy the flip share grows 30-fold with the learning rate. With a narrow carry it barely depends on the
+rate, and each two extra carry bits divide it by about four (at the smaller rates). Reading (not tested): after a tick
+the carry sits next to the rounding boundary, and the carry's own random rounding (up to 1/14 of a gap at 4 bits) is
+much larger than one step, so the weight flips back and forth at random. This matches the flat 4-bit row of the gap
+table and side study G's 1.6–1.9%.

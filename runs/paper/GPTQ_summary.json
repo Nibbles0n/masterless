@@ -73,5 +73,24 @@
    "gptq_above_ours_by_2se": false
   }
  },
+ "qwen_start": {
+  "float": 0.54663,
+  "rtn": 0.48143,
+  "gptq": 0.51175,
+  "on_grid": true,
+  "reproduced": {
+   "float": true,
+   "rtn": true
+  },
+  "gptq_minus_rtn": {
+   "mean": 0.03033,
+   "se": 0.01437
+  },
+  "float_minus_gptq": {
+   "mean": 0.03487,
+   "se": 0.01403
+  },
+  "share_of_rounding_loss_recovered": 0.465
+ },
  "claim_stands_against_gptq": false
 }

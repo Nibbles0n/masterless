@@ -220,7 +220,7 @@ const GROWS = [["p1_muon_float_s1", "GPT-2, float Muon", "GPT-2 float Muon"], ["
 /* ---------- GPTQ: share of the rounding loss recovered ---------- */
 (function () {
   const host = document.getElementById("ch-gptqrec");
-  const rows = [["pretrained", "GPT-2 start", "GPT-2 start"]].concat(GROWS);
+  const rows = [["pretrained", "GPT-2 start", "GPT-2 start"]].concat(GROWS, [["qwen_start", "Qwen 0.8B start (RL)", "Qwen start"]]);
   const draw = () => {
     header(host, { title: "Share of plain rounding's loss that GPTQ wins back", sub: "(rounded to nearest − GPTQ) ÷ (rounded to nearest − 16-bit model)" });
     const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 34, m = { l: narrow ? 104 : 160, r: 48, t: 8, b: 34 };
@@ -233,9 +233,10 @@ const GROWS = [["p1_muon_float_s1", "GPT-2, float Muon", "GPT-2 float Muon"], ["
       el("svg:text", { x: m.l - 10, y: y + 4, "text-anchor": "end" }, g, narrow ? short : name);
       el("svg:rect", { x: X(0), y: y - 8, width: Math.max(0, X(v) - X(0)), height: 16, rx: 4, fill: tok("--c-m2") }, g);
       el("svg:text", { x: X(v) + 6, y: y + 4, class: "lab" }, g, v.toFixed(0) + "%");
+      const acc = k === "qwen_start", f = x => acc ? (100 * x).toFixed(1) + "% right" : fmt(x, 4);
       hover(host, svg, W, H, { x: 0, y: y - rh / 2, width: W, height: rh }, () => [
-        { value: fmt(r.float, 4), label: "16-bit model" }, { value: fmt(r.rtn, 4), label: "rounded to nearest" },
-        { value: fmt(r.gptq, 4), label: "GPTQ" }, { value: v.toFixed(1) + "%", label: "recovered" }], name, X(v), y);
+        { value: f(r.float), label: "16-bit model" }, { value: f(r.rtn), label: "rounded to nearest" },
+        { value: f(r.gptq), label: "GPTQ" }, { value: v.toFixed(1) + "%", label: "recovered" }], name, X(v), y);
     });
   };
   register(host, draw);

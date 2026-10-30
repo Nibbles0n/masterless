@@ -120,7 +120,7 @@ def fig_m():
 
 # ---------------------------------------------------------------- P1: GPT-2 small, continued training
 
-P1_ARMS = [("muon_float", "float Muon"), ("q4_float_copy", "4-bit + float copy"), ("q4_t8_m8", "ours (ticker)"),
+P1_ARMS = [("muon_float", "float Muon"), ("q4_float_copy", "4-bit + float copy"), ("q4_t8_m8", "ticker"),
            ("q4_kahan_m8", "Kahan (fp32 carry)"), ("bf16_sr_m8", "bf16-SR"), ("q4_sr_m8", "naive"),
            ("eco_muon_q4", "ECO-Muon"), ("q4_float_copy_adamw", "4-bit + float copy, AdamW"),
            ("eco_adamw_q4", "ECO-AdamW")]
@@ -160,7 +160,7 @@ def fig_p2():
     for name, curve in d["curves"].items():
         pts = [(e["step"], e["val_ce"]) for e in curve if e["step"] >= 2000]
         ax.plot(*zip(*pts), lw=1.1, color=col[name.split(" ")[0]],
-                label={"ours": "ours (4-bit, 8-bit carry)", "copy": "4-bit + float copy",
+                label={"ours": "ticker (8-bit carry)", "copy": "4-bit + float copy",
                        "bf16-SR": "bf16-SR, in bf16"}[name.split(" ")[0]])
     ax.set_xlabel("step")
     ax.set_ylabel("validation loss (nats per token)")
@@ -176,7 +176,7 @@ def fig_p2():
     ax.set_xlim(0.5, 3.9)
     ax.set_ylim(-0.005, 0.035)
     ax.set_xlabel("seed")
-    ax.set_ylabel("ours $-$ float copy (final loss)")
+    ax.set_ylabel("ticker $-$ float copy (final loss)")
     ax.set_title("(b) gap per seed, 95% paired interval")
     fig.savefig(os.path.join(OUT, "p2_curves.pdf"))
     plt.close(fig)
@@ -202,7 +202,7 @@ def fig_p3():
     ax.set_yscale("symlog", linthresh=0.003)
     ax.set_ylim(-0.006, 0.1)
     ax.set_xlabel("noise ratio $\\rho$")
-    ax.set_ylabel("ours $-$ float copy (loss)")
+    ax.set_ylabel("ticker $-$ float copy (loss)")
     from matplotlib.lines import Line2D
     h = [Line2D([], [], color=bc[b], marker="o", ls="none", ms=4, label=f"{b}-bit carry") for b in bc]
     h += [Line2D([], [], color=C["grey"], marker=mk[lr], ls="none", ms=4, mfc="white", label=f"lr {lr:g}")
@@ -221,7 +221,7 @@ def fig_p5():
         return placeholder("p5_rl.pdf", "P5: GSM8K accuracy during RL")
     d = json.load(open(path))
     col = {"a": C["sgd"], "c": C["muon"], "b": C["adam_eco"]}
-    lab = {"a": "(a) bf16 + float copy", "c": "(c) ours, 4-bit", "b": "(b) 4-bit frozen + LoRA"}
+    lab = {"a": "(a) bf16 + float copy", "c": "(c) ticker, 4-bit", "b": "(b) 4-bit frozen + LoRA"}
     fig, axs = plt.subplots(1, 2, figsize=(7.0, 2.4), constrained_layout=True)
     ax = axs[0]
     seen = set()
@@ -267,7 +267,7 @@ def fig_p6():
         return placeholder("p6_memory.pdf", "P6: peak training memory")
     d = json.load(open(path))
     rows = [("a", "bf16 + AdamW,\nfp32 copy"), ("b", "float Muon"), ("c", "bf16-SR"),
-            ("c_lw", "bf16-SR,\nlayer by layer"), ("d", "ours")]
+            ("c_lw", "bf16-SR,\nlayer by layer"), ("d", "ticker")]
     fig, ax = plt.subplots(figsize=(3.4, 2.3), constrained_layout=True)
     for i, (k, name) in enumerate(rows):
         r = d["rows"][f"Qwen/Qwen3.5-0.8B|{k}"]
