@@ -359,7 +359,10 @@ setups:
 - [x] P1e done (`runs/paper/P1_RESULT.md`, change log fifth entry): **PASS**, ECO-AdamW − ours = 0.079, 0.080, 0.080 (± 0.0014) on seeds 1–3; ECO-AdamW 0.084 ± 0.0002 behind the AdamW float copy, ours 0.0040 ± 0.0003 behind it. Reading as written: no byte-matched ECO run needed. 20.2 units (about 10 wasted on an idle session)
 - [ ] Release code, visual report, summary for Luis
 - [ ] Paper draft read by Luis; arXiv
-- [ ] Units spent: about 164 through P1e (target 90, cap 150: over by about 14)
+- [x] GPTQ round done (change log sixth entry; `runs/paper/P1_RESULT.md`, `runs/paper/P2_RESULT.md`): P1 GPTQ models
+  above ours by 0.0091 and 0.0122 (± 0.0007), as predicted; **P2 GPTQ − ours = +0.0028 ± 0.0021, not resolved**, so the
+  claim narrows from scratch to "beats rounding to nearest", as written. 9.5 units
+- [ ] Units spent: about 174 through GPTQ (target 90, cap 150: over by about 24)
 
 ## 9. Rules carried over from the project
 
@@ -496,3 +499,28 @@ setups:
     with 8-bit moments becomes the next question. Measured only: ECO-AdamW against its own float copy (AdamW), and
     ours against the AdamW float copy over 3 seeds.
   - Not run now: the same arms from scratch (P2 size); proposed to reviewers as an extension first.
+- **Change, 2026-10-29, sixth entry, the owner's decision ("run the GPTQ stuff, all of it"), before any of these runs
+  started.** No earlier pass line moves. This is extensions E2a–E2c of `paper/EXTENSIONS.md`.
+  - The question: the paper's "train in higher precision, then round" baselines round to nearest. GPTQ (Frantar et al.,
+    2023) is the standard careful rounding after training. Does it close the gap to ours?
+  - **GPTQ as run:** script `gptq_paper.py`. Our exact format (E2M1 values, one fp32 scale per 16 inputs); the block's
+    scale is set when GPTQ reaches the block's first column (absmax / 6 of the error-updated weights, values clipped to
+    ±6), as in GPTQ's grouped version. Only the 48 (P1) or 24 (P2) block matrices are rounded, as in every 4-bit arm.
+    Damping 1% of the mean Hessian diagonal, columns in natural order, matrices in order within each layer and layers
+    in order, each using inputs from the already-rounded model. Calibration: 128 windows of 1,024 tokens from the
+    training shard (fixed starts, seed 1234), not the validation windows. Scored on the same 256 validation windows,
+    on the GPU, with the same evaluation code; the same script also scores round to nearest, which must reproduce the
+    logged numbers within 0.0005, or the comparison is not reported until the difference is found.
+  - **Runs:** (P1g-start) the pretrained GPT-2 (no training); (P1g) float Muon seed 1 and bf16-SR seed 1, retrained with
+    `--save` (deterministic, so the final loss must match the logged run within 0.0005); (P2g) P2's bf16-SR seed 1,
+    retrained with `--save`. One A100.
+  - **Predictions, written now:** GPTQ recovers part of the loss of rounding but not all of it. P1g-start: between
+    3.40 and 3.46 (round to nearest: 3.462). P1g: both GPTQ models stay above ours (3.2884) by more than twice the
+    paired standard error. P2g: GPTQ recovers most of the 1.16 lost by rounding bf16-SR, but stays above ours (3.9127,
+    seed 1).
+  - **Readings, written now:** if a GPTQ model is not above ours by more than twice the paired standard error (seed 1
+    against seed 1), the paper's claim "training in 4 bits beats training in higher precision and rounding afterwards"
+    narrows to "beats rounding to nearest", the abstract and contributions say so, and the GPTQ numbers go into the main
+    tables. If every GPTQ model stays above ours, the claim stands against GPTQ too, and the GPTQ rows are added to the
+    P1 and P2 tables. Either way the numbers are reported.
+  - Not run: GPTQ variants (column reordering, scale search), other calibration sizes.

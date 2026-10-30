@@ -48,13 +48,37 @@ larger rates. The same rate is used for every arm, so this does not favour ours.
   3,050 steps) it was +0.0013.
 - **Seed spread is larger for ours** (0.0067 against 0.0028). The random rounding of the carry adds a little
   seed-to-seed noise.
-- **Rounding at the end destroys a normally trained model**: bf16-SR is the best model in float (3.889) but loses 1.16
-  when rounded to 4 bits. Training in 4 bits from the start avoids this.
+- **Rounding to nearest at the end destroys a normally trained model**: bf16-SR is the best model in float (3.889) but
+  loses 1.16 when rounded to 4 bits. GPTQ recovers almost all of it (see below).
+
+## GPTQ instead of rounding to nearest (change log sixth entry, 2026-10-30)
+
+bf16-SR seed 1 was retrained with `--save` and matches the logged run exactly (3.88939; rounded to nearest 5.05152).
+GPTQ (`gptq_paper.py`, 128 calibration windows from the training data) on the 24 block matrices:
+
+| | loss |
+|---|---|
+| bf16-SR in bf16 | 3.88940 |
+| bf16-SR rounded to nearest | 5.05151 |
+| **bf16-SR with GPTQ** | **3.91548** |
+| ours, seeds 1 / 2 / 3 | 3.9127 / 3.9262 / 3.9196 |
+
+- GPTQ recovers 98% of the 1.16 lost by rounding to nearest. All weights on the 4-bit grid (checked).
+- GPTQ − ours (seed 1 against seed 1) = **+0.0028 ± 0.0021**. That is not more than twice the standard error, so by the
+  reading written before the run, **the claim narrows**: from scratch, training in 4 bits beats training in bf16 and
+  rounding to nearest, but not training in bf16 and rounding with GPTQ. The GPTQ model also lies inside the spread of
+  our three seeds.
+- Prediction "GPTQ recovers most of the 1.16" held; "stays above ours" did not (above by 0.003, not resolved).
+- Memory: bf16-SR is 3.03 bytes per weight, ours 2.78. So from scratch at this size, bf16-SR plus GPTQ gives about the
+  same 4-bit model for about 9% more memory. What the ticker still has that it does not: the weights being trained are
+  the 4-bit weights (needed in RL, P5), and the advantage in continued training (P1).
 
 ## Not tested
 
 - Learning rates above 0.04, and the batch size (fixed at 32 × 1,024; the plan named it as a tuning knob, but only the
   rate was tuned).
-- Seeds 2–3 of bf16-SR.
+- Seeds 2–3 of bf16-SR, and GPTQ on them.
+- GPTQ variants (column reordering, scale search), other calibration sizes, and why GPTQ recovers 98% here but about
+  half in P1.
 - Other model sizes. The 124M from-scratch run is future work.
 - Kahan, naive rounding and ECO-Muon from scratch (they were compared in P1 only).

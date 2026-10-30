@@ -1,7 +1,7 @@
-"""Build report/results.html (P1e, P2 and P5 results) from results_body.html, results_charts.js, the earlier report's styles
+"""Build report/results.html (GPTQ, P1e, P2 and P5 results) from results_body.html, results_charts.js, the earlier report's styles
 and chart helpers (template.html), and the summaries.
 
-Run:  python report/p1_analysis.py && python report/p2_analysis.py && python report/p5_analysis.py short && python report/p5_analysis.py main 4e-5 \
+Run:  python report/gptq_analysis.py && python report/p1_analysis.py && python report/p2_analysis.py && python report/p5_analysis.py short && python report/p5_analysis.py main 4e-5 \
       && python report/build_results.py
 """
 import json
@@ -42,7 +42,7 @@ data = rounded(dict(p5main=json.load(open(os.path.join(R, "P5main_summary.json")
                     p5short=json.load(open(os.path.join(R, "P5short_summary.json"))),
                     p2=json.load(open(os.path.join(R, "P2_summary.json"))),
                     lr1e4=dict(reward=[x["reward"] for x in lr1e4["train"]], acc_end=lr1e4["evals"][-1]["acc"]),
-                    p1e=p1e))
+                    p1e=p1e, gptq=json.load(open(os.path.join(R, "GPTQ_summary.json")))))
 body = open(os.path.join(HERE, "results_body.html")).read()
 charts = open(os.path.join(HERE, "results_charts.js")).read()
 css += ".note { background: var(--wash); padding: 10px 14px; border-radius: 6px; }\n"

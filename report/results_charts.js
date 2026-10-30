@@ -1,6 +1,6 @@
 const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
 const sgn = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
-const M = DATA.p5main, S = DATA.p5short, P2 = DATA.p2, E = DATA.p1e;
+const M = DATA.p5main, S = DATA.p5short, P2 = DATA.p2, E = DATA.p1e, G = DATA.gptq;
 const ARMC = { a: "--c-m2", b: "--c-m3", c: "--c-c" };
 const ARMN = { a: "(a) normal 16-bit", b: "(b) 4-bit frozen + LoRA", c: "(c) ours, 4-bit" };
 
@@ -186,3 +186,57 @@ lineChart(document.getElementById("ch-p1ecurve"), {
     { label: "ECO-Muon", color: "--c-m3", points: E.curves.eco_muon },
   ],
 });
+
+/* ---------- GPTQ: GPTQ minus ours, per model ---------- */
+const GROWS = [["p1_muon_float_s1", "GPT-2, float Muon", "GPT-2 float Muon"], ["p1_bf16_sr_s1", "GPT-2, bf16-SR", "GPT-2 bf16-SR"],
+               ["p2_bf16_sr_s1", "45M scratch, bf16-SR", "45M bf16-SR"]];
+(function () {
+  const host = document.getElementById("ch-gptqgap");
+  const draw = () => {
+    header(host, { title: "16-bit model rounded with GPTQ, minus ours, final validation loss", sub: "seed 1 against seed 1; bars are 95% intervals over the 256 validation windows; above 0 means ours is better" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 38, m = { l: narrow ? 104 : 160, r: 20, t: 8, b: 34 };
+    const H = m.t + GROWS.length * rh + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "GPTQ minus ours per model" }, host);
+    const X = scale(-0.004, 0.016, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [-0.004, 0, 0.004, 0.008, 0.012, 0.016]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v === 0 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(3)); }
+    GROWS.forEach(([k, name, short], i) => {
+      const r = G[k], d = r.gptq_minus_ours, y = m.t + i * rh + rh / 2, h = 1.96 * d.se, c = tok(d.gptq_above_ours_by_2se ? "--c-c" : "--c-m3");
+      el("svg:text", { x: m.l - 10, y: y + 4, "text-anchor": "end" }, g, narrow ? short : name);
+      el("svg:line", { x1: X(d.mean - h), x2: X(d.mean + h), y1: y, y2: y, stroke: c, "stroke-width": 2, "stroke-linecap": "round" }, g);
+      el("svg:circle", { cx: X(d.mean), cy: y, r: 6, fill: c, stroke: tok("--surface"), "stroke-width": 2 }, g);
+      hover(host, svg, W, H, { x: 0, y: y - rh / 2, width: W, height: rh }, () => [
+        { value: fmt(r.gptq, 4), label: "GPTQ" },
+        { value: fmt(d.ours, 4), label: "ours", color: tok("--c-c") },
+        { value: sgn(d.mean, 4) + " ± " + fmt(h, 4), label: "gap, 95% interval" },
+        { value: d.gptq_above_ours_by_2se ? "ours ahead" : "not resolved", label: "verdict" }], name, X(d.mean), y);
+    });
+    numbers(host, ["model", "in 16 bits", "rounded to nearest", "GPTQ", "ours", "GPTQ − ours"], GROWS.map(([k, name]) => {
+      const r = G[k], d = r.gptq_minus_ours;
+      return [name, fmt(r.float, 4), fmt(r.rtn, 4), fmt(r.gptq, 4), fmt(d.ours, 4), sgn(d.mean, 4) + " ± " + fmt(d.se, 4)]; }));
+  };
+  register(host, draw);
+})();
+
+/* ---------- GPTQ: share of the rounding loss recovered ---------- */
+(function () {
+  const host = document.getElementById("ch-gptqrec");
+  const rows = [["pretrained", "GPT-2 start", "GPT-2 start"]].concat(GROWS);
+  const draw = () => {
+    header(host, { title: "Share of plain rounding's loss that GPTQ wins back", sub: "(rounded to nearest − GPTQ) ÷ (rounded to nearest − 16-bit model)" });
+    const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 34, m = { l: narrow ? 104 : 160, r: 48, t: 8, b: 34 };
+    const H = m.t + rows.length * rh + m.b;
+    const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "share of rounding loss recovered by GPTQ" }, host);
+    const X = scale(0, 100, m.l, W - m.r), g = el("svg:g", {}, svg);
+    for (const v of [0, 25, 50, 75, 100]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v === 0 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, v + "%"); }
+    rows.forEach(([k, name, short], i) => {
+      const r = G[k], v = 100 * r.share_of_rounding_loss_recovered, y = m.t + i * rh + rh / 2;
+      el("svg:text", { x: m.l - 10, y: y + 4, "text-anchor": "end" }, g, narrow ? short : name);
+      el("svg:rect", { x: X(0), y: y - 8, width: Math.max(0, X(v) - X(0)), height: 16, rx: 4, fill: tok("--c-m2") }, g);
+      el("svg:text", { x: X(v) + 6, y: y + 4, class: "lab" }, g, v.toFixed(0) + "%");
+      hover(host, svg, W, H, { x: 0, y: y - rh / 2, width: W, height: rh }, () => [
+        { value: fmt(r.float, 4), label: "16-bit model" }, { value: fmt(r.rtn, 4), label: "rounded to nearest" },
+        { value: fmt(r.gptq, 4), label: "GPTQ" }, { value: v.toFixed(1) + "%", label: "recovered" }], name, X(v), y);
+    });
+  };
+  register(host, draw);
+})();

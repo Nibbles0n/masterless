@@ -81,6 +81,24 @@ ticker keeps the whole error.
 **What the planned reading says:** pass, so ours beats ECO even in ECO's own setting (Adam with fp32 moments, more
 than 3 times our memory), and no byte-matched (8-bit moment) ECO run is needed.
 
+## GPTQ instead of rounding to nearest (change log sixth entry, 2026-10-29)
+
+`gptq_paper.py` on the saved models; `report/gptq_analysis.py` writes `runs/paper/GPTQ_summary.json`. Raw files in
+`runs/paper/GPTQ/`. The float Muon and bf16-SR seed-1 runs were retrained with `--save`; both match the logged runs
+exactly (3.26697 and 3.269, rounded 3.3303 and 3.33458), so GPTQ was applied to the models in the tables. Every GPTQ
+weight is on the 4-bit grid (checked).
+
+| model | float | rounded to nearest | GPTQ | share of the rounding loss GPTQ recovers | GPTQ − ours (seed 1, 3.28841) |
+|---|---|---|---|---|---|
+| pretrained GPT-2 (start) | 3.40250 | 3.46193 | 3.42850 | 56% | |
+| float Muon, seed 1 | 3.26697 | 3.33031 | 3.29754 | 52% | +0.0091 ± 0.0007 |
+| bf16-SR, seed 1 | 3.26899 | 3.33463 | 3.30060 | 52% | +0.0122 ± 0.0007 |
+
+- Predictions, written before the runs: start between 3.40 and 3.46 (**held**, 3.4285); both GPTQ models above ours by
+  more than twice the paired standard error (**held**, 13 and 16 standard errors).
+- In continued training, the claim "training in 4 bits beats training in higher precision and rounding afterwards"
+  stands against GPTQ too. GPTQ recovers about half of what rounding to nearest loses.
+
 ## ECO-Muon: the first run overflowed, the rerun freezes the 4-bit weights
 
 **First run (fp16 Newton–Schulz, like every other arm): overflowed by step 10.** ECO adds the rounding error, divided
@@ -108,6 +126,7 @@ was not made, so this reading is not measured directly.
 - Seeds 2–3 of the 1-seed arms (the AdamW float copy now has 3).
 - ECO-AdamW at other learning rates, with 8-bit moments, or from scratch (P2 size): proposed as an extension.
 - Other learning rates for any arm (P3 covers ours and the float copy at four rates over 10M tokens).
+- GPTQ on seeds 2–3, GPTQ variants (column reordering, scale search) and other calibration sizes.
 
 **Correction, 2026-10-29.** The table first listed 3.40253 as the 4-bit start. That is the float GPT-2 before
 rounding; the 4-bit start (step 0 of every 4-bit arm) is 3.46200. No pass line used the start.
@@ -115,3 +134,6 @@ rounding; the 4-bit start (step 0 of every 4-bit arm) is 3.46200. No pass line u
 **Compute for P1e (2026-10-29):** 20.2 Colab units on one A100 (5 runs, 4 at a time). About 10 of them were wasted: the
 runs finished around 18:50, but the watcher waited for a "done" flag that one queue never wrote, and the session sat
 idle until 20:20. Total for the paper so far: about 164 units against the 150 cap.
+
+**Compute for GPTQ (2026-10-29/30):** 9.5 units on one A100 (P1 and P2 retrains plus GPTQ, about 1 h 20 min). Total
+about 174 units.

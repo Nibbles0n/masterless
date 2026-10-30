@@ -36,7 +36,9 @@ the way to the weights. We propose the \emph{ticker}: each weight is stored only
 measured in units of that weight's own grid gap, holds the part of each step that has not yet moved it (about 2.8
 bytes per weight with 8-bit momentum). The weights being trained are the 4-bit weights that are served. On GPT-2
 small (continued training) the ticker ends within 0.0013 of training with a float copy, and from scratch (45M
-parameters) within 0.013, while bf16 training rounded to nearest afterwards is 0.04 and 1.16 worse. ECO in its own
+parameters) within 0.013. Training in bf16 and rounding to nearest afterwards is 0.04 and 1.16 worse. Rounding with
+GPTQ instead, the bf16 model is still 0.012 worse in continued training but ties the ticker from scratch
+($+0.003 \pm 0.002$), so from scratch our claim is only against rounding to nearest. ECO in its own
 setting, with AdamW and fp32 moments (8.75 bytes per weight), ends 0.08 behind the ticker on GPT-2 small in each of 3
 seeds. In full-parameter RL of Qwen3.5-0.8B on GSM8K with every decoder weight in 4 bits, ours
 ends 3.7 points behind full-precision training and fails our pre-registered line of $-4$; most of the gap is the 6.5
@@ -82,7 +84,9 @@ the same as training with a float copy. The question is how few bits the carry c
         about 2.6--2.8 bytes per weight (Section~\ref{sec:method}). It is within 0.0013 (continued training of GPT-2
         small) and 0.013 (45M from scratch) of training with a float copy, within 0.0012 of an exact fp32 carry, and
         beats bf16 weights with random rounding once both are rounded to nearest on the 4-bit grid, by 0.04--0.05 and
-        by 1.13. ECO run as its paper does, with AdamW, random rounding and fp32 moments (8.75 bytes per weight),
+        by 1.13. With GPTQ \citep{frantar2023gptq} in place of rounding to nearest, the bf16 model is still 0.012
+        behind in continued training, but from scratch it is level with the ticker ($+0.003 \pm 0.002$, one seed).
+        ECO run as its paper does, with AdamW, random rounding and fp32 moments (8.75 bytes per weight),
         ends 0.080 behind it on GPT-2 small in each of 3 seeds.
   \item \textbf{A noise model} for the smallest carry that works at a given learning rate
         (Section~\ref{sec:noise}). It \emph{fails} its pre-registered tests on a grid of 4 carry widths and 4
@@ -313,7 +317,12 @@ then cosine to 10\%. One A100, fp16 with loss scaling, TF32 off, deterministic. 
 momentum), 4-bit with a float copy and Muon, bf16 weights with random rounding and 8-bit momentum (bf16-SR), Kahan
 (ours with an exact fp32 carry), float Muon, 4-bit with a float copy and AdamW, naive (4-bit weights rounded at random,
 no carry), ECO-Muon (ECO's injection into Muon's momentum) and ECO-AdamW (ECO as its paper runs it, see below).
-Table~\ref{tab:p1} gives the final losses; all five pass lines hold.
+Table~\ref{tab:p1} gives the final losses; all five pass lines hold. After the runs, the float Muon and bf16-SR
+models (seed 1) and the pretrained start were also rounded to the 4-bit grid with GPTQ \citep{frantar2023gptq}, the
+standard careful rounding after training, with its prediction and reading written before those runs
+(Appendix~\ref{app:changes}). GPTQ rounds one column at a time and shifts each column's error onto the columns not yet
+rounded, using 128 calibration windows from the training data; our version uses the same 4-bit values and per-16
+block scales as every 4-bit arm, with each block's scale set from the already error-shifted weights.
 
 \begin{table}[t]
 \centering
@@ -332,18 +341,22 @@ bf16-SR, scored in bf16 & 3.03 & 3.2690 & 3.2720 & 3.2695 \\
 Kahan (fp32 carry) & 5.78 & 3.2872 & & \\
 float Muon & 8 & 3.2670 & & \\
 float Muon, rounded to 4 bits & 8 & 3.3303 & & \\
+float Muon, GPTQ to 4 bits & 8 & 3.2975 & & \\
+bf16-SR, GPTQ to 4 bits & 3.03 & 3.3006 & & \\
 4-bit + float copy, AdamW & 12 & 3.2840 & 3.2859 & 3.2846 \\
 ECO-AdamW (random rounding) & 8.75 & 3.3679 & 3.3693 & 3.3687 \\
 naive (random rounding, no carry) & 1.78 & 3.4483 & & \\
 ECO-Muon (Newton--Schulz in fp32) & 1.78 & 3.3253 & & \\
 start: pretrained (float) & & 3.4025 & & \\
 start: pretrained, rounded to 4 bits & & 3.4620 & & \\
+start: pretrained, GPTQ to 4 bits & & 3.4285 & & \\
 \midrule
 \multicolumn{5}{l}{P1a: ours $-$ float copy $= +0.0011, +0.0006, +0.0023$ ($\pm 0.0005$); line $+0.03$ \hfill PASS}\\
 \multicolumn{5}{l}{P1b: naive $-$ ours $= 0.160$, ECO-Muon $-$ ours $= 0.037$ ($\pm 0.002$); line $0.02$ and $0.033$ \hfill PASS}\\
 \multicolumn{5}{l}{P1c: bf16-SR rounded $-$ ours $= 0.046, 0.049, 0.043$ ($\pm 0.001$) \hfill PASS}\\
 \multicolumn{5}{l}{P1d: ours $-$ Kahan $= +0.0012 \pm 0.0005$; line $0.01$ \hfill PASS}\\
 \multicolumn{5}{l}{P1e: ECO-AdamW $-$ ours $= 0.079, 0.080, 0.080$ ($\pm 0.0014$); line $2\times$ s.e. \hfill PASS}\\
+\multicolumn{5}{l}{GPTQ: float Muon $-$ ours $= 0.009$, bf16-SR $-$ ours $= 0.012$ ($\pm 0.0007$, seed 1) \hfill measured}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -360,7 +373,9 @@ worse after the first steps; ECO-Muon and ECO-AdamW stall.}
 4-bit model with an 8-byte float copy, and 0.0012 behind an exact fp32 carry, so the 8-bit carry loses almost nothing.
 Training in 4 bits beats training in higher precision and rounding to nearest at the end: bf16-SR is the best model
 while it is scored in bf16, but rounded to nearest 4-bit values it is 0.043--0.049 worse than ours, and float Muon rounded to 4 bits is 0.042
-worse. The price of 4-bit weights themselves (ours against float Muon in fp32) is $+0.021$, the same as for the float
+worse. GPTQ recovers about half of what rounding to nearest loses (52\% for both trained models, 56\% for the
+pretrained start), and both GPTQ models are still behind ours, by $0.0091 \pm 0.0007$ (float Muon) and
+$0.0122 \pm 0.0007$ (bf16-SR). The price of 4-bit weights themselves (ours against float Muon in fp32) is $+0.021$, the same as for the float
 copy ($+0.020$). ECO-Muon does better than naive rounding but freezes the 4-bit weights: only 0.0004\% of them change
 per step (ours: 0.14\%), falling to zero by the end. The injected error dominates the momentum, so each step mostly
 points back towards undoing the last rounding (Section~\ref{sec:mechanism}). Its first run, with Newton--Schulz in
@@ -397,9 +412,11 @@ arm & bytes/weight & seed 1 & seed 2 & seed 3 & mean $\pm$ seed s.d. \\
 4-bit + float copy, Muon & 8 & 3.9078 & 3.9133 & 3.9095 & $3.9102 \pm 0.0028$ \\
 bf16-SR, scored in bf16 & 3.03 & 3.8894 & & & \\
 bf16-SR, rounded to 4 bits & 3.03 & 5.0515 & & & \\
+bf16-SR, GPTQ to 4 bits & 3.03 & 3.9155 & & & \\
 \midrule
 \multicolumn{6}{l}{P2a: ours $-$ float copy $= +0.0049, +0.0128, +0.0101$ ($\pm 0.0019$); line $+0.03$ \hfill PASS}\\
 \multicolumn{6}{l}{P2c: bf16-SR rounded $-$ ours $= 1.132$; line $2\times 0.0067$ \hfill PASS}\\
+\multicolumn{6}{l}{GPTQ: bf16-SR with GPTQ $-$ ours $= +0.0028 \pm 0.0021$ (seed 1); reading $2\times$ s.e. \hfill not resolved}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -414,9 +431,13 @@ bf16-SR, rounded to 4 bits & 3.03 & 5.0515 & & & \\
 \paragraph{What it shows.} From scratch the gap to the float copy is larger than in continued training (mean
 $+0.009$ against $+0.0013$) and resolved on every seed, but well inside the line, and the carry never overflowed.
 Ours also varies more from seed to seed (0.0067 against 0.0028): the random rounding of the carry adds a little
-seed noise. Training in 16 bits and rounding to nearest at the end does not survive from scratch: bf16-SR is the best
-model in bf16 (3.889) and loses 1.16 when rounded to nearest 4-bit values. Post-training methods that round more
-carefully, such as GPTQ, were not tried and would likely recover part of this loss. The chosen learning rate is the top of its grid, so a larger
+seed noise. Rounded to nearest, bf16-SR, the best model in bf16 (3.889), loses 1.16. GPTQ recovers 98\% of that
+loss: the GPTQ model scores 3.9155, $0.0028 \pm 0.0021$ above ours on seed 1, which does not exceed twice its
+standard error, and it lies inside the spread of our three seeds (3.913--3.926). From scratch, then, training in
+bf16 with random rounding and rounding the result with GPTQ is as good as the ticker on this model, at 3.03 bytes
+per weight against 2.78, and our claim against training in higher precision holds only against rounding to nearest.
+Why GPTQ recovers almost all of the loss here and about half in continued training is not tested. The chosen
+learning rate is the top of its grid, so a larger
 one might be better for every arm.
 
 \subsection{P3: the noise model}\label{sec:p3}
@@ -658,6 +679,9 @@ the generator compute with the same bf16 values of the 4-bit weights, so there i
   \item \textbf{Simulation.} Training runs keep the 4-bit values in fp32 tensors and do not pack codes; only P6
         measures real packed storage. Block scales are fp32 in training; FP8 scales are counted, not trained with
         (a small character-level test found them to cost little; Appendix~\ref{app:toy}).
+  \item \textbf{GPTQ.} One GPTQ configuration (natural column order, 1\% damping, 128 calibration windows, no search
+        over scales), applied to one seed of each baseline. Stronger post-training rounding may do better; from
+        scratch the plain version already ties the ticker.
   \item \textbf{The mechanism measurement} uses one model, one optimizer state built over a short window of steps,
         and one error direction (the rounding leftover of the pretrained weights) plus a random control; it does not
         follow the error through many steps of training.
@@ -672,7 +696,9 @@ the generator compute with the same bf16 values of the 4-bit weights, so there i
 Error feedback through the momentum, which removes the full-precision copy for SGD and Adam, does not work for Muon,
 because Muon's orthogonalised update has a nearly fixed size. Keeping the error beside each weight instead, as a carry
 of 8 bits in units of the weight's own grid gap, trains 4-bit weights with no copy at about 2.8 bytes per weight and
-ends within 0.0013 (continued training) and 0.013 (from scratch) of training with a copy; ECO with AdamW, at three times the memory, ends 0.08 behind it. In RL the
+ends within 0.0013 (continued training) and 0.013 (from scratch) of training with a copy; ECO with AdamW, at three times the memory, ends 0.08 behind it.
+Training in bf16 and rounding with GPTQ is 0.012 behind the ticker in continued training but level with it from
+scratch. In RL the
 method trains every weight of a 0.8B model in 4 bits, but ends 3.7 points behind full-precision training, mostly
 because of the cost of rounding the starting model. The open questions are scale, longer RL runs, and whether a short
 healing run before RL closes the remaining gap.
@@ -755,6 +781,9 @@ read training reward only \\
 10-29 & third seeds of (a) and (c), by the rule; LoRA seeds 2--3 and LoRA merged and rounded to 4 bits (measured only,
 prediction written) & after seeds 1--2, before these runs \\
 10-29 & ECO with AdamW added to P1 with a new pass line, P1e & after an outside review, before these runs \\
+10-29 & GPTQ applied to the pretrained start, to float Muon and bf16-SR of P1 and to bf16-SR of P2 (seed 1 each),
+with a prediction and a reading: if any GPTQ model is not above ours by twice the paired s.e., the claim narrows to
+rounding to nearest & after P1e, before these runs; the owner's decision \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -1,13 +1,16 @@
 <main>
 <header>
-  <div class="eyebrow">Masterless Muon · paper steps P1e, P2 and P5 · latest: ECO with AdamW on GPT-2 small, 3 seeds</div>
+  <div class="eyebrow">Masterless Muon · paper steps GPTQ, P1e, P2 and P5 · latest: GPTQ in place of rounding to nearest</div>
   <h1>RL in 4 Bits: Short of the Line, Far Ahead as a 4-bit Model</h1>
   <p class="lede">The third seeds settled P5a: ours ends 3.7 points behind normal 16-bit training, and the line was −4, so it fails. LoRA, served the usual way with its 16-bit add-on, ends 2.6 points above ours. The test we wrote down in advance shows where LoRA's gain lives: merged into the weights and rounded to 4 bits, not one weight changes, and the model scores its starting 48%. Ours is the only one of the three whose learning is stored in the 4-bit weights themselves.</p>
-  <p class="lede"><b>New, after the outside review: ECO in its own setting loses clearly.</b> ECO run the way its paper runs it (AdamW, random rounding, full-precision moments, 8.75 bytes per weight) ends 0.080 behind ours on GPT-2 small, in every one of 3 seeds. The pass line, written before the runs, needed only about 0.003.</p>
-  <p class="meta">29 October 2026 · P1e: GPT-2 small, 100M tokens, 3 seeds · P5: Qwen3.5-0.8B, GSM8K, 200 RL steps, 3 seeds per setup · P2: GPT-2 6 × 512 (45M), FineWeb, 0.9B tokens · source: <code>p5_rl.py</code>, <code>runs/paper/P5_RESULT.md</code>, <code>runs/paper/P2_RESULT.md</code></p>
+  <p class="lede"><b>Newest: GPTQ, the careful way to round a trained model, narrows one claim.</b> On GPT-2 small (continued training), models trained in 16 bits and rounded with GPTQ are still 0.009–0.012 behind ours. From scratch (45M), GPTQ wins back 98% of what plain rounding lost and ends level with ours (+0.003 ± 0.002). As written before the runs, the paper now says that from scratch ours beats only plain rounding.</p>
+  <p class="lede"><b>After the outside review: ECO in its own setting loses clearly.</b> ECO run the way its paper runs it (AdamW, random rounding, full-precision moments, 8.75 bytes per weight) ends 0.080 behind ours on GPT-2 small, in every one of 3 seeds. The pass line, written before the runs, needed only about 0.003.</p>
+  <p class="meta">30 October 2026 · GPTQ: seed 1 of each baseline, 128 calibration windows · P1e: GPT-2 small, 100M tokens, 3 seeds · P5: Qwen3.5-0.8B, GSM8K, 200 RL steps, 3 seeds per setup · P2: GPT-2 6 × 512 (45M), FineWeb, 0.9B tokens · source: <code>p5_rl.py</code>, <code>runs/paper/P5_RESULT.md</code>, <code>runs/paper/P2_RESULT.md</code></p>
 </header>
 
 <section class="verdict" aria-label="pass lines">
+  <div><b>GPTQ, continued training · ours ahead</b><span>GPTQ − ours: +0.0091 (float Muon), +0.0122 (bf16-SR), ± 0.0007; predicted</span></div>
+  <div><b>GPTQ, from scratch · level</b><span>bf16-SR + GPTQ − ours: +0.0028 ± 0.0021, under 2 standard errors; claim narrows, as written</span></div>
   <div><b>P1e · PASS</b><span>ECO-AdamW − ours: +0.079, +0.080, +0.080 (± 0.003); line: above 0 by 2 standard errors in each seed</span></div>
   <div><b>P5a · FAIL</b><span>ours − normal: −3.7, interval −5.2 to −2.2 (line: lower end above −4)</span></div>
   <div><b>P5b · PASS</b><span>ours gains +20.4 ± 2.4 exam points over its 4-bit start (line: +5)</span></div>
@@ -19,14 +22,27 @@
 <section class="short">
   <h2>The short version</h2>
   <ol>
+    <li><b>GPTQ: ours still wins in continued training, and ties from scratch.</b> GPTQ recovers about half of plain rounding's loss on GPT-2 small, which is not enough to catch ours. On the 45M model trained from scratch it recovers 98%, and bf16 training plus GPTQ ends level with ours at 9% more memory. The paper's claim against "train in 16 bits, then round" now holds from scratch only against plain rounding (section G).</li>
     <li><b>P5a fails, as the rule says.</b> With three seeds each, ours ends 3.7 points behind normal training, interval −5.2 to −2.2. The third seed did not help: seed 3 of ours ended 4.5 behind seed 3 of normal training.</li>
     <li><b>The gap is mostly the 4-bit start.</b> Rounding the model to 4 bits costs 6.5 points before training. Ours then learns more than normal training (+20.4 against +17.6), so it wins back about two fifths of that in 200 steps.</li>
     <li><b>LoRA ends 2.6 points above ours, but only with its add-on.</b> Its add-on is tiny: on average 1/200 of the gap between neighbouring 4-bit values. Merged and rounded to 4 bits, every weight lands back on its start and the model scores 47.7%.</li>
     <li><b>So the paper's claim about RL is narrower but clean.</b> Ours is the only setup here that produces a better pure 4-bit model. Today's method produces a 4-bit model plus a 16-bit one, which must be served together.</li>
     <li><b>ECO with AdamW is now tested too, and loses.</b> It is ECO's own setting, with three times our memory, and it ends 0.080 behind ours in every seed (section 0).</li>
-    <li><b>Compute:</b> the P5 round used 23.6 units; the ECO-AdamW runs 20.2, about 10 of them wasted on an idle session. About 164 in all, over the 150 cap by about 14.</li>
+    <li><b>Compute:</b> the P5 round used 23.6 units; the ECO-AdamW runs 20.2, about 10 of them wasted on an idle session; GPTQ 9.5. About 174 in all, over the 150 cap by about 24.</li>
   </ol>
 </section>
+
+<h2 id="gptq"><span class="secnum">G</span>GPTQ: rounding a 16-bit model carefully</h2>
+<p>The paper's "train in 16 bits, then round to 4 bits" baselines rounded each weight to its nearest 4-bit value. GPTQ is the standard careful way: it rounds one column of a weight matrix at a time and shifts that column's rounding error onto the columns not yet rounded, choosing the shift so the layer's outputs on 128 sample text windows change as little as possible. We ran it on our exact 4-bit format on four models: the pretrained GPT-2 (P1's start), the float Muon and bf16-SR models of P1 (seed 1), and the bf16-SR model of P2 (seed 1). The retrained models match the logged runs exactly, and every GPTQ weight lies on the 4-bit grid. The prediction and what each result would mean were written in the plan before the runs.</p>
+<figure class="wide">
+  <div class="chart" id="ch-gptqgap"></div>
+  <figcaption><b>On GPT-2 small, ours stays ahead; from scratch, the gap is inside the noise.</b> The rule written in advance: if any GPTQ model is not above ours by more than twice its standard error, the claim narrows. The from-scratch gap, +0.0028 ± 0.0021, is about 1.3 standard errors, so it narrows. Our own three seeds from scratch span 3.913 to 3.926, and the GPTQ model (3.915) sits inside that range.</figcaption>
+</figure>
+<figure class="wide">
+  <div class="chart" id="ch-gptqrec"></div>
+  <figcaption><b>GPTQ wins back about half of plain rounding's loss on GPT-2 small, and almost all of it from scratch.</b> Why it differs this much between the two settings was not tested.</figcaption>
+</figure>
+<p>What ours still has that bf16 training plus GPTQ does not: less memory (2.78 bytes per weight against 3.03), the lead in continued training, and weights that are already the 4-bit weights while training, which is what lets RL (P5) sample answers from the same model it trains.</p>
 
 <h2 id="p1e"><span class="secnum">0</span>P1e: ECO in its own setting</h2>
 <p>The outside review asked the fairest question: ECO was built for Adam, not Muon, so does it lose only because we ran it with Muon? P1e runs ECO's Adam version as its paper does: the same 4-bit grid as ours, random rounding (which the ECO paper finds best), the rounding error fed into Adam's first moment, and both of Adam's moments kept in full precision. That is 8.75 bytes per weight against ours 2.78. Its learning rate is the one the 4-bit float copy with AdamW uses; it was not tuned for ECO, as written in the plan before the runs. The test: pretrained GPT-2 small, 100 million more tokens, 3 seeds. Lower loss is better.</p>
@@ -91,6 +107,7 @@
 
 <h2 id="caveats"><span class="secnum">4</span>What this does not show</h2>
 <ul>
+  <li>GPTQ: one seed of each baseline, one GPTQ setting (no column reordering, no search over scales, 128 calibration windows). A stronger version might do better still.</li>
   <li>P1e: one model, continued training at a small learning rate, ECO-AdamW not tuned. From scratch, where steps are larger, ECO may do better; this is proposed to reviewers as an extension.</li>
   <li>P5: one model (0.8B), one task, 200 steps. Whether ours keeps closing the gap with longer training, or with a short healing run before RL, is untested.</li>
   <li>P5's peak GPU memory is set by vLLM's reserved share and the activations (27–30 GB for normal and ours, 24 GB for LoRA). LoRA does use less memory than ours, since its frozen weights need no gradients or carry. The weight and optimizer saving against full training is measured in P6.</li>
