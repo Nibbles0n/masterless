@@ -9,6 +9,7 @@
 \usepackage{lmodern}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{placeins}
 \usepackage{array}
 \usepackage{graphicx}
 \usepackage{xcolor}
@@ -38,8 +39,9 @@ a nearly fixed size and an error added to the momentum is reshaped on the way to
 injection size ECO prescribes, about 5\% of the error arrives and the update loses the gradient's direction. We
 propose the \emph{ticker}, which keeps the error beside each weight instead, as an 8-bit carry measured in units of
 that weight's own grid spacing. The weights are 4-bit values throughout training, and the training state costs 2.78
-bytes per weight. In continued training of GPT-2 small, the ticker ends 0.0013 (mean of 3 seeds) above training the
-same 4-bit model with a float copy and 0.08 below ECO run with AdamW, at a third of ECO's memory. Training in bf16
+bytes per weight. In continued training of GPT-2 small, the ticker's validation loss is within 0.0013 nats (mean of 3
+seeds) of training the same 4-bit model with a float copy, and 0.08 nats lower than ECO run with AdamW, at a third of
+ECO's memory. Training in bf16
 and rounding afterwards ends 0.04 worse with round-to-nearest and 0.01 worse with GPTQ. Trained from scratch at 45M
 parameters, the ticker stays within 0.013 of the float copy, but there bf16 training followed by GPTQ matches it. In
 full-parameter reinforcement learning of Qwen3.5-0.8B on GSM8K, the ticker matches 4-bit training through an fp32
@@ -940,7 +942,7 @@ The plan, its criteria and every change are dated in \texttt{PAPER\_PLAN.md} in 
 changed after a result it judges was seen. Table~\ref{tab:changes} lists every change that affects what was run or how
 it is judged.
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{Changes to the plan, in order. ``Before'' means before any run that the change affects.}
 \label{tab:changes}
@@ -982,12 +984,13 @@ author's decision \\
 \end{table}
 
 % ======================================================================================================================
+\FloatBarrier
 \section{The 30-step RL design}\label{app:p5short}
 For a time the plan judged P5 on a shorter design: 30 steps, 64 questions per step, 8 answers each, Muon at $10^{-4}$.
 It was completed after the switch back to 200 steps and is reported here in full, but it is not used for any
 criterion. Setup (a) seed 1 of this design was the best of three learning rates on the test set, which favours (a).
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{The 30-step design: GSM8K test accuracy (\%), Qwen3.5-0.8B. Intervals as in Table~\ref{tab:p5}.}
 \label{tab:p5short}
@@ -1008,6 +1011,7 @@ setup & start & end (per seed) \\
 \end{table}
 
 % ======================================================================================================================
+\FloatBarrier
 \section{Compute and reproducibility}\label{app:compute}
 \paragraph{Hardware.} P1--P5 and the GPTQ runs used one NVIDIA A100-SXM4-40GB on Google Colab, with several runs
 sharing the GPU at once; the mechanism measurement (Section~\ref{sec:m}) and P6 used one Tesla T4; the small-scale

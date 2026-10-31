@@ -236,7 +236,7 @@ def fig_p5():
         seen.add(r["arm"])
     ax.set_xlabel("RL step")
     ax.set_ylabel("training reward (20-step mean)")
-    ax.set_title("(a) practice answers marked right")
+    ax.set_title("(a) training reward")
     ax.legend(frameon=False, fontsize=6)
     ax = axs[1]
     rounded_seen = False
