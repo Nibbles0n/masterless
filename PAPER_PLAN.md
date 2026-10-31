@@ -364,7 +364,10 @@ setups:
   claim narrows from scratch to "beats rounding to nearest", as written. 9.5 units
 - [x] GPTQ start for P5 done (change log seventh entry; `runs/paper/P5_RESULT.md`): 51.2% against 48.1% round to nearest
   and 54.7% float (+3.0 ± 2.8 points, 47% of the drop recovered; predicted about half). No RL run from it. 1.8 units
-- [ ] Units spent: about 176 through the GPTQ start (target 90, cap 150: over by about 26)
+- [x] P5 setup (d) done (change log eighth entry; `runs/paper/P5_RESULT.md`): 4-bit with an fp32 master copy ends
+  66.6% (68.1, 67.3, 64.3); **P5d PASS**, (c) − (d) = +2.0, interval +0.5 to +3.6; prediction (within 1 point) missed
+  in the ticker's favour. 27.6 units (about 11 lost to a session that ended mid-run)
+- [ ] Units spent: about 204 through P5 setup (d) (target 90, cap 150: over by about 54)
 
 ## 9. Rules carried over from the project
 
@@ -542,3 +545,26 @@ setups:
   - **Reading, written now:** reported as a datapoint in the P5 section and the limitations: the ticker's gain over its
     own start (P5b) is measured from round to nearest, and a GPTQ start would begin higher by the measured amount.
     Whether RL from a GPTQ start keeps that lead is not tested.
+- **Change, 2026-10-30, eighth entry, the owner's decision ("our comparison is whatever deepseek did for post
+  training"; "Three seeds"), before any run of the new setup.** No earlier pass line moves.
+  - The question: DeepSeek-V4 (arXiv 2606.19348, Sec. 5.2.1) trains its expert weights in FP4 during post-training,
+    RL included, with FP32 master weights: the master is rounded to FP4 for the forward pass, the gradient passes
+    straight through to the master, and RL answers are generated with the FP4 weights. That is the recipe the ticker
+    replaces, and P5 has no run of it: (a) is plain bf16 training. P1's "4-bit float copy" is the same recipe at GPT-2
+    size.
+  - **Setup (d), as run:** `p5_rl.py --arm copy4`. Every decoder matrix has an fp32 master copy and fp32 Muon momentum;
+    the gradient taken at the 4-bit weights updates the master, and after every step the 4-bit weights (used for
+    training and copied into vLLM for generation) are the master rounded to nearest on our format (E2M1, fp32 scale per
+    16, recomputed from the master). It starts from the same round-to-nearest model as (b) and (c) (48.1%). Everything
+    else as (c): Muon 4e-5, AdamW 1e-6 on the rest, 200 steps, 32 questions x 8 answers, seeds 1-3, one A100-40GB.
+    Our format, not MXFP4 (blocks of 32, power-of-two scales); both (c) and (d) use the same format.
+  - **P5d (criterion, written now):** (c) - (d), seeds pooled per question and paired by question as P5a, 95%
+    interval. Met if the interval's lower end is above -3 points. (At equal means the interval's half-width, about 1.5
+    points for three seeds, puts the lower end near -1.5; -3 allows about one more half-width.)
+  - **Prediction, written now:** (c) and (d) end within 1 point of each other, both near 68-69%, as P1a found at GPT-2
+    size. Measured only: (d) - (a), (d)'s gain over its start, the share of 4-bit values changing per step in (d) and
+    (c), and the training-state bytes per weight (8.75 for (d), 2.78 for (c), counted as in P6).
+  - **Readings, written now:** if P5d is met, the RL section leads with "the ticker matches FP4 training with an FP32
+    master copy, at a third of the training state"; if not, it reports how far behind the ticker is, and the abstract
+    says so. Either way (d) goes into the P5 table and figure.
+  - Not run: (d) in MXFP4, with AdamW, or with FP8 dequantization as DeepSeek computes; 16-bit RL rounded at the end.

@@ -42,10 +42,11 @@ bytes per weight. In continued training of GPT-2 small, the ticker ends 0.0013 (
 same 4-bit model with a float copy and 0.08 below ECO run with AdamW, at a third of ECO's memory. Training in bf16
 and rounding afterwards ends 0.04 worse with round-to-nearest and 0.01 worse with GPTQ. Trained from scratch at 45M
 parameters, the ticker stays within 0.013 of the float copy, but there bf16 training followed by GPTQ matches it. In
-full-parameter reinforcement learning of Qwen3.5-0.8B on GSM8K, every weight learns while stored in 4 bits and test
-accuracy rises by 20 points, yet the final model is 3.7 points behind bf16 training and misses the threshold we set in
-advance, mostly because rounding the starting model to nearest costs 6.5 points (3.5 with GPTQ). Every experiment
-and threshold was registered before it ran.
+full-parameter reinforcement learning of Qwen3.5-0.8B on GSM8K, the ticker matches 4-bit training through an fp32
+master copy, the recipe DeepSeek-V4 uses in post-training: it ends 2.0 points ahead (95\% interval $[+0.5, +3.6]$) at a
+third of the training state. Both 4-bit models trail bf16 training, the ticker by 3.7 points, which misses the threshold
+we set in advance, mostly because rounding the starting model to nearest costs 6.5 points (3.5 with GPTQ). Every
+experiment and threshold was registered before it ran.
 \end{abstract}
 
 % ======================================================================================================================
@@ -53,7 +54,8 @@ and threshold was registered before it ran.
 
 Hardware and serving systems increasingly use 4-bit weights \citep{nvidia2025nvfp4,rouhani2023mx}, but training a
 model whose weights are 4-bit numbers almost always means training a different, full-precision model. The standard
-recipe keeps an fp32 or bf16 \emph{master copy} of each weight. The optimizer adds its update to the copy, and the
+recipe keeps an fp32 or bf16 \emph{master copy} of each weight, as DeepSeek-V4 does when it trains expert weights in
+4 bits during post-training \citep{deepseek2026v4}. The optimizer adds its update to the copy, and the
 4-bit weights used in the forward pass are re-rounded from it at every step. The copy is needed because a typical
 update is far smaller than the distance between neighbouring 4-bit values, so rounding it on its own would erase it.
 The price is memory and a subtler mismatch, because the model being trained is not the model being served. In reinforcement
@@ -84,9 +86,9 @@ float copy, well ahead of ECO and of naive stochastic rounding, and a 45M-parame
 a hundredth. Against the strongest
 alternative we found, training in bf16 with stochastic rounding and rounding to 4 bits at the end, the result depends
 on the setting. The ticker is ahead in continued training even when the final rounding uses GPTQ
-\citep{frantar2023gptq}, while from scratch GPTQ closes the gap. In RL on a 0.8B model the ticker trains every weight
-in 4 bits and improves the 4-bit model by twenty points, but does not fully recover what rounding the starting model
-cost.
+\citep{frantar2023gptq}, while from scratch GPTQ closes the gap. In RL on a 0.8B model, where the trained model must
+consist of 4-bit weights only to run on 4-bit arithmetic, the ticker matches the master-copy recipe at a third of its
+training state. Both trail bf16 training, mostly because of what rounding the starting model cost.
 
 \paragraph{Contributions.}
 \begin{enumerate}
@@ -98,8 +100,9 @@ cost.
         with GPTQ (Sections~\ref{sec:method} and~\ref{sec:p1}--\ref{sec:p2}).
   \item A pre-registered test of a noise model for the carry width. The model fails both tests; the logged flip rates
         point to a different mechanism, which we describe (Sections~\ref{sec:noise} and~\ref{sec:p3}).
-  \item Full-parameter RL with every decoder weight stored in 4 bits, compared with full-precision training and with
-        a frozen 4-bit model plus LoRA, and a measurement of training memory with packed storage
+  \item Full-parameter RL with every decoder weight stored in 4 bits, compared with 4-bit training through an fp32
+        master copy as in DeepSeek-V4, with full-precision training and with a frozen 4-bit model plus LoRA, and a
+        measurement of training memory with packed storage
         (Sections~\ref{sec:p5}--\ref{sec:p6}).
 \end{enumerate}
 
@@ -364,6 +367,8 @@ P3b & threshold fitted on two learning rates predicts the smallest working carry
 P3c & noise model's predicted carry used for RL & 8 bits used instead & not tested \\
 P5a & lower end of the 95\% interval of ticker $-$ full precision above $-4$ points & $-3.7$, $[-5.2, -2.2]$ & not met \\
 P5b & ticker gains at least 5 points over its 4-bit start, interval above 0 & $+20.4$, $[+18.0, +22.9]$ & met \\
+P5d & lower end of the 95\% interval of ticker $-$ 4-bit with fp32 master copy above $-3$ points & $+2.0$,
+$[+0.5, +3.6]$ & met \\
 P6a & ticker's peak memory $\le 0.35\times$ the standard setup's & 0.318 & met \\
 \bottomrule
 \end{tabular}
@@ -590,42 +595,61 @@ Rounding the weight to nearest matters most. With stochastic rounding a third of
 the loss is 0.071 worse. Measuring the carry in units of each weight's own gap helps a little (0.0012). Error
 Diffusion's cap on the step never binds at this learning rate, because Muon's steps are far below a quarter of a gap.
 
-\subsection{P5: full-parameter RL in 4 bits}\label{sec:p5}
+\subsection{P5: RL with 4-bit weights}\label{sec:p5}
+\paragraph{Question.} A model served on 4-bit hardware has to consist of 4-bit weights, so the comparison that matters
+is between ways of training 4-bit weights. The current recipe trains them through a master copy. DeepSeek-V4
+\citep{deepseek2026v4} does this for its expert weights during post-training, RL included: an fp32 copy is rounded to
+4 bits for every forward pass, the gradient passes straight through to the copy, and RL answers are generated with the
+4-bit weights. P5 asks whether the ticker can replace that copy in RL.
+
 \paragraph{Setup.} We train Qwen3.5-0.8B (post-trained, non-thinking mode) on GSM8K \citep{cobbe2021gsm8k} with GRPO
 \citep{shao2024deepseekmath}: 8 sampled answers for each of 32 questions per step, reward 1 if the final number is
 correct, 200 steps, no KL term, one update per step. Answers are generated by vLLM \citep{kwon2023vllm} in the same
 process, with the trained weights copied in as bf16 after every step. Accuracy is measured on the 1,319 test questions
-with greedy decoding, at the start and at the end. We compare three setups.
-(a) Full-parameter training with bf16 weights and an fp32 copy, Muon on the decoder matrices. Generator and trainer
-both use 16-bit weights, so this setup has no quantization mismatch and serves as the full-precision reference.
-(b) The 4-bit model frozen, with LoRA \citep{hu2022lora} of rank 32 on every decoder matrix, trained with AdamW at
-$10^{-5}$, as in QeRL \citep{huang2025qerl}.
-(c) The ticker: every decoder matrix stored in 4 bits with an 8-bit carry, trained with Muon.
-Setups (b) and (c) start from the same model rounded to nearest. The registered Muon learning rate was $10^{-4}$, with
-a fallback rule fixed in advance: if the training reward of (a) seed 1, averaged over 20 steps, ended more
-than 0.04 below its peak, every run would use $4\cdot10^{-5}$ instead. At $10^{-4}$ the reward of (a) peaked near step 35 and then
-collapsed, and its test accuracy fell from 54.7\% to 36.6\%, so all runs reported here use $4\cdot10^{-5}$. The rule
-used training reward only. A third seed of (a) and (c) was added by a rule fixed before any run.
+with greedy decoding, at the start and at the end. We compare four setups. The first two produce a model made of 4-bit
+weights only, and both start from the model rounded to nearest.
+\begin{itemize}
+  \item[(c)] The ticker: every decoder matrix stored in 4 bits with an 8-bit carry, trained with Muon; 2.78 bytes of
+        training state per weight.
+  \item[(d)] 4-bit weights trained through an fp32 master copy, DeepSeek-V4's recipe on our format. Muon with fp32
+        momentum updates the copy, and after every step the 4-bit weights, used both for training and for generating
+        answers, are the copy rounded to nearest with its block scales recomputed; 8.75 bytes per weight, the 8 bytes
+        of Table~\ref{tab:bytes} plus the 4-bit values and scales that the forward pass reads.
+  \item[(a)] Full-parameter training with bf16 weights and an fp32 copy, Muon on the decoder matrices, from the
+        unrounded model. Generator and trainer both use 16-bit weights, so this reference has no quantization at all.
+  \item[(b)] The 4-bit model frozen, with LoRA \citep{hu2022lora} of rank 32 on every decoder matrix, trained with
+        AdamW at $10^{-5}$, as in QeRL \citep{huang2025qerl}. The served model is the 4-bit model plus a 16-bit adapter.
+\end{itemize}
+The registered Muon learning rate was $10^{-4}$, with a fallback rule fixed in advance: if the training reward of (a)
+seed 1, averaged over 20 steps, ended more than 0.04 below its peak, every run would use $4\cdot10^{-5}$ instead. At
+$10^{-4}$ the reward of (a) peaked near step 35 and then collapsed, and its test accuracy fell from 54.7\% to 36.6\%, so
+all runs reported here use $4\cdot10^{-5}$. The rule used training reward only. Setup (d) was added after the other
+runs, with its own criterion and prediction written before it ran (Appendix~\ref{app:changes}).
 
 \begin{table}[t]
 \centering
-\caption{P5: GSM8K test accuracy (\%), Qwen3.5-0.8B, 200 RL steps. Gains are 95\% intervals from each question's result
-averaged over seeds and paired across setups.}
+\caption{P5: GSM8K test accuracy (\%), Qwen3.5-0.8B, 200 RL steps. Gains and differences are 95\% intervals from each
+question's result averaged over seeds and paired across setups.}
 \label{tab:p5}
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-setup & weights as scored & start & end (per seed) & gain \\
+setup & start & end (per seed) & gain \\
 \midrule
-(a) bf16 + fp32 copy & bf16 & 54.7 & 72.9, 71.1, 72.9 & $+17.6 \pm 2.4$ \\
-(b) 4-bit frozen + LoRA & 4-bit + bf16 adapter & 48.1 & 70.6, 70.2, 72.8 & $+23.1 \pm 2.5$ \\
-(b) merged, rounded to 4 bits & 4-bit & 48.1 & --, 47.6, 47.8 & $-0.4 \pm 2.0$ \\
-\textbf{(c) ticker} & \textbf{4-bit} & 48.1 & 69.7, 67.7, 68.4 & $+20.4 \pm 2.4$ \\
+\multicolumn{4}{l}{\emph{served as 4-bit weights only}}\\
+\textbf{(c) ticker} & 48.1 & 69.7, 67.7, 68.4 & $+20.4 \pm 2.4$ \\
+(d) 4-bit + fp32 master copy & 48.1 & 68.1, 67.3, 64.3 & $+18.4 \pm 2.5$ \\
+(b) merged into the 4-bit weights & 48.1 & --, 47.6, 47.8 & $-0.4 \pm 2.0$ \\
 \midrule
-\multicolumn{5}{l}{(c) $-$ (a) $= -3.7$, interval $[-5.2, -2.2]$; (c) $-$ (b) $= -2.6 \pm 1.6$;
-(c) $-$ (b) rounded $= +20.9 \pm 2.2$}\\
-\multicolumn{5}{l}{4-bit start $-$ bf16 start $= -6.5 \pm 2.8$}\\
-\multicolumn{5}{l}{start rounded with GPTQ instead (no RL run): 51.2; GPTQ start $-$ bf16 start $= -3.5 \pm 2.7$}\\
+\multicolumn{4}{l}{\emph{served with 16-bit weights}}\\
+(a) bf16 + fp32 copy & 54.7 & 72.9, 71.1, 72.9 & $+17.6 \pm 2.4$ \\
+(b) 4-bit frozen + bf16 LoRA adapter & 48.1 & 70.6, 70.2, 72.8 & $+23.1 \pm 2.5$ \\
+\midrule
+\multicolumn{4}{l}{(c) $-$ (d) $= +2.0$, interval $[+0.5, +3.6]$}\\
+\multicolumn{4}{l}{(c) $-$ (a) $= -3.7$, interval $[-5.2, -2.2]$; (d) $-$ (a) $= -5.7 \pm 1.6$}\\
+\multicolumn{4}{l}{(c) $-$ (b) $= -2.6 \pm 1.6$; (c) $-$ (b) merged $= +20.9 \pm 2.2$}\\
+\multicolumn{4}{l}{4-bit start $-$ bf16 start $= -6.5 \pm 2.8$}\\
+\multicolumn{4}{l}{start rounded with GPTQ instead (no RL run): 51.2; GPTQ start $-$ bf16 start $= -3.5 \pm 2.7$}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -634,36 +658,45 @@ setup & weights as scored & start & end (per seed) & gain \\
 \centering
 \includegraphics[width=\linewidth]{figures/p5_rl.pdf}
 \caption{P5: (a) training reward, 20-step running mean, every run; (b) GSM8K test accuracy at the start and after 200
-steps, one line per seed; $\times$: (b) with its adapter merged and rounded to 4 bits (seeds 2--3).}
+steps, one line per seed. Left of the dashed line, setups whose trained model is 4-bit weights only; $\times$: (b) with
+its adapter merged into the 4-bit weights (seeds 2--3).}
 \label{fig:p5}
 \end{figure}
 
-\paragraph{Results.} The ticker ends 3.7 points behind full-precision training, so the lower end of the interval,
-$-5.2$, misses the registered threshold of $-4$ (Table~\ref{tab:p5}). Most of the gap is present before training, since
-rounding the model to 4 bits costs 6.5 points. That cost depends on how the start is rounded. Rounded with GPTQ
-instead, calibrated on 128 GSM8K training solutions, the starting model scores 51.2\%, $3.0 \pm 2.8$ points above round
-to nearest and $3.5 \pm 2.7$ below bf16; we measured this after the RL runs and did not run RL from it. The ticker then
-gains 20.4 points against 17.6 for (a), although a
-model recovering from rounding has an easier start than one improving from a higher score, so this does not show that
-it learns faster. Every weight learns while stored in 4 bits, with 0.11\% of the 4-bit values changing per step.
+\paragraph{The ticker against the master copy.} The ticker matches training through an fp32 master copy at a third of
+its training state. It ends 2.0 points ahead of (d), with interval $[+0.5, +3.6]$, so the registered criterion, a lower
+end above $-3$, is met (Table~\ref{tab:p5}). We had predicted that the two would end within a point of each other. The
+ticker is ahead on every seed, by 1.6, 0.4 and 4.1 points, but the seeds of (d) spread over 3.8 points, and from seed
+to seed the difference has a standard error of 1.3 points, so we do not claim that the ticker is better. Both learn
+while every weight is a 4-bit number, gaining 20.4 and 18.4 points over the shared start. The ticker changes 0.11\% of
+its 4-bit values per step and (d) 0.033\%; after the data, we read the difference as the boundary jitter described in
+Section~\ref{sec:p3}, which here does no visible harm.
 
-Generator and trainer compute with the same numbers. Both convert each 4-bit value times its fp32 block scale to bf16
-in the same way; with FP8 block scales, as in the released optimizer, that product is exact in bf16. The remaining
-difference between their token probabilities (mean 0.0033 for the ticker, 0.0030 for (a)) comes from the two
-programs' arithmetic, and is as small as in the full-precision setup.
+\paragraph{Against 16-bit training.} Both 4-bit setups end behind (a): the ticker by 3.7 points, interval
+$[-5.2, -2.2]$, which misses the registered threshold of $-4$ for the lower end, and (d) by $5.7 \pm 1.6$. Most of the
+gap is present before training, since rounding the model to nearest costs 6.5 points. That cost depends on how the start
+is rounded. Rounded with GPTQ instead, calibrated on 128 GSM8K training solutions, the starting model scores 51.2\%,
+$3.0 \pm 2.8$ points above round to nearest and $3.5 \pm 2.7$ below bf16; we measured this after the RL runs and did
+not run RL from it. A model recovering from rounding has an easier start than one improving from a higher score, so
+the larger gains of (c) and (d) do not show that they learn faster than (a).
 
-LoRA learns more slowly at first (Appendix~\ref{app:p5short}) but ends 2.6 points ahead of the ticker after 200 steps
-(interval $[-4.2, -1.0]$ for ticker minus LoRA). The two are scored differently: (b) keeps its adapter in 16 bits, as
-QLoRA-style models are served, while the ticker is scored with 4-bit weights only. To see how much of LoRA's gain
-survives in a pure 4-bit model, at the end of (b)'s seeds 2 and 3 we merged the adapter into the 4-bit weights and
-rounded to the same grid, recomputing the block scales. We registered the prediction that most weights would round
-back to their start and the model would score near its 48.1\% start. In fact the adapter averages 0.5\% of the gap
-between neighbouring 4-bit values, \emph{no} 4-bit value changes, and the rounded model scores 47.7\%,
-$23.8 \pm 2.3$ points below the same model with its adapter and $20.9 \pm 2.2$ below the ticker. This measures where
-the learning is stored, since QLoRA-style models are served with their adapter. LoRA's gain is real but held in 16
-bits, while the ticker's is held in the 4-bit weights. Peak GPU memory in these runs is set by the generator's reserved
-share and the activations (27--30 GB for (a) and (c), 24 GB for (b), which needs no gradients or optimizer state for
-its frozen weights). The 4-bit values are held in fp32 tensors here, so P6 rather than P5 measures the method's memory.
+\paragraph{LoRA.} A frozen 4-bit model with a LoRA adapter learns more slowly at first (Appendix~\ref{app:p5short})
+but ends 2.6 points ahead of the ticker after 200 steps (interval $[-4.2, -1.0]$ for ticker minus LoRA). Its gain is
+held in the adapter, which stays in 16 bits, so the served model needs 16-bit matrix products beside the 4-bit ones and
+cannot run on 4-bit arithmetic alone. Merging the adapter into the weights and rounding back to the grid removes it. We
+did this at the end of seeds 2 and 3, recomputing the block scales, after registering the prediction that most weights
+would round back to their start. In fact the adapter averages 0.5\% of the gap between neighbouring 4-bit values,
+\emph{no} 4-bit value changes, and the merged model scores 47.7\%, $23.8 \pm 2.3$ points below the same model with its
+adapter and $20.9 \pm 2.2$ below the ticker. Of the setups whose trained model is 4-bit weights only, (c) and (d) are
+the two that keep what they learn.
+
+\paragraph{Generator and trainer.} In (c) and (d) the generator and the trainer compute with the same numbers. Both
+convert each 4-bit value times its fp32 block scale to bf16 in the same way; with FP8 block scales, as in the released
+optimizer, that product is exact in bf16. The remaining difference between their token probabilities (mean 0.0033 for
+(c) and (d), 0.0030 for (a)) comes from the two programs' arithmetic, and is as small as in the full-precision setup.
+Peak GPU memory in these runs is set by the generator's reserved share and the activations (27--31 GB for (a), (c) and
+(d), 24 GB for (b), which needs no gradients or optimizer state for its frozen weights). The 4-bit values are held in
+fp32 tensors here, so P6 rather than P5 measures the method's memory.
 
 \subsection{P6: training memory}\label{sec:p6}
 \paragraph{Setup.} We measure one full-parameter training step of Qwen3.5-0.8B (752M parameters, 498M of them in the
@@ -718,8 +751,9 @@ model size, training length and the starting point all differ between P1 and P2.
 \paragraph{What native 4-bit weights buy.} The ticker reduces peak memory by only 5--13\% against bf16-SR. Its main
 practical difference is that the trained weights are the 4-bit weights. In RL this means that the
 generator and the trainer use the same values without a correction for mismatch, and that what the model learns is
-stored in the 4-bit weights rather than in a 16-bit adapter that would vanish if merged and rounded. The cost is the
-starting point. Rounding Qwen3.5-0.8B to nearest costs 6.5 points, and 200 steps recover about two fifths of that
+stored in the 4-bit weights rather than in a 16-bit adapter that would vanish if merged and rounded. Against the
+master-copy recipe, which also trains the 4-bit weights themselves, the ticker gave up nothing we could measure in RL
+while keeping a third of the training state. The cost, shared by both, is the starting point. Rounding Qwen3.5-0.8B to nearest costs 6.5 points, and 200 steps recover about two fifths of that
 relative to full-precision training. A better initial rounding, such as GPTQ, or a short phase of ordinary training
 before RL, might close the remaining gap; neither was tested.
 
@@ -773,7 +807,10 @@ with a bound on the resulting error, so a bf16-level master weight still exists.
 trained model to low precision column by column, compensating each column's error with second-order information; we
 use it as the strongest form of rounding after training.
 
-\paragraph{RL with quantized weights.} QLoRA \citep{dettmers2023qlora} fine-tunes a frozen 4-bit model through a
+\paragraph{RL with quantized weights.} DeepSeek-V4 \citep{deepseek2026v4} trains its expert weights in MXFP4
+during post-training, RL included: an fp32 master copy is rounded to 4 bits for each forward pass, the gradient
+passes straight through to the copy, and RL answers are generated with the 4-bit weights. Our setup (d) is this
+recipe on our format and optimizer, and the ticker removes its master copy. QLoRA \citep{dettmers2023qlora} fine-tunes a frozen 4-bit model through a
 16-bit low-rank adapter \citep{hu2022lora}, and QeRL \citep{huang2025qerl} applies this to RL with an NVFP4 model; our
 setup (b) follows it. The trained model is then the 4-bit base plus a 16-bit adapter: QeRL's own evaluation attaches
 the adapter to the NVFP4 model in vLLM, or merges it into a 16-bit model. Merging the adapter into the 4-bit weights
@@ -797,7 +834,9 @@ there is no rounding mismatch between them, though other arithmetic differences 
   \item \textbf{RL.} One model, one task, 200 steps, three seeds. Whether the gap to full precision keeps closing with
         longer training, with a better initial rounding (a GPTQ start begins 3.0 points higher, but RL from it was not
 run), or with a short phase of ordinary training before RL is not
-        tested. LoRA's learning rate was not tuned. The generator holds a bf16 copy of the 4-bit values.
+        tested. LoRA's learning rate was not tuned. The generator holds a bf16 copy of the 4-bit values. Setup (d)
+        follows DeepSeek-V4's recipe on our format (blocks of 16, fp32 scales) and with Muon; DeepSeek's MXFP4
+        format (blocks of 32, power-of-two scales), FP8 compute and optimizer were not tested.
   \item \textbf{GPTQ.} One configuration (natural column order, 1\% damping, 128 calibration windows, no search over
         scales), applied to one seed of each baseline and to P5's starting model. A stronger post-training method may do better; from scratch the
         plain version already matches the ticker.
@@ -823,8 +862,8 @@ and matches a float copy within about a hundredth of a nat, in continued trainin
 training it is well ahead of ECO.
 Whether it also beats training in higher precision and rounding afterwards depends on the setting: it does in
 continued training, even against GPTQ, but not from scratch at 45M parameters. In RL the ticker trains every weight of
-a 0.8B model in 4 bits and keeps what it learns in those weights, but the model it starts from has already lost
-accuracy to rounding. The open questions are scale, the starting point for RL, and how few carry bits a design that
+a 0.8B model in 4 bits and matches training through an fp32 master copy, the recipe used for 4-bit post-training today,
+at a third of the training state; both start from a model that has already lost accuracy to rounding. The open questions are scale, the starting point for RL, and how few carry bits a design that
 avoids boundary jitter could use.
 
 \paragraph{Code and data.} The optimizer with packed 4-bit storage, every experiment script, the registered plan with
@@ -935,6 +974,9 @@ with a prediction and a rule: if any GPTQ model is not above the ticker by twice
 rounding to nearest & after P1e, before these runs; the author's decision \\
 10-30 & P5's starting model rounded with GPTQ and scored, without RL, with a prediction (about half of the 6.5 points
 recovered) & after P5; the author's decision \\
+10-30 & setup (d) added to P5, 4-bit weights trained through an fp32 master copy as in DeepSeek-V4's post-training,
+three seeds, with criterion P5d and a prediction (within 1 point of the ticker) & after P5, before any run of (d); the
+author's decision \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -973,13 +1015,14 @@ studies of Appendix~\ref{app:toy} used a 6-core CPU and a T4. Software: PyTorch 
 generation used vLLM.
 
 \paragraph{Run times} (wall clock while sharing the GPU). P1: about 13 minutes per run (median of 20). P2: about 3
-hours per run. P3: about 1 minute per run; P4: about 3 minutes. P5: 50--65 minutes per 200-step run. GPTQ: about 1
+hours per run. P3: about 1 minute per run; P4: about 3 minutes. P5: 50--65 minutes per 200-step run, including setup (d). GPTQ: about 1
 minute per model after retraining, 4 minutes for Qwen3.5-0.8B. The mechanism measurement took under a minute on the T4.
 
-\paragraph{Total.} The paper's experiments used about 176 Colab compute units, against 90 planned. This includes
+\paragraph{Total.} The paper's experiments used about 204 Colab compute units, against 90 planned. This includes
 runs that are not reported in the main tables: the ECO-Muon run that overflowed in fp16, the RL run at learning rate
 $10^{-4}$ that triggered the fallback rule, the RL pilot, the 30-step design, the retraining of three models for GPTQ,
-and about 10 units lost to a session that stayed idle after its runs had finished.
+about 10 units lost to a session that stayed idle after its runs had finished, and about 11 lost to a session that
+ended in the middle of two runs of setup (d), which were then run again.
 
 \paragraph{Reproducing.} Every run is deterministic given its seed on the same GPU type and software versions:
 retraining the float Muon and bf16-SR models of P1 and P2 for GPTQ reproduced the logged losses exactly. The

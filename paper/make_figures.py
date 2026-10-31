@@ -220,12 +220,14 @@ def fig_p5():
     if not os.path.exists(path):
         return placeholder("p5_rl.pdf", "P5: GSM8K accuracy during RL")
     d = json.load(open(path))
-    col = {"a": C["sgd"], "c": C["muon"], "b": C["adam_eco"]}
-    lab = {"a": "(a) bf16 + float copy", "c": "(c) ticker, 4-bit", "b": "(b) 4-bit frozen + LoRA"}
+    col = {"a": C["sgd"], "c": C["muon"], "b": C["adam_eco"], "d": C["adam_plain"]}
+    lab = {"a": "(a) bf16 + float copy", "c": "(c) ticker, 4-bit", "b": "(b) 4-bit frozen + LoRA",
+           "d": "(d) 4-bit + fp32 copy"}
+    order = [a for a in ("c", "d", "b", "a") if any(r["arm"] == a for r in d["runs"])]
     fig, axs = plt.subplots(1, 2, figsize=(7.0, 2.4), constrained_layout=True)
     ax = axs[0]
     seen = set()
-    for r in d["runs"]:
+    for r in sorted(d["runs"], key=lambda r: order.index(r["arm"])):
         rw = r["reward"]
         k = 20
         sm = [sum(rw[i - k + 1:i + 1]) / k for i in range(k - 1, len(rw))]
@@ -235,9 +237,8 @@ def fig_p5():
     ax.set_xlabel("RL step")
     ax.set_ylabel("training reward (20-step mean)")
     ax.set_title("(a) practice answers marked right")
-    ax.legend(frameon=False)
+    ax.legend(frameon=False, fontsize=6)
     ax = axs[1]
-    order = ["a", "b", "c"]
     rounded_seen = False
     for i, arm in enumerate(order):
         rs = [r for r in d["runs"] if r["arm"] == arm]
@@ -249,11 +250,17 @@ def fig_p5():
             if r.get("lora_rounded"):  # the same model, add-on merged and rounded to 4 bits
                 ax.plot([x], [100 * r["lora_rounded"]["acc"]], marker="x", color="black", ms=4, mew=1.0)
                 rounded_seen = True
-    ax.set_xticks(range(3))
-    ax.set_xticklabels([lab[a] for a in order], fontsize=6)
+    ax.set_xticks(range(len(order)))
+    ax.set_xticklabels([lab[a].replace(") ", ")\n", 1) for a in order], fontsize=6)
+    if "d" in order:  # the setups whose trained model is 4-bit only, then those that need 16-bit weights
+        ax.axvline(1.5, color=C["grey"], lw=0.6, ls="--")
+        ax.set_ylim(top=ax.get_ylim()[1] + 4)  # room for the group labels
+        tr = ax.get_xaxis_transform()
+        ax.text(0.5, 0.98, "4-bit weights only", transform=tr, ha="center", va="top", fontsize=6, color=C["grey"])
+        ax.text(2.5, 0.98, "needs 16-bit weights", transform=tr, ha="center", va="top", fontsize=6, color=C["grey"])
     ax.set_ylabel("GSM8K test accuracy (%)")
     ax.set_title("(b) start (open) to end (filled), one line per seed"
-                 + ("\n\u00d7: (b) with its add-on merged and rounded to 4 bits" if rounded_seen else ""))
+                 + ("\n\u00d7: (b) with its adapter merged into the 4-bit weights" if rounded_seen else ""))
     fig.savefig(os.path.join(OUT, "p5_rl.pdf"))
     plt.close(fig)
     print("p5_rl.pdf: from", os.path.relpath(path, ROOT))

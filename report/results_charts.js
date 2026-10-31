@@ -1,8 +1,9 @@
 const fmt = (v, d = 3) => (v == null || !isFinite(v)) ? "–" : (+v).toFixed(d);
 const sgn = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
 const M = DATA.p5main, S = DATA.p5short, P2 = DATA.p2, E = DATA.p1e, G = DATA.gptq;
-const ARMC = { a: "--c-m2", b: "--c-m3", c: "--c-c" };
-const ARMN = { a: "(a) normal 16-bit", b: "(b) 4-bit frozen + LoRA", c: "(c) ours, 4-bit" };
+const ARMC = { a: "--c-m2", b: "--c-m3", c: "--c-c", d: "--c-m5" };
+const ARMN = { a: "(a) normal 16-bit", b: "(b) 4-bit frozen + LoRA", c: "(c) ours, 4-bit", d: "(d) 4-bit + full copy" };
+const ARMO = ["c", "d", "b", "a"];
 
 function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
   const tip = host._tip || (host._tip = tipBox(host));
@@ -15,10 +16,10 @@ function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
 /* ---------- P5: start -> end per run (dumbbell) ---------- */
 (function () {
   const host = document.getElementById("ch-p5runs");
-  const rows = M.runs;
+  const rows = ARMO.flatMap(a => M.runs.filter(r => r.arm === a));
   const draw = () => {
     header(host, { title: "GSM8K exam accuracy before and after 200 steps of RL", sub: "1,319 questions, greedy; hollow dot: the start, filled dot: after 200 steps; ×: LoRA's add-on merged and rounded to 4 bits" });
-    legend(host, ["a", "b", "c"].map(k => ({ label: ARMN[k], color: tok(ARMC[k]) })));
+    legend(host, ARMO.map(k => ({ label: ARMN[k], color: tok(ARMC[k]) })));
     const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 34, m = { l: narrow ? 74 : 150, r: narrow ? 44 : 60, t: 8, b: 34 };
     const H = m.t + rows.length * rh + m.b;
     const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "accuracy before and after per run" }, host);
@@ -54,31 +55,33 @@ function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
 (function () {
   const host = document.getElementById("ch-p5lines");
   const items = [
+    { k: "P5d: (c) − (d), the full-copy recipe", n: "P5d c − d", d: M.lines.P5d.diff, h: M.lines.P5d.half, line: -3, c: "--c-m5", strong: true },
     { k: "P5a, 200 steps, seeds 1–3", n: "P5a 1–3", d: M.lines.P5a.diff, h: M.lines.P5a.half, line: -4, c: "--c-c", strong: true },
     { k: "P5a, 200 steps, seeds 1–2", n: "P5a 1–2", d: M.lines.P5a_seeds12.diff, h: M.lines.P5a_seeds12.half, line: -4, c: "--c-c" },
     { k: "P5a, 30 steps", n: "P5a 30", d: S.lines.P5a.diff, h: S.lines.P5a.half, line: -4, c: "--c-c" },
+    { k: "(d) − (a), for comparison", n: "d − a", d: M.lines.d_minus_a.diff, h: M.lines.d_minus_a.half, c: "--c-m5" },
     { k: "4-bit start vs float start", n: "start gap", d: M.lines.start_gap_4bit.diff, h: M.lines.start_gap_4bit.half, c: "--c-m0" },
     { k: "(c) − (b), 200 steps", n: "c − b 200", d: M.lines.c_minus_b ? M.lines.c_minus_b.diff : null, h: M.lines.c_minus_b ? M.lines.c_minus_b.half : null, c: "--c-m3" },
     { k: "(c) − (b), 30 steps", n: "c − b 30", d: S.lines.c_minus_b.diff, h: S.lines.c_minus_b.half, c: "--c-m3" },
     { k: "(c) − (b) rounded to 4 bits", n: "c − b 4-bit", d: M.lines.c_minus_b_rounded.diff, h: M.lines.c_minus_b_rounded.half, c: "--c-m3", strong: true },
   ].filter(x => x.d != null);
   const draw = () => {
-    header(host, { title: "Ours minus the other setups, in exam points", sub: "question-by-question differences, seeds pooled; bars are 95% intervals; P5a passes if the whole bar is right of −4" });
+    header(host, { title: "Ours minus the other setups, in exam points", sub: "question-by-question differences, seeds pooled; bars are 95% intervals; a dashed tick marks a row's pass line: the whole bar must be right of it" });
     const W = Math.max(280, host.clientWidth - 24), narrow = W < 560, rh = 34, m = { l: narrow ? 78 : 190, r: 20, t: 8, b: 34 };
     const H = m.t + items.length * rh + m.b;
     const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "differences with intervals" }, host);
     const X = scale(-10, 25, m.l, W - m.r), g = el("svg:g", {}, svg);
     for (const v of [-10, -5, 0, 5, 10, 15, 20, 25]) { el("svg:line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: tok(v === 0 ? "--axis" : "--grid") }, g); el("svg:text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, g, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v)); }
-    el("svg:line", { x1: X(-4), x2: X(-4), y1: m.t, y2: H - m.b, stroke: tok("--ink-2"), "stroke-dasharray": "4 4" }, g);
-    el("svg:text", { x: X(-4) - 4, y: H - m.b - 6, "text-anchor": "end", class: "lab" }, g, "−4 line");
     items.forEach((it, i) => {
       const y = m.t + i * rh + rh / 2, c = tok(it.c);
+      if (it.line != null) el("svg:line", { x1: X(it.line), x2: X(it.line), y1: y - rh / 2 + 3, y2: y + rh / 2 - 3, stroke: tok("--ink-2"), "stroke-width": 1.5, "stroke-dasharray": "3 3" }, g);
       el("svg:text", { x: m.l - 10, y: y + 4, "text-anchor": "end", class: it.strong ? "lab-strong" : null }, g, narrow ? it.n : it.k);
       el("svg:line", { x1: X(it.d - it.h), x2: X(it.d + it.h), y1: y, y2: y, stroke: c, "stroke-width": 2, "stroke-linecap": "round" }, g);
       el("svg:circle", { cx: X(it.d), cy: y, r: it.strong ? 7 : 5.5, fill: c, stroke: tok("--surface"), "stroke-width": 2 }, g);
       hover(host, svg, W, H, { x: 0, y: y - rh / 2, width: W, height: rh }, () => [
         { value: sgn(it.d) + " ± " + fmt(it.h, 1), label: "points, 95% interval", color: c },
-        { value: sgn(it.d - it.h) + " to " + sgn(it.d + it.h), label: "range" }], it.k, X(it.d), y);
+        { value: sgn(it.d - it.h) + " to " + sgn(it.d + it.h), label: "range" },
+        ...(it.line != null ? [{ value: sgn(it.line, 0), label: "pass line (lower end above)" }] : [])], it.k, X(it.d), y);
     });
     numbers(host, ["comparison", "points", "95% interval"], items.map(it => [it.k, sgn(it.d), sgn(it.d - it.h) + " to " + sgn(it.d + it.h)]));
   };
@@ -98,6 +101,7 @@ function hover(host, svg, W, H, hitAttrs, rowsFn, title, cx, cy) {
     series: () => [
       { label: "(a) normal, 4e-5", color: ARMC.a, points: sm(mean("a")) },
       { label: "(c) ours, 4e-5", color: ARMC.c, strong: true, points: sm(mean("c")) },
+      { label: "(d) 4-bit + full copy", color: ARMC.d, points: sm(mean("d")) },
       { label: "(b) LoRA", color: ARMC.b, points: sm(mean("b")) },
       { label: "(a) normal, 1e-4", color: "--c-m0", points: sm(DATA.lr1e4.reward) },
     ],

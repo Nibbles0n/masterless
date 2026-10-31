@@ -1,4 +1,4 @@
-"""P5: pass lines P5a and P5b, plus the measured-only numbers, for one design.
+"""P5: pass lines P5a, P5b and P5d, plus the measured-only numbers, for one design.
 
 usage: python report/p5_analysis.py short          (30 steps x 64 questions, runs/paper/P5short + the tune run as (a) s1)
        python report/p5_analysis.py main 4e-5      (200 steps x 32 questions, runs/paper/P5/*_lr4e-5.json)
@@ -20,7 +20,7 @@ if design == "short":
     out = f"{R}/P5short_summary.json"
 else:
     lr = sys.argv[2]
-    stem = {"a": "float_muon", "c": "ticker_muon_c8", "b": "lora4_adamw"}
+    stem = {"a": "float_muon", "c": "ticker_muon_c8", "b": "lora4_adamw", "d": "copy4_muon"}  # (d): eighth entry
     files = {(a, s): f"{R}/P5/p5_{st}_vllm_s{s}_lr{lr}.json" for a, st in stem.items() for s in (1, 2, 3)}
     out = f"{R}/P5main_summary.json"
 runs = {k: json.load(open(f)) for k, f in files.items() if os.path.exists(f)}
@@ -59,8 +59,9 @@ for (a, s), r in sorted(runs.items()):
                             gen_minus_train_logp=mean([x.get("gen_minus_train_logp") for x in t]),
                             logp_gap_max=max([x.get("logp_gap_max") or 0 for x in t]),
                             lora_rounded={k: v for k, v in (r.get("lora_rounded") or {}).items() if k != "correct"} or None,
+                            changed=mean([x.get("changed") for x in t]),
                             reward=[x["reward"] for x in t], train_len=[x["mean_len"] for x in t]))
-A, B, C = pooled("a"), pooled("b"), pooled("c")
+A, B, C, D = pooled("a"), pooled("b"), pooled("c"), pooled("d")
 c_start = pooled("c", 0)
 lines = {}
 if A and C:
@@ -90,6 +91,13 @@ if rb:
     lines["b_rounded_minus_start"] = dict(zip(("diff", "half"), paired(BR, pooled("b", 0, seeds=seeds))))
     if C:
         lines["c_minus_b_rounded"] = dict(zip(("diff", "half"), paired(C, BR)))
+if C and D:  # P5d (eighth change-log entry): the ticker against the fp32 master copy, DeepSeek-V4 style
+    m, h = paired(C, D)
+    lines["P5d"] = dict(diff=m, half=h, lo=m - h, hi=m + h, pass_=m - h > -3)
+if D:
+    lines["d_gain"] = dict(zip(("diff", "half"), paired(D, pooled("d", 0))))
+    if A:
+        lines["d_minus_a"] = dict(zip(("diff", "half"), paired(D, A)))
 res["lines"] = lines
 json.dump(res, open(out, "w"), indent=1)
 

@@ -5,6 +5,10 @@ Arms (--arm):
   float   full-parameter RL with an fp32 copy of every weight, bf16 autocast (the usual way; arm (a))
   lora4   every 2D linear weight inside the decoder layers frozen at 4-bit round-to-nearest, LoRA rank 32 trained on
           them (QeRL-style; arm (b)); everything else frozen too; always AdamW
+  copy4   full-parameter on 4-bit weights with an fp32 master copy, as DeepSeek-V4's FP4 quantization-aware
+          post-training (arm (d)): the optimizer updates the fp32 copy with the gradient taken at the 4-bit weights
+          (straight-through), and the 4-bit weights used for training and generation are the copy rounded to nearest
+          after every step (block scales recomputed); fp32 optimizer state
   ticker  full-parameter on 4-bit weights with no float copy (ours; arm (c)): each step
             target = stored 4-bit weight + carry - lr * update
             new weight = nearest 4-bit value of the target (block scales recomputed from the target)
@@ -209,16 +213,23 @@ class MatrixOpt(torch.optim.Optimizer):
     b-bit carry, 8-bit optimizer state)."""
 
     def __init__(self, params, lr, gen, opt, ticker, carry_bits=8, momentum=0.95, betas=(0.9, 0.999), eps=1e-8,
-                 weight_decay=0.0):
+                 weight_decay=0.0, master=False):
         super().__init__(params, dict(lr=lr, momentum=momentum, betas=betas, eps=eps, weight_decay=weight_decay))
-        self.gen, self.opt, self.ticker = gen, opt, ticker
+        self.gen, self.opt, self.ticker, self.master = gen, opt, ticker, master
         self.L = 2 ** (carry_bits - 1) - 1
         self.changed, self.total = 0, 0  # 4-bit codes changed, summed over steps since the last read
         self.upd_sq, self.upd_n = 0.0, 0  # squared size of lr * update, for matching Muon's lr to AdamW's
 
     @torch.no_grad()
     def init_storage(self):
-        """Round the pretrained weights to nearest 4-bit; the carry starts as the leftover (as side_gpt2.py)."""
+        """Round the pretrained weights to nearest 4-bit; the carry starts as the leftover (as side_gpt2.py). With a
+        master copy, the copy starts as the pretrained weights."""
+        if self.master:
+            for group in self.param_groups:
+                for p in group["params"]:
+                    self.state[p]["master"] = p.detach().clone().float()
+                    p.copy_(quantize_rtn(p))
+            return
         if not self.ticker:
             return
         for group in self.param_groups:
@@ -265,9 +276,18 @@ class MatrixOpt(torch.optim.Optimizer):
                     continue
                 delta = -lr * self.direction(p, group)
                 if wd:
-                    delta.add_(p, alpha=-lr * wd)
+                    delta.add_(self.state[p]["master"] if self.master else p, alpha=-lr * wd)
                 self.upd_sq += delta.square().sum().item()
                 self.upd_n += delta.numel()
+                if self.master:  # straight-through: the gradient at the 4-bit weights updates the fp32 copy
+                    w = self.state[p]["master"].add_(delta)
+                    w_hat = quantize_rtn(w)
+                    x = p.view(p.size(0), -1, BLOCK) / block_scale(p)
+                    x_new = w_hat.view_as(x) / block_scale(w)
+                    self.changed += ((2 * x_new).round() != (2 * x).round()).sum().item()
+                    self.total += p.numel()
+                    p.copy_(w_hat)
+                    continue
                 if not self.ticker:
                     p.add_(delta)
                     continue
@@ -302,6 +322,8 @@ def state_bytes_per_weight(arm, opt, carry_bits):
     state = {"muon": 4, "adamw": 8}[opt]
     if arm == "float":
         return 4 + state
+    if arm == "copy4":
+        return 0.5 + 4 / 16 + 4 + state  # 4-bit weight + scale, fp32 copy, fp32 state
     carry = 1 if carry_bits <= 8 else 2
     return 0.5 + 4 / 16 + carry + {"muon": 1, "adamw": 2}[opt] + (4 / MBLOCK) * {"muon": 1, "adamw": 2}[opt]
 
@@ -497,7 +519,7 @@ def evaluate(gen, tok, test_prompts, test, max_tokens):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", choices=("float", "lora4", "ticker"), required=True)
+    ap.add_argument("--arm", choices=("float", "lora4", "ticker", "copy4"), required=True)
     ap.add_argument("--opt", choices=("adamw", "muon"), default="adamw")
     ap.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
     ap.add_argument("--gen", choices=("hf", "vllm"), default="hf")
@@ -581,7 +603,8 @@ def main():
         trainable = lora
     else:
         mopt = MatrixOpt(mats, lr=args.muon_lr if args.opt == "muon" else args.lr, gen=gen_rng, opt=args.opt,
-                         ticker=args.arm == "ticker", carry_bits=args.carry_bits, weight_decay=args.weight_decay)
+                         ticker=args.arm == "ticker", carry_bits=args.carry_bits, weight_decay=args.weight_decay,
+                         master=args.arm == "copy4")
         mopt.init_storage()
         opts += [mopt, torch.optim.AdamW(rest, lr=args.lr, weight_decay=args.weight_decay)]
         trainable = lang
@@ -734,7 +757,7 @@ def main():
             evals.append(e)
             write(dict(e, kind="eval"))
 
-    if args.arm == "ticker":
+    if args.arm in ("ticker", "copy4"):
         assert all(on_grid(p) for p in mats), "a matrix left the 4-bit grid"
     if args.arm == "lora4":
         assert all(on_grid(m.weight) for m in lora_mods), "a frozen matrix left the 4-bit grid"
@@ -780,7 +803,7 @@ def main():
         write(dict(lora_rounded, kind="eval_lora_rounded"))
     timed = rows[1:] if len(rows) > 1 else rows  # the first step includes warm-up (compilation, CUDA graphs)
     mean = lambda k: round(sum(r[k] for r in timed) / len(timed), 2) if timed else None  # noqa: E731
-    summary = dict(header, on_grid=args.arm in ("ticker", "lora4"), wall_s=round(time.time() - t_start, 1),
+    summary = dict(header, on_grid=args.arm in ("ticker", "lora4", "copy4"), wall_s=round(time.time() - t_start, 1),
                    steps_done=len(rows), step_s=mean("step_s"), gen_s=mean("gen_s"), train_s=mean("train_s"),
                    opt_sync_s=mean("opt_sync_s"),
                    peak_mem_gb=round(torch.cuda.max_memory_allocated() / 2 ** 30, 2) if device == "cuda" else None,

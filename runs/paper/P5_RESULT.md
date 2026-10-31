@@ -145,3 +145,33 @@ and round to nearest, and both reproduced the logged numbers exactly. Result fil
   would begin 3 points higher. Whether RL from it keeps that lead, and whether the ticker would then meet P5a, is not
   tested.
 - Cost: 1.8 Colab units (A100, about 12 minutes including a 4-minute GPTQ).
+
+## Setup (d): 4-bit weights with an fp32 master copy, DeepSeek-V4 style (2026-10-31, change log eighth entry)
+
+The recipe the ticker replaces. DeepSeek-V4 (arXiv 2606.19348, Sec. 5.2.1) trains its expert weights in FP4 during
+post-training, RL included: an fp32 master copy is rounded to 4 bits for each forward pass, the gradient passes straight
+through to the master, and RL answers are written with the 4-bit weights. `p5_rl.py --arm copy4` does this on our format
+(E2M1, fp32 scale per 16, recomputed from the master each step) with Muon at 4e-5 and fp32 momentum; everything else as
+(c). Start: the same round-to-nearest model (48.1%). Seeds 1–3, one A100-40GB each; 8.75 bytes of training state per
+decoder weight against the ticker's 2.78. Result files: `runs/paper/P5/p5_copy4_muon_vllm_s{1,2,3}_lr4e-5.json`.
+
+| setup | end, seeds 1, 2, 3 | mean | gain over start (95% interval) |
+|---|---|---|---|
+| (c) ticker | 69.7, 67.7, 68.4 | 68.6 | +20.4 ± 2.4 |
+| (d) 4-bit + fp32 copy | 68.1, 67.3, 64.3 | 66.6 | +18.4 ± 2.5 |
+
+- **P5d: PASS.** (c) − (d) = **+2.0 points, interval [+0.5, +3.6]**; the line was "lower end above −3".
+- The prediction ("within 1 point of each other, both near 68–69%") did not hold: the ticker ended 2.0 points ahead,
+  and (d) ended near 66.6%. The ticker is ahead on every seed (+1.6, +0.4, +4.1 with the same seed), but the seeds
+  spread widely ((d)'s standard deviation is 2.0 points, (c)'s 1.0), so the seed-level standard error of the difference
+  is 1.3 points. We read this as "matches", not as "better".
+- (d) − (a) = −5.7 ± 1.6: the master-copy recipe is further from bf16 training than the ticker (−3.7 ± 1.5).
+- Share of 4-bit values changing per step: 0.033% for (d), 0.11% for (c). The ticker flips about three times as many
+  values for the same learning rate; after the data, our reading is the boundary jitter of P3 (the carry's own random
+  rounding flips weights that sit next to a boundary back and forth). Not tested further.
+- Generator–trainer token-probability gap: 0.0033 for (d), as for (c) and (a).
+- Peak GPU memory 31.2 GB (fp32 tensors for the 4-bit values, a master and fp32 momentum); P6 measures packed memory.
+- Cost: 27.6 Colab units, about 11 of them lost to a session that ended mid-run (seeds 1 and 3 were run again).
+
+Not tested: (d) in MXFP4 (blocks of 32, power-of-two scales), with FP8 compute, or with AdamW; 16-bit RL rounded at
+the end; RL from a GPTQ start for either setup.
